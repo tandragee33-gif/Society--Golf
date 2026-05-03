@@ -73,10 +73,10 @@
 </div>
 
 <div class="container">
-    <!-- DASHBOARD -->
+    <!-- HISTORY/DASHBOARD -->
     <div id="tab-dash" class="tab-content">
         <div class="card">
-            <h3>Recent Activity</h3>
+            <h3>Season History</h3>
             <select id="dashSeason" onchange="renderDashboard()"></select>
             <div id="dash-list"></div>
         </div>
@@ -102,7 +102,7 @@
     <!-- ROUND ENTRY -->
     <div id="tab-comp" class="tab-content hidden">
         <div class="card">
-            <h3 id="roundTitle">New Round</h3>
+            <h3 id="roundTitle">New Round Entry</h3>
             <input type="hidden" id="editRoundId">
             <label style="font-size:12px;">Date (dd/mm/yyyy):</label>
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
@@ -117,7 +117,7 @@
     <!-- DOUBLES -->
     <div id="tab-doubles" class="tab-content hidden">
         <div class="card">
-            <h3>Doubles Combined Points</h3>
+            <h3>Doubles Combined Scoring</h3>
             <label style="font-size:12px;">Match Date:</label>
             <input type="text" id="dbDate" placeholder="dd/mm/yyyy" onchange="updateScorecardFromHistory()">
             <div id="db-step1">
@@ -126,18 +126,18 @@
             </div>
             <div id="db-step2" class="hidden">
                 <div id="doubles-scorecards"></div>
-                <button class="btn" onclick="calculateDoublesResults()">Calculate Results</button>
-                <button class="btn-outline" style="width:100%" onclick="showDbStep1()">Back</button>
+                <button class="btn" onclick="calculateDoublesResults()">Calculate Winner</button>
+                <button class="btn-outline" style="width:100%" onclick="showDbStep1()">Back to Select</button>
             </div>
             <hr>
             <div id="doubles-output"></div>
         </div>
     </div>
 
-    <!-- STATS -->
+    <!-- STATS/TABLE -->
     <div id="tab-stats" class="tab-content hidden">
         <div class="card">
-            <h3>All Rounds</h3>
+            <h3>All Recorded Rounds</h3>
             <table class="stats-table">
                 <thead><tr><th>Player</th><th>Date</th><th>Pts</th><th>Actions</th></tr></thead>
                 <tbody id="stats-body"></tbody>
@@ -148,60 +148,62 @@
     <!-- PAIRS KNOCKOUT -->
     <div id="tab-pairs" class="tab-content hidden">
         <div class="card">
-            <h3>Pairs Knockdown</h3>
-            <div id="p-setup">
-                <div id="p-selector" class="selector-list"></div>
-                <button class="btn" onclick="initTourney('pairs')">Generate Bracket</button>
+            <h3>Pairs Knockout Bracket</h3>
+            <div id="pairs-setup">
+                <div id="pairs-selector" class="selector-list"></div>
+                <button class="btn" onclick="initTourney('pairs')">Generate New Bracket</button>
             </div>
-            <div id="p-bracket"></div>
+            <div id="pairs-bracket"></div>
         </div>
     </div>
 
     <!-- SINGLES KNOCKOUT -->
     <div id="tab-singles" class="tab-content hidden">
         <div class="card">
-            <h3>Singles Knockdown</h3>
-            <div id="s-setup">
-                <div id="s-selector" class="selector-list"></div>
-                <button class="btn" onclick="initTourney('singles')">Generate Bracket</button>
+            <h3>Singles Knockout Bracket</h3>
+            <div id="singles-setup">
+                <div id="singles-selector" class="selector-list"></div>
+                <button class="btn" onclick="initTourney('singles')">Generate New Bracket</button>
             </div>
-            <div id="s-bracket"></div>
+            <div id="singles-bracket"></div>
         </div>
     </div>
 
     <!-- SETUP -->
     <div id="tab-setup" class="tab-content hidden">
         <div class="card">
-            <h3>Club Profile</h3>
+            <h3>Club Info</h3>
             <input type="text" id="setupClubName" placeholder="Club Name">
             <input type="file" accept="image/*" onchange="processLogo(this)">
-            <button class="btn" onclick="saveClubProfile()">Save Profile</button>
+            <button class="btn" onclick="saveClubProfile()">Update Profile</button>
         </div>
         <div class="card">
-            <h3>Add Player</h3>
+            <h3>Player Management</h3>
             <input type="hidden" id="editPlayerId">
-            <input type="text" id="pName" placeholder="Name">
+            <input type="text" id="pName" placeholder="Player Name">
             <input type="number" id="pHC" placeholder="Handicap">
-            <button class="btn" onclick="savePlayer()">Save Player</button>
+            <button class="btn" onclick="savePlayer()">Add Player</button>
             <div id="admin-players"></div>
         </div>
         <div class="card">
-            <h3>Add Course</h3>
+            <h3>Course Management</h3>
             <input type="hidden" id="editCourseId">
             <input type="text" id="cName" placeholder="Course Name">
+            <p style="font-size: 11px; margin: 5px 0;">Pars:</p>
             <div class="score-grid" id="setup-pars"></div>
+            <p style="font-size: 11px; margin: 5px 0;">Stroke Index:</p>
             <div class="score-grid" id="setup-si"></div>
-            <button class="btn" onclick="saveCourse()">Save Course</button>
+            <button class="btn" onclick="saveCourse()">Add Course</button>
             <div id="admin-courses"></div>
         </div>
-        <button class="btn-del" style="width:100%" onclick="factoryReset()">Master Data Wipe</button>
+        <button class="btn-del" style="width:100%" onclick="factoryReset()">Master Wipe (Erase All Data)</button>
     </div>
 </div>
 
 <script>
     let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, club = { name: "Golf Pro Manager", logo: "" };
 
-    // --- DATA HANDLING ---
+    // --- UTILITIES & STORAGE ---
     function loadData() {
         players = JSON.parse(localStorage.getItem('g_players')) || [];
         courses = JSON.parse(localStorage.getItem('g_courses')) || [];
@@ -220,13 +222,13 @@
         localStorage.setItem('g_club', JSON.stringify(club));
     }
 
-    // --- NAVIGATION ---
+    // --- TAB NAVIGATION ---
     function showTab(id) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.remove('hidden');
-        const btn = document.getElementById('btn-' + id.split('-')[1]);
-        if(btn) btn.classList.add('active');
+        const btnId = 'btn-' + id.split('-')[1];
+        if(document.getElementById(btnId)) document.getElementById(btnId).classList.add('active');
 
         loadData();
         if(id === 'tab-dash') { updateSeasonDropdown(); renderDashboard(); }
@@ -238,27 +240,14 @@
         if(id === 'tab-comp') {
             document.getElementById('rCourse').innerHTML = courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             document.getElementById('rPlayer').innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            if(!document.getElementById('rDate').value) {
+                const now = new Date();
+                document.getElementById('rDate').value = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+            }
         }
     }
 
-    // --- LEADERBOARD ---
-    function renderLeaderboard(filter) {
-        const display = document.getElementById('leaderboard-display');
-        const todayStr = new Date().toISOString().split('T')[0];
-        let filtered = [...rounds];
-        if (filter === 'today') filtered = filtered.filter(r => r.date === todayStr);
-        
-        filtered.sort((a, b) => b.points - a.points);
-
-        display.innerHTML = filtered.length === 0 ? `<p>No rounds found.</p>` : 
-            filtered.map((r, i) => `
-            <div class="item-row ${i === 0 ? 'gold-medal' : ''}">
-                <span><strong>#${i+1}</strong> ${r.playerName}<br><small>${r.courseName}</small></span>
-                <span style="font-weight:bold">${r.points} pts</span>
-            </div>`).join('');
-    }
-
-    // --- TOURNAMENT (KNOCKOUT) LOGIC ---
+    // --- KNOCKOUT ENGINE ---
     function renderMatchplay(type) {
         const t = (type === 'pairs') ? pairsT : singlesT;
         const setupDiv = document.getElementById(type + '-setup');
@@ -281,17 +270,20 @@
                     html += `
                     <div class="match-card">
                         <div class="${m.win==='A'?'winner-row':''}">${m.uA.name}</div>
-                        <div style="text-align:center; font-size:10px;">VS</div>
+                        <div style="text-align:center; font-size:10px; color:#666;">VS</div>
                         <div class="${m.win==='B'?'winner-row':''}">${m.uB ? m.uB.name : 'BYE'}</div>
-                        <div style="display:flex; gap:5px; margin-top:5px;">
+                        <div style="display:flex; gap:5px; margin-top:8px;">
                             <button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','A')">Win A</button>
                             ${m.uB ? `<button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','B')">Win B</button>` : ''}
                         </div>
                     </div>`;
                 });
 
+                // Advance condition: all matches in LATEST round have a winner, and more than 1 winner exists
                 if (i === t.rounds.length - 1 && rd.every(m => m.win !== null) && rd.length > 1) {
-                    html += `<button class="btn" onclick="advanceRound('${type}')">Generate Next Round</button>`;
+                    html += `<button class="btn" style="margin-top:10px" onclick="advanceRound('${type}')">Generate Round ${i+2}</button>`;
+                } else if (i === t.rounds.length - 1 && rd.length === 1 && rd[0].win !== null) {
+                    html += `<div class="winner-row" style="text-align:center; margin-top:10px; padding:10px;">🏆 Champion Crowned!</div>`;
                 }
             });
             bracketDiv.innerHTML = html;
@@ -300,13 +292,17 @@
 
     function initTourney(type) {
         const ids = Array.from(document.querySelectorAll('.'+type+'-ck:checked')).map(i => i.value);
-        if(ids.length < 2) return alert("Select at least 2.");
+        if(ids.length < 2) return alert("Select at least 2 players/pairs.");
+        
         let units = [];
         if(type === 'pairs') {
             const shuf = ids.sort(() => 0.5 - Math.random());
             for(let i=0; i<shuf.length; i+=2) {
-                if(shuf[i+1]) units.push({id: 'u'+i, name: players.find(p=>p.id==shuf[i]).name + " / " + players.find(p=>p.id==shuf[i+1]).name});
-                else units.push({id: 'u'+i, name: players.find(p=>p.id==shuf[i]).name});
+                if(shuf[i+1]) {
+                    units.push({id: 'u'+Date.now()+i, name: players.find(p=>p.id==shuf[i]).name + " / " + players.find(p=>p.id==shuf[i+1]).name});
+                } else {
+                    units.push({id: 'u'+Date.now()+i, name: players.find(p=>p.id==shuf[i]).name}); // Odd player
+                }
             }
         } else {
             units = ids.map(id => ({id: 'u'+id, name: players.find(p=>p.id==id).name}));
@@ -314,7 +310,12 @@
         
         const matches = [];
         for(let i=0; i<units.length; i+=2) {
-            matches.push({id: 'm'+i, uA: units[i], uB: units[i+1] || null, win: units[i+1] ? null : 'A'});
+            matches.push({
+                id: 'm'+Date.now()+i, 
+                uA: units[i], 
+                uB: units[i+1] || null, 
+                win: units[i+1] ? null : 'A' // Automatic win if BYE
+            });
         }
         const obj = { rounds: [matches] };
         if(type==='pairs') pairsT = obj; else singlesT = obj;
@@ -323,29 +324,65 @@
 
     function setWin(type, rIdx, mId, win) {
         const t = (type === 'pairs') ? pairsT : singlesT;
-        t.rounds[rIdx].find(x => x.id === mId).win = win;
+        const match = t.rounds[rIdx].find(x => x.id === mId);
+        if(match) match.win = win;
         saveData(); renderMatchplay(type);
     }
 
     function advanceRound(type) {
         const t = (type === 'pairs') ? pairsT : singlesT;
-        const winners = t.rounds[t.rounds.length-1].map(m => m.win === 'A' ? m.uA : m.uB);
+        const lastRound = t.rounds[t.rounds.length - 1];
+        
+        const winners = lastRound.map(m => (m.win === 'A') ? m.uA : m.uB).filter(w => w !== null);
+        
+        if (winners.length < 2) return;
+
         const nextMatches = [];
         for(let i=0; i<winners.length; i+=2) {
-            nextMatches.push({id: 'm'+Date.now()+i, uA: winners[i], uB: winners[i+1] || null, win: winners[i+1] ? null : 'A'});
+            nextMatches.push({
+                id: 'm'+Date.now()+i, 
+                uA: winners[i], 
+                uB: winners[i+1] || null, 
+                win: winners[i+1] ? null : 'A'
+            });
         }
         t.rounds.push(nextMatches);
         saveData(); renderMatchplay(type);
     }
 
-    function resetT(type) { if(confirm("Reset?")) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }}
+    function resetT(type) { if(confirm("Permanently erase this bracket?")) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }}
 
-    // --- SETUP & UTILS ---
+    // --- LEADERBOARD & STATS ---
+    function renderLeaderboard(filter) {
+        const display = document.getElementById('leaderboard-display');
+        const todayStr = new Date().toISOString().split('T')[0];
+        let filtered = [...rounds];
+        if (filter === 'today') filtered = filtered.filter(r => r.date === todayStr);
+        
+        filtered.sort((a, b) => b.points - a.points);
+
+        display.innerHTML = filtered.length === 0 ? `<p style="text-align:center; padding:20px;">No rounds found.</p>` : 
+            filtered.map((r, i) => `
+            <div class="item-row ${i === 0 ? 'gold-medal' : ''}">
+                <span><strong>#${i+1}</strong> ${r.playerName}<br><small>${r.courseName}</small></span>
+                <span style="font-weight:bold; font-size:1.2rem;">${r.points} <small style="font-size:10px">pts</small></span>
+            </div>`).join('');
+    }
+
+    function renderStats() {
+        document.getElementById('stats-body').innerHTML = rounds.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `
+            <tr><td><b>${r.playerName}</b><br><small>${r.courseName}</small></td><td>${r.date}</td><td>${r.points}</td>
+            <td><button class="btn-del" onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
+    }
+
+    function deleteRound(id) { if(confirm("Delete round?")) { rounds = rounds.filter(x => String(x.id) !== String(id)); saveData(); renderStats(); renderDashboard(); }}
+
+    // --- SCORING & SETUP ---
     function saveRound() {
         const crs = courses.find(c => String(c.id) === String(document.getElementById('rCourse').value));
         const plr = players.find(p => String(p.id) === String(document.getElementById('rPlayer').value));
-        const dateRaw = document.getElementById('rDate').value;
-        const isoDate = dateRaw.split('/').reverse().join('-');
+        const dateInput = document.getElementById('rDate').value;
+        const isoDate = dateInput.split('/').reverse().join('-');
         const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
         
         let pts = 0;
@@ -357,8 +394,8 @@
             }
         });
 
-        rounds.push({ id: Date.now(), date: isoDate, courseName: crs.name, playerName: plr.name, points: pts, season: isoDate.split('-')[0] });
-        saveData(); showTab('tab-leaderboard');
+        rounds.push({ id: Date.now(), date: isoDate, courseName: crs.name, courseId: crs.id, playerId: plr.id, playerName: plr.name, points: pts, season: isoDate.split('-')[0] });
+        saveData(); resetRoundForm(); showTab('tab-leaderboard');
     }
 
     function renderAdmin() {
@@ -368,6 +405,7 @@
 
     function savePlayer() {
         players.push({ id: 'p'+Date.now(), name: document.getElementById('pName').value, handicap: document.getElementById('pHC').value });
+        document.getElementById('pName').value = ''; document.getElementById('pHC').value = '';
         saveData(); renderAdmin();
     }
 
@@ -376,12 +414,14 @@
             pars: Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value),
             si: Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value) 
         });
+        document.getElementById('cName').value = '';
         saveData(); renderAdmin();
     }
 
     function setupInputGrids() {
         ['round-scores', 'setup-pars', 'setup-si'].forEach(g => {
             const el = document.getElementById(g);
+            el.innerHTML = '';
             for(let i=1; i<=18; i++) el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val"></div>`;
         });
     }
@@ -394,12 +434,37 @@
     function renderDashboard() {
         const s = document.getElementById('dashSeason').value;
         const filtered = rounds.filter(r => r.season === s);
-        document.getElementById('dash-list').innerHTML = filtered.map(r => `<div class="item-row"><span>${r.playerName}<br><small>${r.date}</small></span><span>${r.points} pts</span></div>`).join('');
+        document.getElementById('dash-list').innerHTML = filtered.map(r => `<div class="item-row"><span>${r.playerName}<br><small>${r.date} @ ${r.courseName}</small></span><span>${r.points} pts</span></div>`).join('');
     }
 
-    function factoryReset() { if(confirm("Erase everything?")) { localStorage.clear(); location.reload(); }}
+    function resetRoundForm() {
+        document.querySelectorAll('.round-scores-val').forEach(i => i.value = '');
+    }
 
-    window.onload = () => { loadData(); setupInputGrids(); showTab('tab-dash'); };
+    function processLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => { club.logo = e.target.result; applyClubProfile(); saveData(); };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function applyClubProfile() {
+        document.getElementById('header-club-name').innerText = club.name;
+        if(club.logo) {
+            document.getElementById('club-logo-display').src = club.logo;
+            document.getElementById('club-logo-display').style.display = 'block';
+        }
+    }
+
+    function saveClubProfile() {
+        club.name = document.getElementById('setupClubName').value;
+        saveData(); applyClubProfile();
+    }
+
+    function factoryReset() { if(confirm("ERASE ALL DATA? This cannot be undone.")) { localStorage.clear(); location.reload(); }}
+
+    window.onload = () => { loadData(); setupInputGrids(); applyClubProfile(); showTab('tab-dash'); };
 </script>
 </body>
 </html>
