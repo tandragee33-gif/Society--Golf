@@ -13,14 +13,14 @@
         .header h1 { margin: 0; color: var(--primary); font-size: 1.2rem; flex-grow: 1; }
 
         .nav { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 1000; overflow-x: auto; }
-        .nav button { flex: 1; min-width: 85px; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .nav button { flex: 1; min-width: 85px; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; white-space: nowrap; }
         .nav button.active { border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.1); }
         
         .container { padding: 15px; max-width: 900px; margin: auto; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .hidden { display: none !important; }
         
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; /* 16px prevents iOS zoom on focus */ }
         .btn { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .btn-del { background: var(--danger); color: white; border: none; width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
@@ -33,12 +33,11 @@
         .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
         .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 10px 0; }
         .hole-input { text-align: center; font-size: 10px; }
-        .hole-input input { padding: 4px 0; text-align: center; width: 100% !important; }
+        .hole-input input { padding: 4px 0; text-align: center; width: 100% !important; margin: 2px 0; }
 
         .match-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: #fff; border-left: 5px solid var(--accent); }
         .winner-row { background: #e8f5e9; font-weight: bold; color: #2e7d32; padding: 6px; border-radius: 4px; }
 
-        .pts-input { width: 65px !important; text-align: center; margin: 0 !important; font-weight: bold; }
         .stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .stats-table th { text-align: left; background: #f8f8f8; padding: 8px; border-bottom: 2px solid #ddd; }
         .stats-table td { padding: 8px; border-bottom: 1px solid #eee; }
@@ -54,7 +53,7 @@
 <div class="nav">
     <button onclick="showTab('tab-dash')" id="btn-dash" class="active">History</button>
     <button onclick="showTab('tab-leaderboard')" id="btn-leaderboard">Leaderboard</button>
-    <button onclick="showTab('tab-comp')" id="btn-comp">Round</button>
+    <button onclick="showTab('tab-comp')" id="btn-comp">Enter Score</button>
     <button onclick="showTab('tab-doubles')" id="btn-doubles">Doubles</button>
     <button onclick="showTab('tab-stats')" id="btn-stats">Stats</button>
     <button onclick="showTab('tab-pairs')" id="btn-pairs">Pairs (KO)</button>
@@ -84,12 +83,12 @@
         </div>
     </div>
 
-    <!-- ROUND ENTRY -->
+    <!-- ROUND ENTRY (NOW "ENTER SCORE") -->
     <div id="tab-comp" class="tab-content hidden">
         <div class="card">
-            <h3>Round Scorecard</h3>
-            <label>Date (dd/mm/yyyy):</label>
-            <input type="text" id="rDate" placeholder="dd/mm/yyyy">
+            <h3>Enter Scorecard</h3>
+            <label>Date of Play:</label>
+            <input type="date" id="rDate">
             <label>Select Course:</label>
             <select id="rCourse"></select>
             <label>Select Player:</label>
@@ -167,7 +166,9 @@
         <div class="card">
             <h3>Courses</h3>
             <input type="text" id="cName" placeholder="Course Name">
+            <p style="font-size: 11px; margin: 10px 0 0 0;">Pars:</p>
             <div class="score-grid" id="setup-pars"></div>
+            <p style="font-size: 11px; margin: 10px 0 0 0;">Stroke Index:</p>
             <div class="score-grid" id="setup-si"></div>
             <button class="btn" onclick="saveCourse()">Add Course</button>
             <div id="admin-courses"></div>
@@ -177,7 +178,7 @@
 </div>
 
 <script>
-    let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, club = { name: "Golf Pro Manager", logo: "" };
+    let players = [], courses = [], rounds = [], pairsT = null, singlesT = null;
 
     function loadData() {
         players = JSON.parse(localStorage.getItem('g_players')) || [];
@@ -211,10 +212,13 @@
         if(id === 'tab-comp') {
             document.getElementById('rCourse').innerHTML = courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             document.getElementById('rPlayer').innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            // Default to today's date
+            if(!document.getElementById('rDate').value) {
+                document.getElementById('rDate').value = new Date().toISOString().split('T')[0];
+            }
         }
     }
 
-    // --- PLAYER & COURSE REGISTRY ---
     function savePlayer() {
         const name = document.getElementById('pName').value;
         const hc = document.getElementById('pHC').value;
@@ -239,10 +243,8 @@
         document.getElementById('admin-courses').innerHTML = courses.map(c => `<div class="item-row">${c.name}</div>`).join('');
     }
 
-    // --- SELECTOR LOGIC ---
     function renderDoublesSelector() {
         const list = document.getElementById('doubles-selector');
-        if (players.length === 0) return list.innerHTML = "<p>Add players in Setup first.</p>";
         list.innerHTML = players.map(p => `
             <div class="selector-item" onclick="toggleCk('db-${p.id}')">
                 <label>${p.name}</label>
@@ -252,7 +254,6 @@
 
     function toggleCk(id) { const el = document.getElementById(id); if(el) el.checked = !el.checked; }
 
-    // --- KNOCKOUT ENGINE ---
     function renderMatchplay(type) {
         const t = (type === 'pairs') ? pairsT : singlesT;
         const setupDiv = document.getElementById(type + '-setup');
@@ -333,12 +334,12 @@
 
     function resetT(type) { if(confirm("Reset?")) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }}
 
-    // --- SCORING & STATS ---
     function saveRound() {
         const crs = courses.find(c => c.id == document.getElementById('rCourse').value);
         const plr = players.find(p => p.id == document.getElementById('rPlayer').value);
-        const dateRaw = document.getElementById('rDate').value;
-        const isoDate = dateRaw.split('/').reverse().join('-');
+        const isoDate = document.getElementById('rDate').value;
+        if(!crs || !plr || !isoDate) return alert("Select course, player, and date!");
+        
         const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
         
         let pts = 0;
@@ -384,6 +385,7 @@
     function setupInputGrids() {
         ['round-scores', 'setup-pars', 'setup-si'].forEach(g => {
             const el = document.getElementById(g);
+            el.innerHTML = '';
             for(let i=1; i<=18; i++) el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val"></div>`;
         });
     }
