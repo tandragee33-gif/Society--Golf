@@ -69,12 +69,12 @@
     <div id="tab-dash" class="tab-content">
         <div class="card">
             <h3>Historical Results</h3>
-            <label>Select a date with recorded rounds:</label>
+            <label>Select a date to view rounds:</label>
             <select id="historyDropdown" onchange="renderHistoryBySelection()">
                 <option value="">-- No Dates Available --</option>
             </select>
             <div id="history-results-list" style="margin-top:15px;">
-                <p style="color:#666; font-size:14px; text-align:center;">Select a date from the dropdown to see all scores.</p>
+                <p style="color:#666; font-size:14px; text-align:center;">Please select a date from the dropdown.</p>
             </div>
         </div>
     </div>
@@ -82,11 +82,7 @@
     <!-- LEADERBOARD -->
     <div id="tab-leaderboard" class="tab-content hidden">
         <div class="card">
-            <h3>Leaderboards</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="btn-outline" onclick="renderLeaderboard('all')">All Time</button>
-                <button class="btn-outline" onclick="renderLeaderboard('today')">Today</button>
-            </div>
+            <h3>Today's Leaderboard</h3>
             <div id="leaderboard-display"></div>
         </div>
     </div>
@@ -154,7 +150,7 @@
     <!-- STATS -->
     <div id="tab-stats" class="tab-content hidden">
         <div class="card">
-            <h3>All Rounds (Log)</h3>
+            <h3>Master Score Log</h3>
             <table class="stats-table">
                 <thead><tr><th>Player</th><th>Date</th><th>Pts</th><th>Del</th></tr></thead>
                 <tbody id="stats-body"></tbody>
@@ -229,7 +225,7 @@
             document.getElementById('setupClubName').value = club.name;
         }
         if(id === 'tab-stats') renderStats();
-        if(id === 'tab-leaderboard') renderLeaderboard('all');
+        if(id === 'tab-leaderboard') renderLeaderboard();
         if(id === 'tab-doubles') renderDoublesSelector();
         if(id === 'tab-pairs' || id === 'tab-singles') renderMatchplay(id.split('-')[1]);
         if(id === 'tab-comp') {
@@ -241,16 +237,14 @@
         }
     }
 
-    // --- NEW DROPDOWN LOGIC ---
+    // --- HISTORY DROPDOWN LOGIC ---
     function populateHistoryDropdown() {
         const dropdown = document.getElementById('historyDropdown');
         const dates = [...new Set(rounds.map(r => r.date))].sort().reverse();
-        
         if (dates.length === 0) {
             dropdown.innerHTML = '<option value="">-- No Rounds Recorded --</option>';
             return;
         }
-
         dropdown.innerHTML = '<option value="">-- Select a Date --</option>' + 
             dates.map(d => `<option value="${d}">${d}</option>`).join('');
     }
@@ -258,14 +252,11 @@
     function renderHistoryBySelection() {
         const selectedDate = document.getElementById('historyDropdown').value;
         const resultsDiv = document.getElementById('history-results-list');
-        
         if (!selectedDate) {
-            resultsDiv.innerHTML = '<p style="color:#666; text-align:center;">Select a date above.</p>';
+            resultsDiv.innerHTML = '<p style="color:#666; text-align:center;">Select a date from the list.</p>';
             return;
         }
-
         const filtered = rounds.filter(r => r.date === selectedDate).sort((a,b) => b.points - a.points);
-        
         resultsDiv.innerHTML = filtered.map((r, i) => `
             <div class="item-row">
                 <span><strong>${r.playerName}</strong><br><small>${r.courseName}</small></span>
@@ -321,19 +312,17 @@
         document.getElementById('admin-courses').innerHTML = courses.map(c => `<div class="item-row">${c.name}</div>`).join('');
     }
 
-    // --- LEADERBOARD (WITH TOP 3 HIGHLIGHT) ---
-    function renderLeaderboard(filter) {
+    // --- LEADERBOARD (TODAY ONLY) ---
+    function renderLeaderboard() {
         const display = document.getElementById('leaderboard-display');
-        let filtered = [...rounds].sort((a,b) => b.points - a.points);
-        if(filter === 'today') {
-            const today = new Date().toISOString().split('T')[0];
-            filtered = filtered.filter(r => r.date === today);
-        }
+        const today = new Date().toISOString().split('T')[0];
+        const filtered = rounds.filter(r => r.date === today).sort((a,b) => b.points - a.points);
+        
         display.innerHTML = filtered.length ? filtered.map((r, i) => `
             <div class="item-row rank-${i < 3 ? i : 'none'}">
                 <span><strong>#${i+1}</strong> ${r.playerName}</span>
                 <b>${r.points} pts</b>
-            </div>`).join('') : "<p>No scores found.</p>";
+            </div>`).join('') : "<p style='text-align:center; padding:20px;'>No scores logged for today yet.</p>";
     }
 
     // --- SCORING ---
@@ -352,7 +341,8 @@
             }
         });
         rounds.push({ id: Date.now(), date: isoDate, courseName: crs.name, playerName: plr.name, points: pts });
-        saveData(); showTab('tab-dash');
+        saveData(); 
+        showTab('tab-leaderboard');
     }
 
     function renderStats() {
@@ -449,6 +439,7 @@
 
     function resetT(type) { if(confirm("Reset?")) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }}
     function toggleCk(id) { const el = document.getElementById(id); if(el) el.checked = !el.checked; }
+    
     function renderDoublesSelector() {
         document.getElementById('doubles-selector').innerHTML = players.map(p => `
             <div class="selector-item" onclick="toggleCk('db-${p.id}')">
