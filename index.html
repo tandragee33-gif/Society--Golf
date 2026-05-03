@@ -8,7 +8,6 @@
         :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; --gold: #fff9c4; --silver: #f5f5f5; --bronze: #efebe9; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e0e0e0; color: #333; }
         
-        /* Header & Logo */
         .header { background: white; padding: 15px; border-bottom: 3px solid var(--accent); display: flex; align-items: center; gap: 15px; }
         #club-logo-display { width: 50px; height: 50px; object-fit: contain; border-radius: 5px; display: none; background: #eee; }
         .header h1 { margin: 0; color: var(--primary); font-size: 1.2rem; flex-grow: 1; }
@@ -26,15 +25,12 @@
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .btn-del { background: var(--danger); color: white; border: none; width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         
-        /* Leaderboard Highlighting */
         .rank-0 { background-color: var(--gold) !important; border-left: 5px solid #FFD700 !important; font-weight: bold; }
         .rank-1 { background-color: var(--silver) !important; border-left: 5px solid #C0C0C0 !important; }
         .rank-2 { background-color: var(--bronze) !important; border-left: 5px solid #CD7F32 !important; }
 
         .selector-list { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #fafafa; border-radius: 8px; max-height: 300px; overflow-y: auto; }
         .selector-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .selector-item input[type="checkbox"] { width: 22px; height: 22px; margin: 0; cursor: pointer; }
-
         .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
         .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 10px 0; }
         .hole-input { text-align: center; font-size: 10px; }
@@ -67,12 +63,15 @@
 </div>
 
 <div class="container">
-    <!-- DASHBOARD -->
+    <!-- HISTORY DASHBOARD -->
     <div id="tab-dash" class="tab-content">
         <div class="card">
-            <h3>Recent Activity</h3>
-            <select id="dashSeason" onchange="renderDashboard()"></select>
-            <div id="dash-list"></div>
+            <h3>Search Historical Rounds</h3>
+            <label>Select Date:</label>
+            <input type="date" id="historyDateSelect" onchange="renderHistoryByDate()">
+            <div id="history-results-list" style="margin-top:15px;">
+                <p style="color:#666; font-size:14px;">Select a date to view all rounds from that day.</p>
+            </div>
         </div>
     </div>
 
@@ -151,7 +150,7 @@
     <!-- STATS -->
     <div id="tab-stats" class="tab-content hidden">
         <div class="card">
-            <h3>History Log</h3>
+            <h3>History Log (All Data)</h3>
             <table class="stats-table">
                 <thead><tr><th>Player</th><th>Date</th><th>Pts</th><th>Del</th></tr></thead>
                 <tbody id="stats-body"></tbody>
@@ -219,7 +218,10 @@
 
         loadData();
         applyClubProfile();
-        if(id === 'tab-dash') { updateSeasonDropdown(); renderDashboard(); }
+        if(id === 'tab-dash') {
+            document.getElementById('historyDateSelect').value = new Date().toISOString().split('T')[0];
+            renderHistoryByDate();
+        }
         if(id === 'tab-setup') { 
             renderAdmin(); 
             document.getElementById('setupClubName').value = club.name;
@@ -237,37 +239,48 @@
         }
     }
 
+    // --- HISTORY BY DATE ---
+    function renderHistoryByDate() {
+        const selectedDate = document.getElementById('historyDateSelect').value;
+        const resultsDiv = document.getElementById('history-results-list');
+        const filtered = rounds.filter(r => r.date === selectedDate);
+        
+        if (filtered.length === 0) {
+            resultsDiv.innerHTML = `<p style="color:#999; text-align:center; padding:20px;">No rounds found for ${selectedDate}.</p>`;
+            return;
+        }
+
+        resultsDiv.innerHTML = filtered.map(r => `
+            <div class="item-row">
+                <span><strong>${r.playerName}</strong><br><small>${r.courseName}</small></span>
+                <span style="font-weight:bold; color:var(--primary); font-size:1.1rem;">${r.points} pts</span>
+            </div>
+        `).join('');
+    }
+
     // --- CLUB BRANDING ---
     function processLogo(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
-            reader.onload = function(e) {
-                club.logo = e.target.result;
-                applyClubProfile();
-            };
+            reader.onload = function(e) { club.logo = e.target.result; applyClubProfile(); };
             reader.readAsDataURL(input.files[0]);
         }
     }
 
     function saveClubProfile() {
         club.name = document.getElementById('setupClubName').value || "Golf Pro Manager";
-        saveData();
-        applyClubProfile();
+        saveData(); applyClubProfile();
         alert("Branding Updated!");
     }
 
     function applyClubProfile() {
         document.getElementById('header-club-name').innerText = club.name;
         const logoEl = document.getElementById('club-logo-display');
-        if (club.logo) {
-            logoEl.src = club.logo;
-            logoEl.style.display = 'block';
-        } else {
-            logoEl.style.display = 'none';
-        }
+        if (club.logo) { logoEl.src = club.logo; logoEl.style.display = 'block'; }
+        else { logoEl.style.display = 'none'; }
     }
 
-    // --- PLAYER & COURSE ---
+    // --- SETUP & REGISTRY ---
     function savePlayer() {
         const name = document.getElementById('pName').value;
         const hc = document.getElementById('pHC').value;
@@ -297,7 +310,6 @@
         const t = (type === 'pairs') ? pairsT : singlesT;
         const setupDiv = document.getElementById(type + '-setup');
         const bracketDiv = document.getElementById(type + '-bracket');
-        
         if(!t) {
             setupDiv.classList.remove('hidden'); bracketDiv.classList.add('hidden');
             document.getElementById(type + '-selector').innerHTML = players.map(p => `
@@ -381,7 +393,6 @@
             const today = new Date().toISOString().split('T')[0];
             filtered = filtered.filter(r => r.date === today);
         }
-        
         display.innerHTML = filtered.length ? filtered.map((r, i) => `
             <div class="item-row rank-${i < 3 ? i : 'none'}">
                 <span><strong>#${i+1}</strong> ${r.playerName}</span>
@@ -389,13 +400,12 @@
             </div>`).join('') : "<p>No scores found.</p>";
     }
 
-    // --- DATA ---
+    // --- DATA HANDLING ---
     function saveRound() {
         const crs = courses.find(c => c.id == document.getElementById('rCourse').value);
         const plr = players.find(p => p.id == document.getElementById('rPlayer').value);
         const isoDate = document.getElementById('rDate').value;
         if(!crs || !plr || !isoDate) return alert("Select course, player, and date!");
-        
         const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
         let pts = 0;
         scs.forEach((s, i) => {
@@ -415,16 +425,9 @@
 
     function deleteRound(id) { rounds = rounds.filter(r => r.id != id); saveData(); renderStats(); }
 
-    function updateSeasonDropdown() {
-        const years = [...new Set(rounds.map(r => r.season)), new Date().getFullYear().toString()].sort().reverse();
-        document.getElementById('dashSeason').innerHTML = years.map(y => `<option value="${y}">${y} Season</option>`).join('');
-    }
+    function updateSeasonDropdown() {} // No longer used for dashboard
 
-    function renderDashboard() {
-        const s = document.getElementById('dashSeason').value;
-        const filtered = rounds.filter(r => r.season === s);
-        document.getElementById('dash-list').innerHTML = filtered.map(r => `<div class="item-row"><span>${r.playerName} @ ${r.courseName}</span><span>${r.points} pts</span></div>`).join('');
-    }
+    function renderDashboard() {} // Combined into renderHistoryByDate
 
     function setupInputGrids() {
         ['round-scores', 'setup-pars', 'setup-si'].forEach(g => {
