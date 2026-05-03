@@ -3,31 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golf Pro Manager - Tournament Edition</title>
+    <title>Golf Pro Manager</title>
     <style>
-        :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; }
+        :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; --gold: #fff9c4; --silver: #f5f5f5; --bronze: #efebe9; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e0e0e0; color: #333; }
         
+        /* Header & Logo */
         .header { background: white; padding: 15px; border-bottom: 3px solid var(--accent); display: flex; align-items: center; gap: 15px; }
-        #club-logo-display { width: 50px; height: 50px; object-fit: contain; border-radius: 5px; display: none; }
+        #club-logo-display { width: 50px; height: 50px; object-fit: contain; border-radius: 5px; display: none; background: #eee; }
         .header h1 { margin: 0; color: var(--primary); font-size: 1.2rem; flex-grow: 1; }
 
         .nav { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 1000; overflow-x: auto; }
-        .nav button { flex: 1; min-width: 85px; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; white-space: nowrap; }
+        .nav button { flex: 1; min-width: 90px; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; white-space: nowrap; }
         .nav button.active { border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.1); }
         
         .container { padding: 15px; max-width: 900px; margin: auto; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .hidden { display: none !important; }
         
-        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; /* 16px prevents iOS zoom on focus */ }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         .btn { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .btn-del { background: var(--danger); color: white; border: none; width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         
+        /* Leaderboard Highlighting */
+        .rank-0 { background-color: var(--gold) !important; border-left: 5px solid #FFD700 !important; font-weight: bold; }
+        .rank-1 { background-color: var(--silver) !important; border-left: 5px solid #C0C0C0 !important; }
+        .rank-2 { background-color: var(--bronze) !important; border-left: 5px solid #CD7F32 !important; }
+
         .selector-list { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #fafafa; border-radius: 8px; max-height: 300px; overflow-y: auto; }
         .selector-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .selector-item:hover { background: #f0f0f0; }
         .selector-item input[type="checkbox"] { width: 22px; height: 22px; margin: 0; cursor: pointer; }
 
         .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
@@ -83,7 +88,7 @@
         </div>
     </div>
 
-    <!-- ROUND ENTRY (NOW "ENTER SCORE") -->
+    <!-- ENTER SCORE -->
     <div id="tab-comp" class="tab-content hidden">
         <div class="card">
             <h3>Enter Scorecard</h3>
@@ -157,14 +162,22 @@
     <!-- SETUP -->
     <div id="tab-setup" class="tab-content hidden">
         <div class="card">
-            <h3>Registry</h3>
+            <h3>Club Branding</h3>
+            <label>Club Name:</label>
+            <input type="text" id="setupClubName" placeholder="Enter Club Name">
+            <label>Club Logo:</label>
+            <input type="file" accept="image/*" onchange="processLogo(this)">
+            <button class="btn" onclick="saveClubProfile()">Update Branding</button>
+        </div>
+        <div class="card">
+            <h3>Player Registry</h3>
             <input type="text" id="pName" placeholder="New Player Name">
             <input type="number" id="pHC" placeholder="Handicap">
             <button class="btn" onclick="savePlayer()">Add Player</button>
             <div id="admin-players"></div>
         </div>
         <div class="card">
-            <h3>Courses</h3>
+            <h3>Course Registry</h3>
             <input type="text" id="cName" placeholder="Course Name">
             <p style="font-size: 11px; margin: 10px 0 0 0;">Pars:</p>
             <div class="score-grid" id="setup-pars"></div>
@@ -178,7 +191,7 @@
 </div>
 
 <script>
-    let players = [], courses = [], rounds = [], pairsT = null, singlesT = null;
+    let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, club = { name: "Golf Pro Manager", logo: "" };
 
     function loadData() {
         players = JSON.parse(localStorage.getItem('g_players')) || [];
@@ -186,6 +199,7 @@
         rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
         pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
         singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
+        club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     }
 
     function saveData() {
@@ -194,6 +208,7 @@
         localStorage.setItem('g_rounds', JSON.stringify(rounds));
         localStorage.setItem('g_pairsT', JSON.stringify(pairsT));
         localStorage.setItem('g_singlesT', JSON.stringify(singlesT));
+        localStorage.setItem('g_club', JSON.stringify(club));
     }
 
     function showTab(id) {
@@ -203,8 +218,12 @@
         document.getElementById('btn-' + id.split('-')[1]).classList.add('active');
 
         loadData();
+        applyClubProfile();
         if(id === 'tab-dash') { updateSeasonDropdown(); renderDashboard(); }
-        if(id === 'tab-setup') renderAdmin();
+        if(id === 'tab-setup') { 
+            renderAdmin(); 
+            document.getElementById('setupClubName').value = club.name;
+        }
         if(id === 'tab-stats') renderStats();
         if(id === 'tab-leaderboard') renderLeaderboard('all');
         if(id === 'tab-doubles') renderDoublesSelector();
@@ -212,13 +231,43 @@
         if(id === 'tab-comp') {
             document.getElementById('rCourse').innerHTML = courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             document.getElementById('rPlayer').innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-            // Default to today's date
             if(!document.getElementById('rDate').value) {
                 document.getElementById('rDate').value = new Date().toISOString().split('T')[0];
             }
         }
     }
 
+    // --- CLUB BRANDING ---
+    function processLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                club.logo = e.target.result;
+                applyClubProfile();
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function saveClubProfile() {
+        club.name = document.getElementById('setupClubName').value || "Golf Pro Manager";
+        saveData();
+        applyClubProfile();
+        alert("Branding Updated!");
+    }
+
+    function applyClubProfile() {
+        document.getElementById('header-club-name').innerText = club.name;
+        const logoEl = document.getElementById('club-logo-display');
+        if (club.logo) {
+            logoEl.src = club.logo;
+            logoEl.style.display = 'block';
+        } else {
+            logoEl.style.display = 'none';
+        }
+    }
+
+    // --- PLAYER & COURSE ---
     function savePlayer() {
         const name = document.getElementById('pName').value;
         const hc = document.getElementById('pHC').value;
@@ -243,17 +292,7 @@
         document.getElementById('admin-courses').innerHTML = courses.map(c => `<div class="item-row">${c.name}</div>`).join('');
     }
 
-    function renderDoublesSelector() {
-        const list = document.getElementById('doubles-selector');
-        list.innerHTML = players.map(p => `
-            <div class="selector-item" onclick="toggleCk('db-${p.id}')">
-                <label>${p.name}</label>
-                <input type="checkbox" class="db-ck" id="db-${p.id}" value="${p.id}" onclick="event.stopPropagation()">
-            </div>`).join('');
-    }
-
-    function toggleCk(id) { const el = document.getElementById(id); if(el) el.checked = !el.checked; }
-
+    // --- KNOCKOUT ---
     function renderMatchplay(type) {
         const t = (type === 'pairs') ? pairsT : singlesT;
         const setupDiv = document.getElementById(type + '-setup');
@@ -334,6 +373,23 @@
 
     function resetT(type) { if(confirm("Reset?")) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }}
 
+    // --- LEADERBOARD ---
+    function renderLeaderboard(filter) {
+        const display = document.getElementById('leaderboard-display');
+        let filtered = [...rounds].sort((a,b) => b.points - a.points);
+        if(filter === 'today') {
+            const today = new Date().toISOString().split('T')[0];
+            filtered = filtered.filter(r => r.date === today);
+        }
+        
+        display.innerHTML = filtered.length ? filtered.map((r, i) => `
+            <div class="item-row rank-${i < 3 ? i : 'none'}">
+                <span><strong>#${i+1}</strong> ${r.playerName}</span>
+                <b>${r.points} pts</b>
+            </div>`).join('') : "<p>No scores found.</p>";
+    }
+
+    // --- DATA ---
     function saveRound() {
         const crs = courses.find(c => c.id == document.getElementById('rCourse').value);
         const plr = players.find(p => p.id == document.getElementById('rPlayer').value);
@@ -341,7 +397,6 @@
         if(!crs || !plr || !isoDate) return alert("Select course, player, and date!");
         
         const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
-        
         let pts = 0;
         scs.forEach((s, i) => {
             if(s > 0) {
@@ -350,30 +405,19 @@
                 pts += Math.max(0, par - (s - allow) + 2);
             }
         });
-
         rounds.push({ id: Date.now(), date: isoDate, courseName: crs.name, playerName: plr.name, points: pts, season: isoDate.split('-')[0] });
         saveData(); showTab('tab-leaderboard');
     }
 
-    function renderLeaderboard(filter) {
-        const display = document.getElementById('leaderboard-display');
-        let filtered = [...rounds].sort((a,b) => b.points - a.points);
-        if(filter === 'today') {
-            const today = new Date().toISOString().split('T')[0];
-            filtered = filtered.filter(r => r.date === today);
-        }
-        display.innerHTML = filtered.map((r, i) => `<div class="item-row"><span>#${i+1} ${r.playerName}</span><b>${r.points} pts</b></div>`).join('');
-    }
-
     function renderStats() {
-        document.getElementById('stats-body').innerHTML = rounds.map(r => `<tr><td>${r.playerName}</td><td>${r.date}</td><td>${r.points}</td><td><button onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
+        document.getElementById('stats-body').innerHTML = rounds.map(r => `<tr><td>${r.playerName}</td><td>${r.date}</td><td>${r.points}</td><td><button class="btn-del" onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
     }
 
     function deleteRound(id) { rounds = rounds.filter(r => r.id != id); saveData(); renderStats(); }
 
     function updateSeasonDropdown() {
         const years = [...new Set(rounds.map(r => r.season)), new Date().getFullYear().toString()].sort().reverse();
-        document.getElementById('dashSeason').innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+        document.getElementById('dashSeason').innerHTML = years.map(y => `<option value="${y}">${y} Season</option>`).join('');
     }
 
     function renderDashboard() {
@@ -388,6 +432,15 @@
             el.innerHTML = '';
             for(let i=1; i<=18; i++) el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val"></div>`;
         });
+    }
+
+    function toggleCk(id) { const el = document.getElementById(id); if(el) el.checked = !el.checked; }
+    function renderDoublesSelector() {
+        document.getElementById('doubles-selector').innerHTML = players.map(p => `
+            <div class="selector-item" onclick="toggleCk('db-${p.id}')">
+                <label>${p.name}</label>
+                <input type="checkbox" class="db-ck" id="db-${p.id}" value="${p.id}" onclick="event.stopPropagation()">
+            </div>`).join('');
     }
 
     function factoryReset() { if(confirm("Erase everything?")) { localStorage.clear(); location.reload(); }}
