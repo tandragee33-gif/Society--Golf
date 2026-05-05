@@ -368,7 +368,7 @@
     }
 
     function renderStats() {
-        const filterVal = document.getElementById('statsFilterDate').value; // format: YYYY-MM
+        const filterVal = document.getElementById('statsFilterDate').value; 
         let data = rounds.sort((a,b) => new Date(b.date) - new Date(a.date));
         
         if(filterVal) {
@@ -460,6 +460,7 @@
         }
     }
 
+    // MATCHPLAY (PAIRS/SINGLES) LOGIC
     function renderMatchplay(type) {
         const t = (type === 'pairs') ? pairsT : singlesT;
         const setupDiv = document.getElementById(type === 'pairs' ? 'p-setup' : 's-setup');
@@ -488,23 +489,77 @@
     function initTourney(type) {
         const ids = Array.from(document.querySelectorAll(`.${type}-ck:checked`)).map(i => i.value);
         if(ids.length < 2) return alert("Select players.");
-        let units = (type === 'pairs') ? [] : ids.map(id => ({ id: 'u'+id, name: players.find(p=>p.id==id).name }));
-        if(type==='pairs') {
+        
+        let units = [];
+        if(type === 'singles') {
+            units = ids.map(id => ({ id: 'u'+id, name: players.find(p=>p.id==id).name }));
+        } else {
             const shuf = ids.sort(()=>0.5-Math.random());
-            for(let i=0; i<shuf.length; i+=2) if(shuf[i+1]) units.push({id:'u'+i, name:players.find(p=>p.id==shuf[i]).name + " / " + players.find(p=>p.id==shuf[i+1]).name});
+            for(let i=0; i<shuf.length; i+=2) {
+                if(shuf[i+1]) {
+                    units.push({id:'u'+i, name:players.find(p=>p.id==shuf[i]).name + " / " + players.find(p=>p.id==shuf[i+1]).name});
+                } else if(shuf[i]) {
+                    // Solo person if odd number of selections
+                    units.push({id:'u'+i, name:players.find(p=>p.id==shuf[i]).name});
+                }
+            }
         }
-        const matches = []; for(let i=0; i<units.length; i+=2) matches.push({id:'m'+i, uA:units[i], uB:units[i+1]||null, win:null});
-        const obj = { rounds: [matches] }; if(type==='pairs') pairsT=obj; else singlesT=obj; saveData(); renderMatchplay(type);
+        
+        const matches = []; 
+        for(let i=0; i<units.length; i+=2) {
+            matches.push({id:'m'+i, uA:units[i], uB:units[i+1]||null, win:null});
+        }
+        
+        const obj = { rounds: [matches] }; 
+        if(type==='pairs') pairsT=obj; else singlesT=obj; 
+        
+        saveData(); 
+        progressTourney(type); // Initial check for byes
+        renderMatchplay(type);
     }
 
     function setWin(type, rIdx, mId, win) {
         const t=(type==='pairs')?pairsT:singlesT;
-        t.rounds[rIdx].find(x=>x.id===mId).win = win;
-        saveData(); renderMatchplay(type);
+        const match = t.rounds[rIdx].find(x=>x.id===mId);
+        if(!match.uB && win === 'B') return; // Cannot win against nobody
+        
+        match.win = win;
+        saveData();
+        progressTourney(type);
+        renderMatchplay(type);
+    }
+
+    function progressTourney(type) {
+        const t = (type === 'pairs') ? pairsT : singlesT;
+        let lastRound = t.rounds[t.rounds.length - 1];
+        
+        // Check if round is complete (everyone has a winner or is a bye)
+        const isComplete = lastRound.every(m => m.win !== null || m.uB === null);
+        
+        if(isComplete && lastRound.length > 1) {
+            const winners = lastRound.map(m => {
+                if(!m.uB) return m.uA; // BYE advances
+                return m.win === 'A' ? m.uA : m.uB;
+            });
+            
+            const nextRound = [];
+            for(let i=0; i<winners.length; i+=2) {
+                nextRound.push({
+                    id: 'm' + Date.now() + i, 
+                    uA: winners[i], 
+                    uB: winners[i+1] || null, 
+                    win: null
+                });
+            }
+            t.rounds.push(nextRound);
+            saveData();
+            progressTourney(type); // Check again in case new round is just one person (bye)
+        }
     }
 
     function resetT(type) { if(confirm("Reset?")) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }}
 
+    // DASHBOARD & UTILS
     function renderDashboard() {
         const s = document.getElementById('dashSeason').value;
         const comps = rounds.filter(r => r.season === s).reduce((acc, r) => { const k = `${r.date}|${r.courseId}`; if (!acc[k]) acc[k] = { date: r.date, course: r.courseName, id: r.courseId, count: 0 }; acc[k].count++; return acc; }, {});
@@ -533,7 +588,7 @@
         const uniqueYears = [...new Set([...yearsFromRounds, currentYear])];
         uniqueYears.sort((a, b) => b - a);
         const dropdown = document.getElementById('dashSeason');
-        dropdown.innerHTML = uniqueYears.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y} Season</option>`).join('');
+        if(dropdown) dropdown.innerHTML = uniqueYears.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y} Season</option>`).join('');
     }
 
     function factoryReset() { if(confirm("ERASE ALL?")) { localStorage.clear(); location.reload(); } }
