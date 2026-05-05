@@ -404,12 +404,44 @@
     }
 
     function renderAdmin() {
-        document.getElementById('admin-players').innerHTML = players.map(p => `<div class="item-row"><span>${p.name} (HC: ${p.handicap})</span><div><button class="btn-outline" onclick="editPlayer('${p.id}')">Edit</button></div></div>`).join('');
-        document.getElementById('admin-courses').innerHTML = courses.map(c => `<div class="item-row"><span>${c.name}</span><div><button class="btn-outline" onclick="editCourse('${c.id}')">Edit</button></div></div>`).join('');
+        document.getElementById('admin-players').innerHTML = players.map(p => `
+            <div class="item-row">
+                <span>${p.name} (HC: ${p.handicap})</span>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-outline" onclick="editPlayer('${p.id}')">Edit</button>
+                    <button class="btn-del" onclick="deletePlayer('${p.id}')">Delete</button>
+                </div>
+            </div>`).join('');
+        
+        document.getElementById('admin-courses').innerHTML = courses.map(c => `
+            <div class="item-row">
+                <span>${c.name}</span>
+                <div style="display:flex; gap:5px;">
+                    <button class="btn-outline" onclick="editCourse('${c.id}')">Edit</button>
+                    <button class="btn-del" onclick="deleteCourse('${c.id}')">Delete</button>
+                </div>
+            </div>`).join('');
     }
 
     function editPlayer(id) { const p = players.find(x => String(x.id) === String(id)); document.getElementById('editPlayerId').value = p.id; document.getElementById('pName').value = p.name; document.getElementById('pHC').value = p.handicap; }
+    
+    function deletePlayer(id) {
+        if(confirm("Are you sure you want to delete this player?")) {
+            players = players.filter(p => String(p.id) !== String(id));
+            saveData();
+            renderAdmin();
+        }
+    }
+
     function editCourse(id) { const c = courses.find(x => String(x.id) === String(id)); document.getElementById('editCourseId').value = c.id; document.getElementById('cName').value = c.name; document.querySelectorAll('.setup-pars-val').forEach((inp,i)=>inp.value=c.pars[i]); document.querySelectorAll('.setup-si-val').forEach((inp,i)=>inp.value=c.si[i]); }
+
+    function deleteCourse(id) {
+        if(confirm("Are you sure you want to delete this course?")) {
+            courses = courses.filter(c => String(c.id) !== String(id));
+            saveData();
+            renderAdmin();
+        }
+    }
 
     function renderMatchplay(type) {
         const t = (type === 'pairs') ? pairsT : singlesT;
