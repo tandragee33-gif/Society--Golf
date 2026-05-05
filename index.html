@@ -70,7 +70,7 @@
 </div>
 
 <div class="container">
-    <!-- DASHBOARD -->
+    <!-- DASHBOARD (HISTORY) -->
     <div id="tab-dash" class="tab-content">
         <div class="card">
             <h3>Recent Activity</h3>
@@ -135,6 +135,11 @@
     <div id="tab-stats" class="tab-content hidden">
         <div class="card">
             <h3>All Rounds</h3>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <label style="font-size:12px;">Filter Date:</label>
+                <input type="month" id="statsFilterDate" onchange="renderStats()" style="width: auto; margin: 0;">
+                <button class="btn-outline" onclick="clearStatsFilter()">Show All</button>
+            </div>
             <div style="overflow-x: auto;">
                 <table class="stats-table">
                     <thead><tr><th>Player</th><th>Date</th><th>Pts</th><th>Actions</th></tr></thead>
@@ -363,9 +368,21 @@
     }
 
     function renderStats() {
-        document.getElementById('stats-body').innerHTML = rounds.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `
+        const filterVal = document.getElementById('statsFilterDate').value; // format: YYYY-MM
+        let data = rounds.sort((a,b) => new Date(b.date) - new Date(a.date));
+        
+        if(filterVal) {
+            data = data.filter(r => r.date.startsWith(filterVal));
+        }
+
+        document.getElementById('stats-body').innerHTML = data.map(r => `
             <tr><td><b>${r.playerName}</b><br><small>${r.courseName}</small></td><td>${formatDateDisplay(r.date)}</td><td>${r.points}</td>
             <td><button class="btn-outline" onclick="editRound('${r.id}')">Edit</button> <button class="btn-del" onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
+    }
+
+    function clearStatsFilter() {
+        document.getElementById('statsFilterDate').value = '';
+        renderStats();
     }
 
     function editRound(id) {
@@ -496,31 +513,27 @@
 
     function viewDetail(d, cid) {
         document.getElementById('dash-detail').classList.remove('hidden');
-        const f = rounds.filter(r => r.date === d && String(r.courseId) === String(cid));
-        document.getElementById('detail-title').innerText = f[0].courseName + " (" + formatDateDisplay(d) + ")";
-        document.getElementById('detail-results').innerHTML = f.map(r=>`<div class="item-row">${r.playerName} <span>${r.points} pts</span></div>`).join('');
+        const filteredRounds = rounds.filter(r => r.date === d && String(r.courseId) === String(cid));
+        filteredRounds.sort((a, b) => b.points - a.points);
+        if (filteredRounds.length > 0) {
+            document.getElementById('detail-title').innerText = filteredRounds[0].courseName + " (" + formatDateDisplay(d) + ")";
+            document.getElementById('detail-results').innerHTML = filteredRounds.map((r, index) => `
+                <div class="item-row ${index === 0 ? 'winner-row' : ''}">
+                    <span>${index + 1}. ${r.playerName}</span> 
+                    <span><b>${r.points} pts</b></span>
+                </div>`).join('');
+        }
     }
 
     function closeDetail() { document.getElementById('dash-detail').classList.add('hidden'); }
 
     function updateSeasonDropdown() {
         const currentYear = new Date().getFullYear().toString();
-        
-        // Filter unique years from rounds and remove any invalid 'undefined' entries
-        const yearsFromRounds = rounds
-            .map(r => r.season)
-            .filter(s => s && s !== "undefined");
-
-        // Combine current year with round years and use Set to ensure 2026 isn't duplicated
+        const yearsFromRounds = rounds.map(r => r.season).filter(s => s && s !== "undefined");
         const uniqueYears = [...new Set([...yearsFromRounds, currentYear])];
-        
-        // Sort newest first
         uniqueYears.sort((a, b) => b - a);
-
         const dropdown = document.getElementById('dashSeason');
-        dropdown.innerHTML = uniqueYears.map(y => 
-            `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y} Season</option>`
-        ).join('');
+        dropdown.innerHTML = uniqueYears.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y} Season</option>`).join('');
     }
 
     function factoryReset() { if(confirm("ERASE ALL?")) { localStorage.clear(); location.reload(); } }
