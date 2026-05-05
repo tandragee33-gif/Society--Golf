@@ -7,7 +7,7 @@
     <style>
         :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e0e0e0; color: #333; }
-       
+        
         .header { background: white; padding: 15px; border-bottom: 3px solid var(--accent); display: flex; align-items: center; gap: 15px; }
         #club-logo-display { width: 50px; height: 50px; object-fit: contain; border-radius: 5px; display: none; }
         .header h1 { margin: 0; color: var(--primary); font-size: 1.2rem; flex-grow: 1; }
@@ -15,16 +15,16 @@
         .nav { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 1000; overflow-x: auto; }
         .nav button { flex: 1; min-width: 70px; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .nav button.active { border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.1); }
-       
+        
         .container { padding: 15px; max-width: 900px; margin: auto; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .hidden { display: none !important; }
-       
+        
         input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .btn { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .btn-del { background: var(--danger); color: white; border: none; width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
-       
+        
         .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
         .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 10px 0; }
         .hole-input { text-align: center; font-size: 10px; }
@@ -105,7 +105,7 @@
             <h3>Doubles Combined Points</h3>
             <label style="font-size:12px;">Match Date:</label>
             <input type="text" id="dbDate" placeholder="dd/mm/yyyy" onchange="updateScorecardFromHistory()">
-           
+            
             <div id="db-step1">
                 <p style="font-size:12px;">1. Select players competing today:</p>
                 <div id="doubles-selector" class="selector-list"></div>
@@ -254,7 +254,7 @@
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.remove('hidden');
         document.getElementById('btn-' + id.split('-')[1]).classList.add('active');
-       
+        
         loadData();
         if(id === 'tab-setup') renderAdmin();
         if(id === 'tab-dash') { updateSeasonDropdown(); renderDashboard(); }
@@ -275,7 +275,6 @@
         }
     }
 
-    // --- DOUBLES LOGIC ---
     function renderDoublesSelector() {
         const sel = document.getElementById('doubles-selector');
         sel.innerHTML = players.map(p => `<div class="selector-item"><label for="db-${p.id}">${p.name}</label><input type="checkbox" class="db-ck" id="db-${p.id}" value="${p.id}"></div>`).join('');
@@ -290,7 +289,7 @@
     function setupDoublesTeams() {
         const ids = Array.from(document.querySelectorAll('.db-ck:checked')).map(i => i.value);
         if(ids.length < 2 || ids.length % 2 !== 0) return alert("Select an even number of players.");
-       
+        
         const shuf = ids.sort(() => 0.5 - Math.random());
         tempTeams = [];
         for(let i=0; i < shuf.length; i+=2) {
@@ -344,7 +343,6 @@
         showDbStep1();
     }
 
-    // --- CORE SHARED FUNCTIONS ---
     function saveRound() {
         const id = document.getElementById('editRoundId').value;
         const crs = courses.find(c => String(c.id) === String(document.getElementById('rCourse').value));
@@ -381,7 +379,7 @@
     }
 
     function deleteRound(id) { if(confirm("Delete?")) { rounds = rounds.filter(x => String(x.id) !== String(id)); saveData(); renderStats(); renderDashboard(); } }
-   
+    
     function resetRoundForm() {
         document.getElementById('editRoundId').value = '';
         document.querySelectorAll('.round-scores-val').forEach(i => i.value = '');
@@ -418,7 +416,7 @@
         const setupDiv = document.getElementById(type === 'pairs' ? 'p-setup' : 's-setup');
         const bracketDiv = document.getElementById(type === 'pairs' ? 'p-bracket' : 's-bracket');
         const selector = document.getElementById(type === 'pairs' ? 'p-selector' : 's-selector');
-       
+        
         if(!t) {
             setupDiv.classList.remove('hidden'); bracketDiv.classList.add('hidden');
             selector.innerHTML = players.map(p => `<div class="selector-item"><label for="${type}-${p.id}">${p.name}</label><input type="checkbox" class="${type}-ck" id="${type}-${p.id}" value="${p.id}"></div>`).join('');
@@ -472,20 +470,40 @@
     }
 
     function closeDetail() { document.getElementById('dash-detail').classList.add('hidden'); }
+
     function updateSeasonDropdown() {
-        const years = [...new Set(rounds.map(r => r.season)), new Date().getFullYear().toString()].sort().reverse();
-        document.getElementById('dashSeason').innerHTML = years.map(y => `<option value="${y}">${y} Season</option>`).join('');
+        const currentYear = new Date().getFullYear().toString();
+        
+        // Filter unique years from rounds and remove any invalid 'undefined' entries
+        const yearsFromRounds = rounds
+            .map(r => r.season)
+            .filter(s => s && s !== "undefined");
+
+        // Combine current year with round years and use Set to ensure 2026 isn't duplicated
+        const uniqueYears = [...new Set([...yearsFromRounds, currentYear])];
+        
+        // Sort newest first
+        uniqueYears.sort((a, b) => b - a);
+
+        const dropdown = document.getElementById('dashSeason');
+        dropdown.innerHTML = uniqueYears.map(y => 
+            `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y} Season</option>`
+        ).join('');
     }
+
     function factoryReset() { if(confirm("ERASE ALL?")) { localStorage.clear(); location.reload(); } }
+    
     function applyClubProfile() {
         document.getElementById('header-club-name').innerText = club.name;
         const logoImg = document.getElementById('club-logo-display');
         if(club.logo) { logoImg.src = club.logo; logoImg.style.display = 'block'; }
     }
+    
     function saveClubProfile() {
         club.name = document.getElementById('setupClubName').value;
         saveData(); applyClubProfile(); alert("Profile Updated");
     }
+    
     function processLogo(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
