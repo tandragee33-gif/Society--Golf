@@ -60,27 +60,25 @@
 </div>
 
 <div class="nav">
-    <button onclick="showTab('tab-dash')" id="btn-dash" class="active">History</button>
+    <button onclick="showTab('tab-stats')" id="btn-stats" class="active">History</button>
     <button onclick="showTab('tab-comp')" id="btn-comp">Round</button>
     <button onclick="showTab('tab-doubles')" id="btn-doubles">Doubles</button>
-    <button onclick="showTab('tab-stats')" id="btn-stats">Stats</button>
     <button onclick="showTab('tab-pairs')" id="btn-pairs">Pairs (KO)</button>
     <button onclick="showTab('tab-singles')" id="btn-singles">Singles (KO)</button>
     <button onclick="showTab('tab-setup')" id="btn-setup">Setup</button>
 </div>
 
 <div class="container">
-    <!-- DASHBOARD (HISTORY) -->
-    <div id="tab-dash" class="tab-content">
+    <!-- NEW HISTORY (FORMERLY STATS) -->
+    <div id="tab-stats" class="tab-content">
         <div class="card">
-            <h3>Recent Activity</h3>
-            <select id="dashSeason" onchange="renderDashboard()"></select>
-            <div id="dash-list"></div>
-        </div>
-        <div id="dash-detail" class="hidden card">
-            <button class="btn-outline" onclick="closeDetail()">← Back</button>
-            <h3 id="detail-title"></h3>
-            <div id="detail-results"></div>
+            <h3>Round History</h3>
+            <div style="overflow-x: auto;">
+                <table class="stats-table">
+                    <thead><tr><th>Player</th><th>Date</th><th>Pts</th><th>Actions</th></tr></thead>
+                    <tbody id="stats-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -128,19 +126,6 @@
             <hr>
             <div id="doubles-output"></div>
             <button id="btnPrintDb" class="btn-outline hidden" style="width:100%; margin-top:10px;" onclick="window.print()">Print Results / Export PDF</button>
-        </div>
-    </div>
-
-    <!-- STATS -->
-    <div id="tab-stats" class="tab-content hidden">
-        <div class="card">
-            <h3>All Rounds</h3>
-            <div style="overflow-x: auto;">
-                <table class="stats-table">
-                    <thead><tr><th>Player</th><th>Date</th><th>Pts</th><th>Actions</th></tr></thead>
-                    <tbody id="stats-body"></tbody>
-                </table>
-            </div>
         </div>
     </div>
 
@@ -234,9 +219,8 @@
     function init() {
         loadData();
         setupInputGrids();
-        updateSeasonDropdown();
         applyClubProfile();
-        showTab('tab-dash');
+        showTab('tab-stats'); // Show new History tab first
     }
 
     function setupInputGrids() {
@@ -257,7 +241,6 @@
         
         loadData();
         if(id === 'tab-setup') renderAdmin();
-        if(id === 'tab-dash') { updateSeasonDropdown(); renderDashboard(); }
         if(id === 'tab-stats') renderStats();
         if(id === 'tab-comp') {
             document.getElementById('rCourse').innerHTML = courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
@@ -268,49 +251,8 @@
             }
         }
         if(id === 'tab-doubles') renderDoublesSelector();
+        if(id === 'tab-pairs' || id === 'tab-singles') renderMatchplay(id.split('-')[1]);
     }
-
-    // --- DASHBOARD LOGIC ---
-    function updateSeasonDropdown() {
-        const currentYear = new Date().getFullYear().toString();
-        let years = [...new Set(rounds.map(r => r.season))];
-        if(!years.includes(currentYear)) years.push(currentYear);
-        years.sort().reverse();
-        document.getElementById('dashSeason').innerHTML = years.map(y => `<option value="${y}">${y} Season</option>`).join('');
-    }
-
-    function renderDashboard() {
-        const s = document.getElementById('dashSeason').value;
-        const dashList = document.getElementById('dash-list');
-        const filtered = rounds.filter(r => r.season === s);
-        
-        if(filtered.length === 0) {
-            dashList.innerHTML = "<p style='text-align:center; padding:20px; color:#999;'>No history found for this season.</p>";
-            return;
-        }
-
-        const comps = filtered.reduce((acc, r) => { 
-            const k = `${r.date}|${r.courseId}`; 
-            if (!acc[k]) acc[k] = { date: r.date, course: r.courseName, id: r.courseId, count: 0 }; 
-            acc[k].count++; 
-            return acc; 
-        }, {});
-
-        dashList.innerHTML = Object.values(comps).map(c => `
-            <div class="item-row" onclick="viewDetail('${c.date}','${c.id}')">
-                <span><b>${c.course}</b><br><small>${formatDateDisplay(c.date)}</small></span>
-                <span>${c.count} Players ></span>
-            </div>`).join('');
-    }
-
-    function viewDetail(d, cid) {
-        document.getElementById('dash-detail').classList.remove('hidden');
-        const f = rounds.filter(r => r.date === d && String(r.courseId) === String(cid));
-        document.getElementById('detail-title').innerText = f[0].courseName + " (" + formatDateDisplay(d) + ")";
-        document.getElementById('detail-results').innerHTML = f.map(r=>`<div class="item-row">${r.playerName} <span>${r.points} pts</span></div>`).join('');
-    }
-
-    function closeDetail() { document.getElementById('dash-detail').classList.add('hidden'); }
 
     // --- ROUND ENTRY & EDIT ---
     function saveRound() {
@@ -368,7 +310,7 @@
             <td><button class="btn-outline" onclick="editRound('${r.id}')">Edit</button> <button class="btn-del" onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
     }
 
-    function deleteRound(id) { if(confirm("Delete?")) { rounds = rounds.filter(x => String(x.id) !== String(id)); saveData(); renderStats(); renderDashboard(); } }
+    function deleteRound(id) { if(confirm("Delete?")) { rounds = rounds.filter(x => String(x.id) !== String(id)); saveData(); renderStats(); } }
 
     // --- DOUBLES LOGIC ---
     function renderDoublesSelector() {
