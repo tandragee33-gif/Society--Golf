@@ -5,469 +5,588 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Golf Pro Manager - Tournament Edition</title>
     <style>
-        :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; --success: #2e7d32; --whatsapp: #25D366; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #e0e0e0; color: #333; }
+        :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; --success: #2e7d32; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e0e0e0; color: #333; }
         
         .header { background: white; padding: 15px; border-bottom: 3px solid var(--accent); display: flex; align-items: center; gap: 15px; }
-        #club-logo-display { width: 45px; height: 45px; object-fit: contain; display: none; }
-        .header h1 { margin: 0; color: var(--primary); font-size: 1.1rem; flex-grow: 1; }
+        #club-logo-display { width: 50px; height: 50px; object-fit: contain; border-radius: 5px; display: none; }
+        .header h1 { margin: 0; color: var(--primary); font-size: 1.2rem; flex-grow: 1; }
 
         .nav { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 1000; overflow-x: auto; }
-        .nav button { flex: 1; min-width: 80px; padding: 12px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; }
+        .nav button { flex: 1; min-width: 70px; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .nav button.active { border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.1); }
         
-        .container { padding: 15px; max-width: 800px; margin: auto; }
-        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .container { padding: 15px; max-width: 900px; margin: auto; }
+        .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .hidden { display: none !important; }
         
-        input, select, button { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .btn { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; }
-        .btn-del { background: var(--danger); color: white; border: none; width: auto; padding: 5px 10px; border-radius: 6px; font-size: 11px; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+        .btn-del { background: var(--danger); color: white; border: none; width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
+        .btn-save-comp { background: var(--success); color: white; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
         
-        .item-row { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .scroll-area { max-height: 250px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0; background: #fafafa; }
-        
-        .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin: 10px 0; }
-        .hole-input { text-align: center; font-size: 9px; }
-        .hole-input input { padding: 4px 0; text-align: center; margin: 2px 0; font-size: 12px; }
+        .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
+        .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 10px 0; }
+        .hole-input { text-align: center; font-size: 10px; }
+        .hole-input input { padding: 4px 0; text-align: center; width: 100% !important; }
 
-        .match-card { border: 1px solid #ddd; padding: 12px; margin: 10px 0; border-radius: 8px; border-left: 5px solid var(--accent); }
-        .winner-row { background: #e8f5e9; font-weight: bold; color: #2e7d32; }
-        
-        .team-box { background: #f1f8e9; border: 1px solid #c5e1a5; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
-        .pts-input { width: 60px !important; text-align: center; border: 2px solid var(--primary) !important; margin: 0 !important; }
+        .selector-list { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #fafafa; border-radius: 8px; }
+        .selector-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .selector-item input[type="checkbox"] { width: 20px; height: 20px; margin: 0; cursor: pointer; }
 
-        @media print { .nav, .btn, .btn-outline, .btn-del, .btn-whatsapp, input, select { display: none !important; } }
+        .match-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; background: #fff; border-left: 5px solid var(--accent); }
+        .winner-row { background: #e8f5e9; font-weight: bold; color: #2e7d32; padding: 4px; border-radius: 4px; }
+        .champion-box { background: #fffde7; border: 2px solid var(--accent); padding: 15px; border-radius: 12px; text-align: center; margin-top: 20px; }
+
+        .pts-input { width: 60px !important; text-align: center; margin: 0 !important; padding: 5px !important; border: 2px solid var(--primary); }
+        .team-box { background: #f9f9f9; border: 1px solid #eee; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .stats-table th { text-align: left; background: #f8f8f8; padding: 8px; border-bottom: 2px solid #ddd; }
+        .stats-table td { padding: 8px; border-bottom: 1px solid #eee; }
+
+        @media print {
+            .nav, .btn, .btn-outline, .btn-del, .selector-list, label, #db-step1, input, hr, .btn-save-comp { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #ccc; }
+            .hidden { display: block !important; }
+            .pts-input { border: none !important; }
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
     <img id="club-logo-display" src="" alt="Logo">
-    <h1 id="club-name-text">Golf Pro Manager</h1>
+    <h1 id="header-club-name">Golf Pro Manager</h1>
 </div>
 
 <div class="nav">
-    <button onclick="showTab('dash')" id="nav-dash" class="active">History</button>
-    <button onclick="showTab('round')" id="nav-round">Round</button>
-    <button onclick="showTab('doubles')" id="nav-doubles">Doubles</button>
-    <button onclick="showTab('stats')" id="nav-stats">Stats</button>
-    <button onclick="showTab('ko-p')" id="nav-ko-p">Pairs KO</button>
-    <button onclick="showTab('ko-s')" id="nav-ko-s">Singles KO</button>
-    <button onclick="showTab('setup')" id="nav-setup">Setup</button>
+    <button onclick="showTab('tab-dash')" id="btn-dash" class="active">History</button>
+    <button onclick="showTab('tab-comp')" id="btn-comp">Round</button>
+    <button onclick="showTab('tab-doubles')" id="btn-doubles">Doubles</button>
+    <button onclick="showTab('tab-stats')" id="btn-stats">Stats</button>
+    <button onclick="showTab('tab-pairs')" id="btn-pairs">Pairs (KO)</button>
+    <button onclick="showTab('tab-singles')" id="btn-singles">Singles (KO)</button>
+    <button onclick="showTab('tab-setup')" id="btn-setup">Setup</button>
 </div>
 
 <div class="container">
-    <!-- HISTORY -->
+    <!-- DASHBOARD (HISTORY) -->
     <div id="tab-dash" class="tab-content">
         <div class="card">
-            <h3>Recent Tournaments</h3>
-            <div id="past-list"></div>
+            <h3>Tournament Titles</h3>
+            <div id="past-tourney-list"></div>
         </div>
         <div class="card">
-            <h3>Round History</h3>
-            <select id="season-sel" onchange="renderDashboard()"></select>
+            <h3>Recent Rounds</h3>
+            <select id="dashSeason" onchange="renderDashboard()"></select>
             <div id="dash-list"></div>
         </div>
         <div id="dash-detail" class="hidden card">
             <button class="btn-outline" onclick="closeDetail()">← Back</button>
             <h3 id="detail-title"></h3>
             <div id="detail-results"></div>
-            <button class="btn-whatsapp" onclick="shareResults()">Share to WhatsApp</button>
         </div>
     </div>
 
-    <!-- SINGLE ROUND ENTRY -->
-    <div id="tab-round" class="tab-content hidden">
+    <!-- ROUND ENTRY -->
+    <div id="tab-comp" class="tab-content hidden">
         <div class="card">
-            <h3>Enter Round Score</h3>
-            <input type="text" id="rDate" placeholder="Date (dd/mm/yyyy)">
+            <h3 id="roundTitle">New Round</h3>
+            <input type="hidden" id="editRoundId">
+            <label style="font-size:12px;">Date (dd/mm/yyyy):</label>
+            <input type="text" id="rDate" placeholder="dd/mm/yyyy">
             <select id="rCourse"></select>
             <select id="rPlayer"></select>
-            <div class="score-grid" id="round-grid"></div>
-            <button class="btn" onclick="saveRound()">Save & Calculate</button>
+            <div class="score-grid" id="round-scores"></div>
+            <button class="btn" onclick="saveRound()">Save Result</button>
+            <button class="btn-outline" style="width:100%" onclick="resetRoundForm()">Clear / New</button>
         </div>
     </div>
 
     <!-- DOUBLES -->
     <div id="tab-doubles" class="tab-content hidden">
         <div class="card">
-            <h3>Doubles Random Pairings</h3>
+            <h3>Doubles Combined Points</h3>
+            <label style="font-size:12px;">Match Date:</label>
+            <input type="text" id="dbDate" placeholder="dd/mm/yyyy" onchange="updateScorecardFromHistory()">
+            
             <div id="db-step1">
-                <p>Select players for today's match:</p>
-                <div id="db-selector" class="scroll-area"></div>
-                <button class="btn" onclick="generateRandomPairs()">Create Random Pairs</button>
+                <p style="font-size:12px;">1. Select players competing today:</p>
+                <div id="doubles-selector" class="selector-list"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn" onclick="setupDoublesTeams()">Create Scorecards</button>
+                    <button class="btn-del" onclick="resetDoublesSelection()">Clear All</button>
+                </div>
             </div>
+
             <div id="db-step2" class="hidden">
-                <input type="text" id="dbDate" placeholder="Match Date (dd/mm/yyyy)">
-                <div id="db-cards"></div>
-                <button class="btn" onclick="calcDoubles()">Calculate Winners</button>
-                <button class="btn-outline" style="width:100%" onclick="showDbStep1()">Restart Selection</button>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <p style="font-size:12px;">2. Scoring (Auto-populated if history exists):</p>
+                    <button class="btn-outline" onclick="updateScorecardFromHistory()">Sync with History</button>
+                </div>
+                <div id="doubles-scorecards"></div>
+                <button class="btn" onclick="calculateDoublesResults()">Calculate Results</button>
+                <button class="btn-outline" style="width:100%" onclick="showDbStep1()">Back to Selection</button>
             </div>
-            <div id="db-result"></div>
+
+            <hr>
+            <div id="doubles-output"></div>
+            <div id="db-winner-area"></div>
+            <button id="btnPrintDb" class="btn-outline hidden" style="width:100%; margin-top:10px;" onclick="window.print()">Print Results / Export PDF</button>
         </div>
     </div>
 
     <!-- STATS -->
     <div id="tab-stats" class="tab-content hidden">
         <div class="card">
-            <h3>All-Time Stats</h3>
-            <div id="stats-list" class="scroll-area" style="max-height: 500px;"></div>
+            <h3>All Rounds</h3>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <label style="font-size:12px;">Filter Date:</label>
+                <input type="month" id="statsFilterDate" onchange="renderStats()" style="width: auto; margin: 0;">
+                <button class="btn-outline" onclick="clearStatsFilter()">Show All</button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="stats-table">
+                    <thead><tr><th>Player</th><th>Date</th><th>Pts</th><th>Actions</th></tr></thead>
+                    <tbody id="stats-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- KO PAIRS -->
-    <div id="tab-ko-p" class="tab-content hidden">
+    <!-- PAIRS KNOCKOUT -->
+    <div id="tab-pairs" class="tab-content hidden">
         <div class="card">
-            <h3>Pairs Knockout</h3>
-            <div id="kop-setup">
-                <div id="kop-selector" class="scroll-area"></div>
-                <button class="btn" onclick="startKO('pairs')">Generate Bracket</button>
+            <h3>Pairs Knockdown</h3>
+            <div id="p-setup">
+                <div id="p-selector" class="selector-list"></div>
+                <button class="btn" onclick="initTourney('pairs')">Generate Pairs Bracket</button>
             </div>
-            <div id="kop-bracket"></div>
+            <div id="p-bracket"></div>
+            <div id="p-winner-area"></div>
         </div>
     </div>
 
-    <!-- KO SINGLES -->
-    <div id="tab-ko-s" class="tab-content hidden">
+    <!-- SINGLES KNOCKOUT -->
+    <div id="tab-singles" class="tab-content hidden">
         <div class="card">
-            <h3>Singles Knockout</h3>
-            <div id="kos-setup">
-                <div id="kos-selector" class="scroll-area"></div>
-                <button class="btn" onclick="startKO('singles')">Generate Bracket</button>
+            <h3>Singles Knockdown</h3>
+            <div id="s-setup">
+                <div id="s-selector" class="selector-list"></div>
+                <button class="btn" onclick="initTourney('singles')">Generate Singles Bracket</button>
             </div>
-            <div id="kos-bracket"></div>
+            <div id="s-bracket"></div>
+            <div id="s-winner-area"></div>
         </div>
     </div>
 
     <!-- SETUP -->
     <div id="tab-setup" class="tab-content hidden">
         <div class="card">
-            <h3>Club Settings</h3>
-            <input type="text" id="clubNameInput" placeholder="Club Name">
-            <input type="file" accept="image/*" onchange="handleLogo(this)">
-            <button class="btn" onclick="updateClub()">Update Club Info</button>
+            <h3>Club Profile</h3>
+            <input type="text" id="setupClubName" placeholder="Club Name">
+            <input type="file" id="setupLogoInput" accept="image/*" onchange="processLogo(this)">
+            <button class="btn" onclick="saveClubProfile()">Update Profile</button>
         </div>
         <div class="card">
-            <h3 id="pEditTitle">Add Player</h3>
-            <input type="hidden" id="editPId">
-            <input type="text" id="pName" placeholder="Name">
+            <h3>Player Registry</h3>
+            <input type="hidden" id="editPlayerId">
+            <input type="text" id="pName" placeholder="Full Name">
             <input type="number" id="pHC" placeholder="Handicap">
             <button class="btn" onclick="savePlayer()">Save Player</button>
-            <div id="p-list-admin" class="scroll-area"></div>
+            <div id="admin-players"></div>
         </div>
         <div class="card">
-            <h3 id="cEditTitle">Add Course</h3>
-            <input type="hidden" id="editCId">
+            <h3>Course Registry</h3>
+            <input type="hidden" id="editCourseId">
             <input type="text" id="cName" placeholder="Course Name">
-            <p style="font-size:10px;">Pars / SI:</p>
             <div class="score-grid" id="setup-pars"></div>
             <div class="score-grid" id="setup-si"></div>
             <button class="btn" onclick="saveCourse()">Save Course</button>
-            <div id="c-list-admin" class="scroll-area"></div>
+            <div id="admin-courses"></div>
         </div>
-        <button class="btn-del" style="width:100%" onclick="fullReset()">Wipe All Data</button>
+        <button class="btn-del" style="width:100%" onclick="factoryReset()">Master Data Wipe</button>
     </div>
 </div>
 
 <script>
-    let players = [], courses = [], rounds = [], past = [], club = {name:'Golf Pro Manager', logo:''}, koP = null, koS = null;
-    let activeDetail = null;
+    let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, pastComps = [], club = { name: "Golf Pro Manager", logo: "" };
+    let tempTeams = [];
 
-    function save() {
-        localStorage.setItem('g2_players', JSON.stringify(players));
-        localStorage.setItem('g2_courses', JSON.stringify(courses));
-        localStorage.setItem('g2_rounds', JSON.stringify(rounds));
-        localStorage.setItem('g2_past', JSON.stringify(past));
-        localStorage.setItem('g2_club', JSON.stringify(club));
-        localStorage.setItem('g2_koP', JSON.stringify(koP));
-        localStorage.setItem('g2_koS', JSON.stringify(koS));
+    function formatDateDisplay(dateStr) {
+        if(!dateStr || !dateStr.includes('-')) return dateStr;
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
     }
 
-    function load() {
-        players = JSON.parse(localStorage.getItem('g2_players')) || [];
-        courses = JSON.parse(localStorage.getItem('g2_courses')) || [];
-        rounds = JSON.parse(localStorage.getItem('g2_rounds')) || [];
-        past = JSON.parse(localStorage.getItem('g2_past')) || [];
-        club = JSON.parse(localStorage.getItem('g2_club')) || {name:'Golf Pro Manager', logo:''};
-        koP = JSON.parse(localStorage.getItem('g2_koP'));
-        koS = JSON.parse(localStorage.getItem('g2_koS'));
+    function parseDateInput(displayStr) {
+        const parts = displayStr.split('/');
+        if(parts.length !== 3) return new Date().toISOString().split('T')[0];
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    function loadData() {
+        players = JSON.parse(localStorage.getItem('g_players')) || [];
+        courses = JSON.parse(localStorage.getItem('g_courses')) || [];
+        rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
+        pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
+        singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
+        pastComps = JSON.parse(localStorage.getItem('g_pastComps')) || [];
+        club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
+    }
+
+    function saveData() {
+        localStorage.setItem('g_players', JSON.stringify(players));
+        localStorage.setItem('g_courses', JSON.stringify(courses));
+        localStorage.setItem('g_rounds', JSON.stringify(rounds));
+        localStorage.setItem('g_pairsT', JSON.stringify(pairsT));
+        localStorage.setItem('g_singlesT', JSON.stringify(singlesT));
+        localStorage.setItem('g_pastComps', JSON.stringify(pastComps));
+        localStorage.setItem('g_club', JSON.stringify(club));
     }
 
     function init() {
-        load();
-        ['round-grid', 'setup-pars', 'setup-si'].forEach(id => {
-            const el = document.getElementById(id);
+        loadData();
+        setupInputGrids();
+        updateSeasonDropdown();
+        applyClubProfile();
+        showTab('tab-dash');
+    }
+
+    function setupInputGrids() {
+        ['round-scores', 'setup-pars', 'setup-si'].forEach(g => {
+            const el = document.getElementById(g);
             el.innerHTML = '';
-            for(let i=1; i<=18; i++) el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${id}-val"></div>`;
+            for(let i=1; i<=18; i++) {
+                el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val"></div>`;
+            }
         });
-        updateClubUI();
-        showTab('dash');
     }
 
-    function showTab(t) {
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    function showTab(id) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + t).classList.remove('hidden');
-        document.getElementById('nav-' + t).classList.add('active');
-
-        if(t === 'setup') renderAdmin();
-        if(t === 'dash') { renderDashboard(); renderPast(); updateSeasonDrops(); }
-        if(t === 'round') populateRoundUI();
-        if(t === 'doubles') renderDbSelector();
-        if(t === 'stats') renderStats();
-        if(t === 'ko-p') renderKO('pairs');
-        if(t === 'ko-s') renderKO('singles');
-    }
-
-    // --- SETUP LOGIC ---
-    function savePlayer() {
-        const id = document.getElementById('editPId').value;
-        const name = document.getElementById('pName').value;
-        const hc = document.getElementById('pHC').value;
-        if(!name) return;
-        if(id) {
-            const idx = players.findIndex(p => p.id === id);
-            players[idx] = {id, name, handicap: hc};
-        } else {
-            players.push({id: 'p'+Date.now(), name, handicap: hc});
+        document.getElementById(id).classList.remove('hidden');
+        document.getElementById('btn-' + id.split('-')[1]).classList.add('active');
+        
+        loadData();
+        if(id === 'tab-setup') renderAdmin();
+        if(id === 'tab-dash') { updateSeasonDropdown(); renderDashboard(); renderPastComps(); }
+        if(id === 'tab-stats') renderStats();
+        if(id === 'tab-doubles') {
+            renderDoublesSelector();
+            const now = new Date();
+            document.getElementById('dbDate').value = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         }
-        save(); clearPForm(); renderAdmin();
+        if(id === 'tab-pairs' || id === 'tab-singles') renderMatchplay(id.split('-')[1]);
     }
 
-    function editP(id) {
-        const p = players.find(x => x.id === id);
-        document.getElementById('editPId').value = p.id;
-        document.getElementById('pName').value = p.name;
-        document.getElementById('pHC').value = p.handicap;
-        document.getElementById('pEditTitle').innerText = "Edit Player";
-    }
+    // MATCHPLAY (PAIRS/SINGLES) LOGIC
+    function renderMatchplay(type) {
+        const t = (type === 'pairs') ? pairsT : singlesT;
+        const setupDiv = document.getElementById(type === 'pairs' ? 'p-setup' : 's-setup');
+        const bracketDiv = document.getElementById(type === 'pairs' ? 'p-bracket' : 's-bracket');
+        const selector = document.getElementById(type === 'pairs' ? 'p-selector' : 's-selector');
+        const winArea = document.getElementById(type === 'pairs' ? 'p-winner-area' : 's-winner-area');
+        
+        winArea.innerHTML = "";
 
-    function clearPForm() {
-        document.getElementById('editPId').value = '';
-        document.getElementById('pName').value = '';
-        document.getElementById('pHC').value = '';
-        document.getElementById('pEditTitle').innerText = "Add Player";
-    }
-
-    function saveCourse() {
-        const id = document.getElementById('editCId').value;
-        const name = document.getElementById('cName').value;
-        const pars = Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value || 4);
-        const si = Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value || 1);
-        if(!name) return;
-        if(id) {
-            const idx = courses.findIndex(c => c.id === id);
-            courses[idx] = {id, name, pars, si};
-        } else {
-            courses.push({id: 'c'+Date.now(), name, pars, si});
-        }
-        save(); clearCForm(); renderAdmin();
-    }
-
-    function editC(id) {
-        const c = courses.find(x => x.id === id);
-        document.getElementById('editCId').value = c.id;
-        document.getElementById('cName').value = c.name;
-        document.querySelectorAll('.setup-pars-val').forEach((el, i) => el.value = c.pars[i]);
-        document.querySelectorAll('.setup-si-val').forEach((el, i) => el.value = c.si[i]);
-        document.getElementById('cEditTitle').innerText = "Edit Course";
-    }
-
-    function clearCForm() {
-        document.getElementById('editCId').value = '';
-        document.getElementById('cName').value = '';
-        document.querySelectorAll('.setup-pars-val, .setup-si-val').forEach(el => el.value = '');
-        document.getElementById('cEditTitle').innerText = "Add Course";
-    }
-
-    function renderAdmin() {
-        document.getElementById('p-list-admin').innerHTML = players.map(p => `<div class="item-row"><span>${p.name} (${p.handicap})</span><div><button class="btn-outline" onclick="editP('${p.id}')">Edit</button><button class="btn-del" onclick="delP('${p.id}')">X</button></div></div>`).join('');
-        document.getElementById('c-list-admin').innerHTML = courses.map(c => `<div class="item-row"><span>${c.name}</span><div><button class="btn-outline" onclick="editC('${c.id}')">Edit</button><button class="btn-del" onclick="delC('${c.id}')">X</button></div></div>`).join('');
-    }
-
-    // --- ROUND ENTRY ---
-    function populateRoundUI() {
-        const d = new Date();
-        document.getElementById('rDate').value = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-        document.getElementById('rCourse').innerHTML = courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        document.getElementById('rPlayer').innerHTML = players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    }
-
-    function saveRound() {
-        const c = courses.find(x => x.id === document.getElementById('rCourse').value);
-        const p = players.find(x => x.id === document.getElementById('rPlayer').value);
-        const dt = document.getElementById('rDate').value;
-        const strokes = Array.from(document.querySelectorAll('.round-grid-val')).map(i => parseInt(i.value) || 0);
-        let pts = 0;
-        strokes.forEach((s, i) => {
-            if(s > 0) {
-                const allow = Math.floor(p.handicap/18) + (p.handicap%18 >= c.si[i] ? 1 : 0);
-                pts += Math.max(0, parseInt(c.pars[i]) - (s - allow) + 2);
-            }
-        });
-        rounds.push({id: Date.now(), date: dt, cId: c.id, cName: c.name, pId: p.id, pName: p.name, pts, season: dt.split('/')[2]});
-        save(); alert("Saved!"); showTab('dash');
-    }
-
-    // --- DOUBLES LOGIC ---
-    function renderDbSelector() {
-        document.getElementById('db-selector').innerHTML = players.map(p => `<div class="item-row"><span>${p.name}</span><input type="checkbox" class="db-ck" value="${p.id}" style="width:20px;"></div>`).join('');
-    }
-
-    function generateRandomPairs() {
-        const selectedIds = Array.from(document.querySelectorAll('.db-ck:checked')).map(i => i.value);
-        if(selectedIds.length < 2 || selectedIds.length % 2 !== 0) return alert("Select an even number of players.");
-        const shuffled = selectedIds.sort(() => 0.5 - Math.random());
-        let html = '';
-        for(let i=0; i<shuffled.length; i+=2) {
-            const p1 = players.find(x => x.id === shuffled[i]);
-            const p2 = players.find(x => x.id === shuffled[i+1]);
-            html += `<div class="team-box">
-                <strong>Pair: ${p1.name} & ${p2.name}</strong>
-                <div class="item-row"><span>${p1.name} Pts:</span><input type="number" class="pts-input db-p" data-name="${p1.name}"></div>
-                <div class="item-row"><span>${p2.name} Pts:</span><input type="number" class="pts-input db-p" data-name="${p2.name}"></div>
-            </div>`;
-        }
-        document.getElementById('db-cards').innerHTML = html;
-        document.getElementById('db-step1').classList.add('hidden');
-        document.getElementById('db-step2').classList.remove('hidden');
-        const d = new Date();
-        document.getElementById('dbDate').value = `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-    }
-
-    function calcDoubles() {
-        const cards = document.querySelectorAll('.team-box');
-        let results = [];
-        cards.forEach(card => {
-            const names = card.querySelector('strong').innerText;
-            const pts = Array.from(card.querySelectorAll('.db-p')).reduce((sum, i) => sum + (parseInt(i.value) || 0), 0);
-            results.push({names, pts});
-        });
-        results.sort((a,b) => b.pts - a.pts);
-        let winMsg = `🏆 Winners: ${results[0].names} (${results[0].pts} pts)`;
-        document.getElementById('db-result').innerHTML = `<h3>Results</h3>` + results.map(r => `<div class="item-row"><span>${r.names}</span><b>${r.pts}</b></div>`).join('') + `<div class="champion-box"><h2>${winMsg}</h2><button class="btn-whatsapp" onclick="shareDb('${winMsg}')">WhatsApp Winners</button><button class="btn" onclick="savePast('Doubles','${results[0].names}')">Save to Hall of Fame</button></div>`;
-    }
-
-    function showDbStep1() {
-        document.getElementById('db-step1').classList.remove('hidden');
-        document.getElementById('db-step2').classList.add('hidden');
-        document.getElementById('db-result').innerHTML = '';
-    }
-
-    // --- KO BRACKETS ---
-    function renderKO(type) {
-        const t = type === 'pairs' ? koP : koS;
-        const setup = document.getElementById(type === 'pairs' ? 'kop-setup' : 'kos-setup');
-        const bracket = document.getElementById(type === 'pairs' ? 'kop-bracket' : 'kos-bracket');
         if(!t) {
-            setup.classList.remove('hidden'); bracket.classList.add('hidden');
-            const sel = document.getElementById(type === 'pairs' ? 'kop-selector' : 'kos-selector');
-            sel.innerHTML = players.map(p => `<div class="item-row"><span>${p.name}</span><input type="checkbox" class="${type}-ck" value="${p.id}" style="width:20px;"></div>`).join('');
+            setupDiv.classList.remove('hidden'); bracketDiv.classList.add('hidden');
+            selector.innerHTML = players.map(p => `<div class="selector-item"><label for="${type}-${p.id}">${p.name}</label><input type="checkbox" class="${type}-ck" id="${type}-${p.id}" value="${p.id}"></div>`).join('');
         } else {
-            setup.classList.add('hidden'); bracket.classList.remove('hidden');
-            bracket.innerHTML = `<button class="btn-del" onclick="resetKO('${type}')">Reset Bracket</button>` + t.rounds.map((r, i) => `<h4>Round ${i+1}</h4>` + r.map(m => `
+            setupDiv.classList.add('hidden'); bracketDiv.classList.remove('hidden');
+            bracketDiv.innerHTML = `<button class="btn-del" style="margin-bottom:15px;" onclick="resetT('${type}')">Reset Bracket</button>` +
+                t.rounds.map((rd, i) => `<h4>Round ${i+1}</h4>` + rd.map(m => `
                 <div class="match-card">
-                    <div class="${m.w==='A'?'winner-row':''}">${m.pA.n}</div>
-                    <div class="${m.w==='B'?'winner-row':''}">${m.pB ? m.pB.n : 'BYE'}</div>
-                    <div style="margin-top:5px;"><button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','A')">Win A</button><button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','B')">Win B</button></div>
+                    <div class="${m.win==='A'?'winner-row':''}">${m.uA.name}</div>
+                    <div style="text-align:center; color:#999; font-size:10px;">VS</div>
+                    <div class="${m.win==='B'?'winner-row':''}">${m.uB ? m.uB.name : 'BYE'}</div>
+                    <div style="display:flex; gap:5px; margin-top:10px;">
+                        <button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','A')">Win A</button>
+                        <button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','B')">Win B</button>
+                    </div>
                 </div>`).join('')).join('');
-            
-            const last = t.rounds[t.rounds.length-1];
-            if(last.length === 1 && last[0].w) {
-                const champ = last[0].w === 'A' ? last[0].pA.n : last[0].pB.n;
-                bracket.innerHTML += `<div class="champion-box"><h2>🏆 ${champ} is Champion!</h2><button class="btn" onclick="savePast('${type} KO','${champ}')">Save to History</button></div>`;
+
+            // Identify Final Winner
+            const lastRound = t.rounds[t.rounds.length - 1];
+            if(lastRound.length === 1 && lastRound[0].win) {
+                const champ = lastRound[0].win === 'A' ? lastRound[0].uA.name : lastRound[0].uB.name;
+                winArea.innerHTML = `
+                    <div class="champion-box">
+                        <h2>🏆 Champion: ${champ}</h2>
+                        <button class="btn-save-comp" onclick="saveTournamentRecord('${type}', '${champ}')">Save to Previous Competitions</button>
+                    </div>`;
             }
         }
     }
 
-    function startKO(type) {
+    function initTourney(type) {
         const ids = Array.from(document.querySelectorAll(`.${type}-ck:checked`)).map(i => i.value);
-        if(ids.length < 2) return;
+        if(ids.length < 2) return alert("Select players.");
         let units = [];
         if(type === 'singles') {
-            units = ids.map(id => ({id, n: players.find(x=>x.id===id).name}));
+            units = ids.map(id => ({ id: 'u'+id, name: players.find(p=>p.id==id).name }));
         } else {
             const shuf = ids.sort(()=>0.5-Math.random());
             for(let i=0; i<shuf.length; i+=2) {
-                if(shuf[i+1]) units.push({id:'u'+i, n: players.find(x=>x.id===shuf[i]).name + '/' + players.find(x=>x.id===shuf[i+1]).name});
-                else units.push({id:'u'+i, n: players.find(x=>x.id===shuf[i]).name});
+                if(shuf[i+1]) units.push({id:'u'+i, name:players.find(p=>p.id==shuf[i]).name + " / " + players.find(p=>p.id==shuf[i+1]).name});
+                else units.push({id:'u'+i, name:players.find(p=>p.id==shuf[i]).name});
             }
         }
-        let matches = [];
-        for(let i=0; i<units.length; i+=2) matches.push({id:'m'+i, pA: units[i], pB: units[i+1]||null, w: units[i+1]?null:'A'});
-        const obj = {rounds: [matches]};
-        if(type==='pairs') koP = obj; else koS = obj;
-        save(); progressKO(type); renderKO(type);
+        const matches = []; 
+        for(let i=0; i<units.length; i+=2) matches.push({id:'m'+i, uA:units[i], uB:units[i+1]||null, win:null});
+        const obj = { rounds: [matches] }; 
+        if(type==='pairs') pairsT=obj; else singlesT=obj; 
+        saveData(); progressTourney(type); renderMatchplay(type);
     }
 
-    function setWin(type, rIdx, mId, w) {
-        const t = type === 'pairs' ? koP : koS;
-        const m = t.rounds[rIdx].find(x => x.id === mId);
-        if(m.pB) m.w = w;
-        save(); progressKO(type); renderKO(type);
+    function setWin(type, rIdx, mId, win) {
+        const t=(type==='pairs')?pairsT:singlesT;
+        const match = t.rounds[rIdx].find(x=>x.id===mId);
+        if(!match.uB && win === 'B') return;
+        match.win = win;
+        saveData(); progressTourney(type); renderMatchplay(type);
     }
 
-    function progressKO(type) {
-        const t = type === 'pairs' ? koP : koS;
-        let last = t.rounds[t.rounds.length-1];
-        if(last.every(m => m.w !== null) && last.length > 1) {
-            const winners = last.map(m => m.w === 'A' ? m.pA : m.pB);
-            let next = [];
-            for(let i=0; i<winners.length; i+=2) next.push({id:'m'+Date.now()+i, pA: winners[i], pB: winners[i+1]||null, w: winners[i+1]?null:'A'});
-            t.rounds.push(next);
-            save(); progressKO(type);
+    function progressTourney(type) {
+        const t = (type === 'pairs') ? pairsT : singlesT;
+        let lastRound = t.rounds[t.rounds.length - 1];
+        const isComplete = lastRound.every(m => m.win !== null || m.uB === null);
+        if(isComplete && lastRound.length > 1) {
+            const winners = lastRound.map(m => {
+                if(!m.uB) return m.uA;
+                return m.win === 'A' ? m.uA : m.uB;
+            });
+            const nextRound = [];
+            for(let i=0; i<winners.length; i+=2) {
+                nextRound.push({ id: 'm' + Date.now() + i, uA: winners[i], uB: winners[i+1] || null, win: null });
+            }
+            t.rounds.push(nextRound);
+            saveData(); progressTourney(type);
         }
     }
 
-    // --- DASHBOARD & UTILS ---
+    function saveTournamentRecord(type, winner) {
+        const title = (type === 'pairs' ? 'Pairs KO' : 'Singles KO');
+        const entry = { id: Date.now(), type: title, winner: winner, date: new Date().toLocaleDateString() };
+        pastComps.push(entry);
+        saveData();
+        alert("Record Saved!");
+        if(type === 'pairs') resetT('pairs'); else resetT('singles');
+        showTab('tab-dash');
+    }
+
+    function resetT(type) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }
+
+    // DOUBLES LOGIC
+    function renderDoublesSelector() {
+        const sel = document.getElementById('doubles-selector');
+        sel.innerHTML = players.map(p => `<div class="selector-item"><label for="db-${p.id}">${p.name}</label><input type="checkbox" class="db-ck" id="db-${p.id}" value="${p.id}"></div>`).join('');
+    }
+
+    function setupDoublesTeams() {
+        const ids = Array.from(document.querySelectorAll('.db-ck:checked')).map(i => i.value);
+        if(ids.length < 2 || ids.length % 2 !== 0) return alert("Select an even number of players.");
+        const shuf = ids.sort(() => 0.5 - Math.random());
+        tempTeams = [];
+        for(let i=0; i < shuf.length; i+=2) {
+            tempTeams.push({ p1: players.find(p=>p.id==shuf[i]), p2: players.find(p=>p.id==shuf[i+1]) });
+        }
+        const scoreDiv = document.getElementById('doubles-scorecards');
+        scoreDiv.innerHTML = tempTeams.map((t, idx) => `
+            <div class="team-box">
+                <div class="item-row"><b>Team ${idx+1}</b></div>
+                <div class="item-row"><span>${t.p1.name}</span> <input type="number" class="pts-input db-p1" data-id="${t.p1.id}" data-idx="${idx}" placeholder="Pts"></div>
+                <div class="item-row"><span>${t.p2.name}</span> <input type="number" class="pts-input db-p2" data-id="${t.p2.id}" data-idx="${idx}" placeholder="Pts"></div>
+            </div>`).join('');
+        document.getElementById('db-step1').classList.add('hidden');
+        document.getElementById('db-step2').classList.remove('hidden');
+        updateScorecardFromHistory();
+    }
+
+    function calculateDoublesResults() {
+        const results = tempTeams.map((t, idx) => {
+            const p1Pts = parseInt(document.querySelectorAll('.db-p1')[idx].value) || 0;
+            const p2Pts = parseInt(document.querySelectorAll('.db-p2')[idx].value) || 0;
+            return { names: `${t.p1.name} & ${t.p2.name}`, total: p1Pts + p2Pts, breakdown: `${p1Pts} + ${p2Pts}` };
+        });
+        results.sort((a,b) => b.total - a.total);
+        const out = document.getElementById('doubles-output');
+        out.innerHTML = `<h4>Leaderboard (${document.getElementById('dbDate').value})</h4>` + results.map((r, i) => `
+            <div class="match-card ${i===0?'winner-row':''}">
+                <div class="item-row"><span>${i+1}. <b>${r.names}</b></span><span><b>${r.total} pts</b></span></div>
+                <small style="color:#666">Individual: ${r.breakdown}</small>
+            </div>`).join('');
+        
+        const winArea = document.getElementById('db-winner-area');
+        if(results.length > 0) {
+            winArea.innerHTML = `
+                <div class="champion-box">
+                    <h2>🏆 Winners: ${results[0].names} (${results[0].total} pts)</h2>
+                    <button class="btn-save-comp" onclick="saveDoublesRecord('${results[0].names}', '${results[0].total}')">Save to Previous Competitions</button>
+                </div>`;
+        }
+        document.getElementById('btnPrintDb').classList.remove('hidden');
+    }
+
+    function saveDoublesRecord(names, pts) {
+        const entry = { id: Date.now(), type: 'Doubles Combined', winner: names, date: document.getElementById('dbDate').value, detail: pts + ' pts' };
+        pastComps.push(entry);
+        saveData();
+        alert("Doubles Winner Saved!");
+        resetDoublesSelection();
+        showTab('tab-dash');
+    }
+
+    function resetDoublesSelection() {
+        document.getElementById('db-winner-area').innerHTML = '';
+        document.getElementById('doubles-output').innerHTML = '';
+        showDbStep1();
+    }
+
+    // DASHBOARD / HISTORY
+    function renderPastComps() {
+        const list = document.getElementById('past-tourney-list');
+        if(pastComps.length === 0) {
+            list.innerHTML = "<p style='font-size:12px; color:#999;'>No tournament records saved yet.</p>";
+            return;
+        }
+        list.innerHTML = pastComps.sort((a,b)=>b.id - a.id).map(c => `
+            <div class="item-row">
+                <span><b>${c.winner}</b><br><small>${c.type} - ${c.date} ${c.detail ? '('+c.detail+')' : ''}</small></span>
+                <button class="btn-del" onclick="deletePastComp(${c.id})">X</button>
+            </div>`).join('');
+    }
+
+    function deletePastComp(id) {
+        if(confirm("Delete this record?")) {
+            pastComps = pastComps.filter(c => c.id !== id);
+            saveData();
+            renderPastComps();
+        }
+    }
+
     function renderDashboard() {
-        const s = document.getElementById('season-sel').value;
-        const filtered = rounds.filter(r => r.season === s);
-        const grouped = filtered.reduce((acc, r) => {
-            const k = r.date + r.cId;
-            if(!acc[k]) acc[k] = {date: r.date, c: r.cName, cid: r.cId, count: 0};
-            acc[k].count++; return acc;
-        }, {});
-        document.getElementById('dash-list').innerHTML = Object.values(grouped).map(g => `<div class="item-row" onclick="viewDetail('${g.date}','${g.cid}')"><span>${g.c}<br><small>${g.date}</small></span><span>${g.count} Players ></span></div>`).join('');
+        const s = document.getElementById('dashSeason').value;
+        const comps = rounds.filter(r => r.season === s).reduce((acc, r) => { const k = `${r.date}|${r.courseId}`; if (!acc[k]) acc[k] = { date: r.date, course: r.courseName, id: r.courseId, count: 0 }; acc[k].count++; return acc; }, {});
+        document.getElementById('dash-list').innerHTML = Object.values(comps).map(c => `<div class="item-row" onclick="viewDetail('${c.date}','${c.id}')"><span><b>${c.course}</b><br><small>${formatDateDisplay(c.date)}</small></span><span>${c.count} Players ></span></div>`).join('');
     }
 
-    function viewDetail(dt, cid) {
-        activeDetail = rounds.filter(r => r.date === dt && r.cId === cid).sort((a,b)=>b.pts-a.pts);
-        document.getElementById('dash-detail').classList.remove('hidden');
-        document.getElementById('detail-title').innerText = activeDetail[0].cName + " ("+dt+")";
-        document.getElementById('detail-results').innerHTML = activeDetail.map((r, i) => `<div class="item-row ${i===0?'winner-row':''}"><span>${i+1}. ${r.pName}</span><b>${r.pts} pts</b></div>`).join('');
+    // [ALL OTHER CORE FUNCTIONS: saveRound, renderStats, editRound, deleteRound, savePlayer, saveCourse, renderAdmin, editPlayer, deletePlayer, editCourse, deleteCourse, updateSeasonDropdown, factoryReset, applyClubProfile, saveClubProfile, processLogo, updateScorecardFromHistory, showDbStep1, closeDetail, resetRoundForm remain exactly the same as provided in previous full code block]
+    function updateScorecardFromHistory() {
+        const targetDate = parseDateInput(document.getElementById('dbDate').value);
+        document.querySelectorAll('.pts-input').forEach(input => {
+            const pid = input.getAttribute('data-id');
+            const round = rounds.find(r => r.date === targetDate && String(r.playerId) === String(pid));
+            if(round) input.value = round.points;
+        });
     }
-
+    function showDbStep1() {
+        document.getElementById('db-step1').classList.remove('hidden');
+        document.getElementById('db-step2').classList.add('hidden');
+        document.getElementById('btnPrintDb').classList.add('hidden');
+    }
+    function saveRound() {
+        const id = document.getElementById('editRoundId').value;
+        const crs = courses.find(c => String(c.id) === String(document.getElementById('rCourse').value));
+        const plr = players.find(p => String(p.id) === String(document.getElementById('rPlayer').value));
+        const isoDate = parseDateInput(document.getElementById('rDate').value);
+        const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
+        let pts = 0;
+        scs.forEach((s, i) => {
+            if(s > 0) {
+                const par = parseInt(crs.pars[i]), si = parseInt(crs.si[i]), hc = parseInt(plr.handicap),
+                allow = Math.floor(hc/18) + (hc%18 >= si ? 1 : 0);
+                pts += Math.max(0, par - (s - allow) + 2);
+            }
+        });
+        const r = { id: id ? parseInt(id) : Date.now(), date: isoDate, courseId: crs.id, courseName: crs.name, playerId: plr.id, playerName: plr.name, points: pts, scores: scs, season: isoDate.split('-')[0] };
+        if(id) rounds = rounds.map(x => String(x.id) === String(id) ? r : x); else rounds.push(r);
+        saveData(); resetRoundForm(); showTab('tab-stats');
+    }
     function renderStats() {
-        document.getElementById('stats-list').innerHTML = rounds.sort((a,b)=>b.id-a.id).map(r => `<div class="item-row"><span>${r.pName}<br><small>${r.cName} (${r.date})</small></span><b>${r.pts} pts</b><button class="btn-del" onclick="delR(${r.id})">X</button></div>`).join('');
+        const filterVal = document.getElementById('statsFilterDate').value; 
+        let data = rounds.sort((a,b) => new Date(b.date) - new Date(a.date));
+        if(filterVal) data = data.filter(r => r.date.startsWith(filterVal));
+        document.getElementById('stats-body').innerHTML = data.map(r => `<tr><td><b>${r.playerName}</b><br><small>${r.courseName}</small></td><td>${formatDateDisplay(r.date)}</td><td>${r.points}</td><td><button class="btn-outline" onclick="editRound('${r.id}')">Edit</button> <button class="btn-del" onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
     }
-
-    function shareResults() {
-        if(!activeDetail) return;
-        let msg = `⛳ *${activeDetail[0].cName} Leaderboard*\n`;
-        activeDetail.forEach((r, i) => msg += `${i+1}. ${r.pName}: ${r.pts} pts\n`);
-        window.location.href = "whatsapp://send?text=" + encodeURIComponent(msg);
+    function clearStatsFilter() { document.getElementById('statsFilterDate').value = ''; renderStats(); }
+    function editRound(id) {
+        const r = rounds.find(x => String(x.id) === String(id));
+        showTab('tab-comp');
+        document.getElementById('editRoundId').value = r.id;
+        document.getElementById('rDate').value = formatDateDisplay(r.date);
+        document.getElementById('rCourse').value = r.courseId;
+        document.getElementById('rPlayer').value = r.playerId;
+        document.querySelectorAll('.round-scores-val').forEach((inp, i) => inp.value = r.scores[i]);
     }
-
-    function shareDb(txt) { window.location.href = "whatsapp://send?text=" + encodeURIComponent(txt); }
-    function savePast(type, win) { past.push({type, win, date: new Date().toLocaleDateString()}); save(); showTab('dash'); }
-    function renderPast() { document.getElementById('past-list').innerHTML = past.map(p => `<div class="item-row"><span>🏆 ${p.win}<br><small>${p.type} (${p.date})</small></span></div>`).join(''); }
-    function updateSeasonDrops() {
-        const s = [...new Set(rounds.map(r => r.season))];
-        document.getElementById('season-sel').innerHTML = s.map(x => `<option value="${x}">${x} Season</option>`).join('');
+    function deleteRound(id) { if(confirm("Delete?")) { rounds = rounds.filter(x => String(x.id) !== String(id)); saveData(); renderStats(); renderDashboard(); } }
+    function resetRoundForm() {
+        document.getElementById('editRoundId').value = '';
+        document.querySelectorAll('.round-scores-val').forEach(i => i.value = '');
+        const now = new Date();
+        document.getElementById('rDate').value = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
     }
-    function updateClubUI() { document.getElementById('club-name-text').innerText = club.name; if(club.logo) { document.getElementById('club-logo-display').src = club.logo; document.getElementById('club-logo-display').style.display = 'block'; } }
-    function updateClub() { club.name = document.getElementById('clubNameInput').value; save(); updateClubUI(); }
-    function handleLogo(i) { if(i.files[0]) { const r = new FileReader(); r.onload=e=>{club.logo=e.target.result; save(); updateClubUI();}; r.readAsDataURL(i.files[0]); } }
-    function delP(id) { players = players.filter(p=>p.id!==id); save(); renderAdmin(); }
-    function delC(id) { courses = courses.filter(c=>c.id!==id); save(); renderAdmin(); }
-    function delR(id) { rounds = rounds.filter(r=>r.id!==id); save(); renderStats(); }
+    function savePlayer() {
+        const id = document.getElementById('editPlayerId').value;
+        const p = { id: id || 'p' + Date.now(), name: document.getElementById('pName').value, handicap: document.getElementById('pHC').value };
+        if(id) players = players.map(x => String(x.id) === String(id) ? p : x); else players.push(p);
+        document.getElementById('editPlayerId').value = ''; document.getElementById('pName').value = ''; document.getElementById('pHC').value = '';
+        saveData(); renderAdmin();
+    }
+    function saveCourse() {
+        const id = document.getElementById('editCourseId').value;
+        const c = { id: id || 'c' + Date.now(), name: document.getElementById('cName').value, pars: Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value), si: Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value) };
+        if(id) courses = courses.map(x => String(x.id) === String(id) ? c : x); else courses.push(c);
+        document.getElementById('editCourseId').value = ''; document.getElementById('cName').value = '';
+        saveData(); renderAdmin();
+    }
+    function renderAdmin() {
+        document.getElementById('admin-players').innerHTML = players.map(p => `<div class="item-row"><span>${p.name} (HC: ${p.handicap})</span><div style="display:flex; gap:5px;"><button class="btn-outline" onclick="editPlayer('${p.id}')">Edit</button><button class="btn-del" onclick="deletePlayer('${p.id}')">Delete</button></div></div>`).join('');
+        document.getElementById('admin-courses').innerHTML = courses.map(c => `<div class="item-row"><span>${c.name}</span><div style="display:flex; gap:5px;"><button class="btn-outline" onclick="editCourse('${c.id}')">Edit</button><button class="btn-del" onclick="deleteCourse('${c.id}')">Delete</button></div></div>`).join('');
+    }
+    function editPlayer(id) { const p = players.find(x => String(x.id) === String(id)); document.getElementById('editPlayerId').value = p.id; document.getElementById('pName').value = p.name; document.getElementById('pHC').value = p.handicap; }
+    function deletePlayer(id) { if(confirm("Delete player?")) { players = players.filter(p => String(p.id) !== String(id)); saveData(); renderAdmin(); } }
+    function editCourse(id) { const c = courses.find(x => String(x.id) === String(id)); document.getElementById('editCourseId').value = c.id; document.getElementById('cName').value = c.name; document.querySelectorAll('.setup-pars-val').forEach((inp,i)=>inp.value=c.pars[i]); document.querySelectorAll('.setup-si-val').forEach((inp,i)=>inp.value=c.si[i]); }
+    function deleteCourse(id) { if(confirm("Delete course?")) { courses = courses.filter(c => String(c.id) !== String(id)); saveData(); renderAdmin(); } }
+    function viewDetail(d, cid) {
+        document.getElementById('dash-detail').classList.remove('hidden');
+        const filteredRounds = rounds.filter(r => r.date === d && String(r.courseId) === String(cid));
+        filteredRounds.sort((a, b) => b.points - a.points);
+        if (filteredRounds.length > 0) {
+            document.getElementById('detail-title').innerText = filteredRounds[0].courseName + " (" + formatDateDisplay(d) + ")";
+            document.getElementById('detail-results').innerHTML = filteredRounds.map((r, index) => `<div class="item-row ${index === 0 ? 'winner-row' : ''}"><span>${index + 1}. ${r.playerName}</span> <span><b>${r.points} pts</b></span></div>`).join('');
+        }
+    }
     function closeDetail() { document.getElementById('dash-detail').classList.add('hidden'); }
-    function resetKO(type) { if(type==='pairs') koP=null; else koS=null; save(); renderKO(type); }
-    function fullReset() { if(confirm("ERASE ALL?")) { localStorage.clear(); location.reload(); } }
+    function updateSeasonDropdown() {
+        const currentYear = new Date().getFullYear().toString();
+        const yearsFromRounds = rounds.map(r => r.season).filter(s => s && s !== "undefined");
+        const uniqueYears = [...new Set([...yearsFromRounds, currentYear])];
+        uniqueYears.sort((a, b) => b - a);
+        const dropdown = document.getElementById('dashSeason');
+        if(dropdown) dropdown.innerHTML = uniqueYears.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y} Season</option>`).join('');
+    }
+    function factoryReset() { if(confirm("ERASE ALL?")) { localStorage.clear(); location.reload(); } }
+    function applyClubProfile() {
+        document.getElementById('header-club-name').innerText = club.name;
+        const logoImg = document.getElementById('club-logo-display');
+        if(club.logo) { logoImg.src = club.logo; logoImg.style.display = 'block'; }
+    }
+    function saveClubProfile() {
+        club.name = document.getElementById('setupClubName').value;
+        saveData(); applyClubProfile(); alert("Profile Updated");
+    }
+    function processLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { club.logo = e.target.result; saveData(); applyClubProfile(); };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
     init();
 </script>
