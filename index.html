@@ -73,6 +73,7 @@
 </div>
 
 <div class="container">
+    <!-- DASHBOARD -->
     <div id="tab-dash" class="tab-content">
         <div class="card">
             <h3>Tournament Titles</h3>
@@ -90,6 +91,7 @@
         </div>
     </div>
 
+    <!-- ROUND ENTRY -->
     <div id="tab-comp" class="tab-content hidden">
         <div class="card">
             <h3 id="roundTitle">New Round</h3>
@@ -104,6 +106,7 @@
         </div>
     </div>
 
+    <!-- DOUBLES -->
     <div id="tab-doubles" class="tab-content hidden">
         <div class="card">
             <h3>Doubles Combined Points</h3>
@@ -133,6 +136,7 @@
         </div>
     </div>
 
+    <!-- STATS -->
     <div id="tab-stats" class="tab-content hidden">
         <div class="card">
             <h3>All Rounds</h3>
@@ -150,6 +154,7 @@
         </div>
     </div>
 
+    <!-- PAIRS KO -->
     <div id="tab-pairs" class="tab-content hidden">
         <div class="card">
             <h3>Pairs Knockdown</h3>
@@ -162,6 +167,7 @@
         </div>
     </div>
 
+    <!-- SINGLES KO -->
     <div id="tab-singles" class="tab-content hidden">
         <div class="card">
             <h3>Singles Knockdown</h3>
@@ -174,6 +180,7 @@
         </div>
     </div>
 
+    <!-- SETUP & EXPORT -->
     <div id="tab-setup" class="tab-content hidden">
         <div class="card">
             <h3>Club Profile</h3>
@@ -181,11 +188,16 @@
             <input type="file" id="setupLogoInput" accept="image/*" onchange="processLogo(this)">
             <button class="btn" onclick="saveClubProfile()">Update Profile</button>
         </div>
-        <div class="card">
-            <h3>Data Management</h3>
-            <p style="font-size: 11px; color: #666;">Download your round history as a CSV file for Excel/Sheets.</p>
-            <button class="btn-export" onclick="exportToCSV()">Download Round History (CSV)</button>
+
+        <div class="card" style="border: 2px solid var(--info);">
+            <h3>Data & Backup</h3>
+            <p style="font-size: 11px; color: #666; margin-bottom: 15px;">Export includes Club Info, Logo, All Rounds, Players, and Course data.</p>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn-export" onclick="exportFullData()">Download Full Data Package (JSON)</button>
+                <button class="btn-outline" onclick="exportToCSV()">Download Rounds Spreadsheet (CSV)</button>
+            </div>
         </div>
+
         <div class="card">
             <h3>Player Registry</h3>
             <input type="hidden" id="editPlayerId">
@@ -211,18 +223,7 @@
     let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, pastComps = [], club = { name: "Golf Pro Manager", logo: "" };
     let tempTeams = [];
 
-    function formatDateDisplay(dateStr) {
-        if(!dateStr || !dateStr.includes('-')) return dateStr;
-        const [y, m, d] = dateStr.split('-');
-        return `${d}/${m}/${y}`;
-    }
-
-    function parseDateInput(displayStr) {
-        const parts = displayStr.split('/');
-        if(parts.length !== 3) return new Date().toISOString().split('T')[0];
-        return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-
+    // --- CORE LOGIC ---
     function loadData() {
         players = JSON.parse(localStorage.getItem('g_players')) || [];
         courses = JSON.parse(localStorage.getItem('g_courses')) || [];
@@ -252,16 +253,50 @@
         showTab('tab-dash');
     }
 
-    function setupInputGrids() {
-        ['round-scores', 'setup-pars', 'setup-si'].forEach(g => {
-            const el = document.getElementById(g);
-            el.innerHTML = '';
-            for(let i=1; i<=18; i++) {
-                el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val"></div>`;
+    // --- EXPORT FUNCTIONS ---
+    function exportFullData() {
+        // Prepare a single object containing all app data
+        const fullExport = {
+            exportDate: new Date().toISOString(),
+            club: club,
+            players: players,
+            courses: courses,
+            rounds: rounds,
+            tournaments: {
+                pairs: pairsT,
+                singles: singlesT,
+                history: pastComps
             }
-        });
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullExport, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `${club.name.replace(/\s+/g, '_')}_Backup_${new Date().toLocaleDateString()}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
     }
 
+    function exportToCSV() {
+        if(rounds.length === 0) return alert("No data to export.");
+        let csv = `Club Name: ${club.name}\nExport Date: ${new Date().toLocaleDateString()}\n\n`;
+        csv += "Date,Season,Player,Course,Points,H1,H2,H3,H4,H5,H6,H7,H8,H9,H10,H11,H12,H13,H14,H15,H16,H17,H18\n";
+        
+        rounds.forEach(r => {
+            let row = `${r.date},${r.season},"${r.playerName}","${r.courseName}",${r.points},${r.scores.join(',')}\n`;
+            csv += row;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `${club.name.replace(/\s+/g, '_')}_Rounds.csv`);
+        a.click();
+    }
+
+    // --- VIEW / UI LOGIC ---
     function showTab(id) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
@@ -278,6 +313,55 @@
             document.getElementById('dbDate').value = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         }
         if(id === 'tab-pairs' || id === 'tab-singles') renderMatchplay(id.split('-')[1]);
+    }
+
+    function viewDetail(d, cid) {
+        document.getElementById('dash-detail').classList.remove('hidden');
+        const filtered = rounds.filter(r => r.date === d && String(r.courseId) === String(cid)).sort((a,b)=>b.points-a.points);
+        if (filtered.length > 0) {
+            document.getElementById('detail-title').innerText = filtered[0].courseName + " (" + formatDateDisplay(d) + ")";
+            document.getElementById('detail-results').innerHTML = filtered.map((r,i)=>`<div class="item-row"><span>${i+1}. ${r.playerName}</span><b>${r.points} pts</b></div>`).join('');
+        }
+    }
+
+    function setupInputGrids() {
+        ['round-scores', 'setup-pars', 'setup-si'].forEach(g => {
+            const el = document.getElementById(g);
+            el.innerHTML = '';
+            for(let i=1; i<=18; i++) {
+                el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val"></div>`;
+            }
+        });
+    }
+
+    function formatDateDisplay(dateStr) {
+        if(!dateStr || !dateStr.includes('-')) return dateStr;
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+    }
+
+    function parseDateInput(displayStr) {
+        const parts = displayStr.split('/');
+        if(parts.length !== 3) return new Date().toISOString().split('T')[0];
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+
+    function applyClubProfile() { 
+        document.getElementById('header-club-name').innerText = club.name; 
+        document.getElementById('setupClubName').value = club.name; 
+        const img = document.getElementById('club-logo-display');
+        if(club.logo) { img.src = club.logo; img.style.display = 'block'; } else { img.style.display = 'none'; }
+    }
+
+    function saveClubProfile() { 
+        club.name = document.getElementById('setupClubName').value; 
+        saveData(); applyClubProfile(); alert("Profile Updated"); 
+    }
+
+    function processLogo(input) { 
+        const reader = new FileReader(); 
+        reader.onload = e => { club.logo = e.target.result; saveData(); applyClubProfile(); }; 
+        if(input.files[0]) reader.readAsDataURL(input.files[0]); 
     }
 
     function populateRoundSelectors() {
@@ -504,34 +588,7 @@
     }
 
     function factoryReset() { if(confirm("Wipe everything?")) { localStorage.clear(); location.reload(); } }
-    function applyClubProfile() { document.getElementById('header-club-name').innerText = club.name; document.getElementById('setupClubName').value = club.name; if(club.logo) { const img = document.getElementById('club-logo-display'); img.src = club.logo; img.style.display = 'block'; } }
-    function saveClubProfile() { club.name = document.getElementById('setupClubName').value; saveData(); applyClubProfile(); alert("Saved"); }
-    function processLogo(input) { const reader = new FileReader(); reader.onload = e => { club.logo = e.target.result; saveData(); applyClubProfile(); }; if(input.files[0]) reader.readAsDataURL(input.files[0]); }
     function closeDetail() { document.getElementById('dash-detail').classList.add('hidden'); }
-
-    function viewDetail(d, cid) {
-        document.getElementById('dash-detail').classList.remove('hidden');
-        const filtered = rounds.filter(r => r.date === d && String(r.courseId) === String(cid)).sort((a,b)=>b.points-a.points);
-        if (filtered.length > 0) {
-            document.getElementById('detail-title').innerText = filtered[0].courseName + " (" + formatDateDisplay(d) + ")";
-            document.getElementById('detail-results').innerHTML = filtered.map((r,i)=>`<div class="item-row"><span>${i+1}. ${r.playerName}</span><b>${r.points} pts</b></div>`).join('');
-        }
-    }
-
-    function exportToCSV() {
-        if(rounds.length === 0) return alert("No data to export.");
-        let csv = "Date,Season,Player,Course,Points,H1,H2,H3,H4,H5,H6,H7,H8,H9,H10,H11,H12,H13,H14,H15,H16,H17,H18\n";
-        rounds.forEach(r => {
-            let row = `${r.date},${r.season},"${r.playerName}","${r.courseName}",${r.points},${r.scores.join(',')}\n`;
-            csv += row;
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('href', url);
-        a.setAttribute('download', `Golf_Rounds_${new Date().toLocaleDateString()}.csv`);
-        a.click();
-    }
 </script>
 
 </body>
