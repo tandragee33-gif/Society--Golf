@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Golf Pro Manager - Tournament Edition</title>
     <style>
-        :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; --success: #2e7d32; }
+        :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; --success: #2e7d32; --info: #0277bd; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e0e0e0; color: #333; }
         
         .header { background: white; padding: 15px; border-bottom: 3px solid var(--accent); display: flex; align-items: center; gap: 15px; }
@@ -25,9 +25,10 @@
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .btn-del { background: var(--danger); color: white; border: none; width: auto; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .btn-save-comp { background: var(--success); color: white; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .btn-export { background: var(--info); color: white; border: none; font-weight: bold; cursor: pointer; }
         
         .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
-        .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 10px 0; }
+        .score-grid { grid-template-columns: repeat(6, 1fr); display: grid; gap: 5px; margin: 10px 0; }
         .hole-input { text-align: center; font-size: 10px; }
         .hole-input input { padding: 4px 0; text-align: center; width: 100% !important; }
 
@@ -47,7 +48,7 @@
         .stats-table td { padding: 8px; border-bottom: 1px solid #eee; }
 
         @media print {
-            .nav, .btn, .btn-outline, .btn-del, .selector-list, label, #db-step1, input, hr, .btn-save-comp { display: none !important; }
+            .nav, .btn, .btn-outline, .btn-del, .selector-list, label, #db-step1, input, hr, .btn-save-comp, .btn-export { display: none !important; }
             .card { box-shadow: none; border: 1px solid #ccc; }
             .hidden { display: block !important; }
             .pts-input { border: none !important; }
@@ -72,7 +73,6 @@
 </div>
 
 <div class="container">
-    <!-- DASHBOARD (HISTORY) -->
     <div id="tab-dash" class="tab-content">
         <div class="card">
             <h3>Tournament Titles</h3>
@@ -90,7 +90,6 @@
         </div>
     </div>
 
-    <!-- ROUND ENTRY -->
     <div id="tab-comp" class="tab-content hidden">
         <div class="card">
             <h3 id="roundTitle">New Round</h3>
@@ -105,13 +104,11 @@
         </div>
     </div>
 
-    <!-- DOUBLES -->
     <div id="tab-doubles" class="tab-content hidden">
         <div class="card">
             <h3>Doubles Combined Points</h3>
             <label style="font-size:12px;">Match Date:</label>
             <input type="text" id="dbDate" placeholder="dd/mm/yyyy" onchange="updateScorecardFromHistory()">
-            
             <div id="db-step1">
                 <p style="font-size:12px;">1. Select players competing today:</p>
                 <div id="doubles-selector" class="selector-list"></div>
@@ -120,7 +117,6 @@
                     <button class="btn-del" onclick="resetDoublesSelection()">Clear All</button>
                 </div>
             </div>
-
             <div id="db-step2" class="hidden">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <p style="font-size:12px;">2. Scoring (Auto-populated if history exists):</p>
@@ -130,7 +126,6 @@
                 <button class="btn" onclick="calculateDoublesResults()">Calculate Results</button>
                 <button class="btn-outline" style="width:100%" onclick="showDbStep1()">Back to Selection</button>
             </div>
-
             <hr>
             <div id="doubles-output"></div>
             <div id="db-winner-area"></div>
@@ -138,7 +133,6 @@
         </div>
     </div>
 
-    <!-- STATS -->
     <div id="tab-stats" class="tab-content hidden">
         <div class="card">
             <h3>All Rounds</h3>
@@ -156,7 +150,6 @@
         </div>
     </div>
 
-    <!-- PAIRS KNOCKOUT -->
     <div id="tab-pairs" class="tab-content hidden">
         <div class="card">
             <h3>Pairs Knockdown</h3>
@@ -169,7 +162,6 @@
         </div>
     </div>
 
-    <!-- SINGLES KNOCKOUT -->
     <div id="tab-singles" class="tab-content hidden">
         <div class="card">
             <h3>Singles Knockdown</h3>
@@ -182,13 +174,17 @@
         </div>
     </div>
 
-    <!-- SETUP -->
     <div id="tab-setup" class="tab-content hidden">
         <div class="card">
             <h3>Club Profile</h3>
             <input type="text" id="setupClubName" placeholder="Club Name">
             <input type="file" id="setupLogoInput" accept="image/*" onchange="processLogo(this)">
             <button class="btn" onclick="saveClubProfile()">Update Profile</button>
+        </div>
+        <div class="card">
+            <h3>Data Management</h3>
+            <p style="font-size: 11px; color: #666;">Download your round history as a CSV file for Excel/Sheets.</p>
+            <button class="btn-export" onclick="exportToCSV()">Download Round History (CSV)</button>
         </div>
         <div class="card">
             <h3>Player Registry</h3>
@@ -252,7 +248,7 @@
         setupInputGrids();
         updateSeasonDropdown();
         applyClubProfile();
-        resetRoundForm(); // Set default date
+        resetRoundForm();
         showTab('tab-dash');
     }
 
@@ -271,7 +267,6 @@
         document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.remove('hidden');
         document.getElementById('btn-' + id.split('-')[1]).classList.add('active');
-        
         loadData();
         if(id === 'tab-setup') renderAdmin();
         if(id === 'tab-dash') { updateSeasonDropdown(); renderDashboard(); renderPastComps(); }
@@ -318,7 +313,7 @@
             const lastRound = t.rounds[t.rounds.length - 1];
             if(lastRound.length === 1 && lastRound[0].win) {
                 const champ = lastRound[0].win === 'A' ? lastRound[0].uA.name : lastRound[0].uB.name;
-                winArea.innerHTML = `<div class="champion-box"><h2>🏆 Champion: ${champ}</h2><button class="btn-save-comp" onclick="saveTournamentRecord('${type}', '${champ}')">Save to Previous Competitions</button></div>`;
+                winArea.innerHTML = `<div class="champion-box"><h2>🏆 Champion: ${champ}</h2><button class="btn-save-comp" onclick="saveTournamentRecord('${type}', '${champ}')">Save to Records</button></div>`;
             }
         }
     }
@@ -327,9 +322,8 @@
         const ids = Array.from(document.querySelectorAll(`.${type}-ck:checked`)).map(i => i.value);
         if(ids.length < 2) return alert("Select players.");
         let units = [];
-        if(type === 'singles') {
-            units = ids.map(id => ({ id: 'u'+id, name: players.find(p=>p.id==id).name }));
-        } else {
+        if(type === 'singles') units = ids.map(id => ({ id: 'u'+id, name: players.find(p=>p.id==id).name }));
+        else {
             const shuf = ids.sort(()=>0.5-Math.random());
             for(let i=0; i<shuf.length; i+=2) {
                 if(shuf[i+1]) units.push({id:'u'+i, name:players.find(p=>p.id==shuf[i]).name + " / " + players.find(p=>p.id==shuf[i+1]).name});
@@ -365,9 +359,8 @@
     }
 
     function saveTournamentRecord(type, winner) {
-        const entry = { id: Date.now(), type: type==='pairs'?'Pairs KO':'Singles KO', winner: winner, date: new Date().toLocaleDateString() };
-        pastComps.push(entry); saveData(); alert("Record Saved!");
-        resetT(type); showTab('tab-dash');
+        pastComps.push({ id: Date.now(), type: type==='pairs'?'Pairs KO':'Singles KO', winner: winner, date: new Date().toLocaleDateString() });
+        saveData(); alert("Record Saved!"); resetT(type); showTab('tab-dash');
     }
 
     function resetT(type) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }
@@ -396,7 +389,7 @@
             return { names: `${t.p1.name} & ${t.p2.name}`, total: p1 + p2, breakdown: `${p1} + ${p2}` };
         }).sort((a,b) => b.total - a.total);
         document.getElementById('doubles-output').innerHTML = `<h4>Leaderboard (${document.getElementById('dbDate').value})</h4>` + results.map((r, i) => `<div class="match-card ${i===0?'winner-row':''}"><div class="item-row"><span>${i+1}. <b>${r.names}</b></span><span><b>${r.total} pts</b></span></div><small style="color:#666">Individual: ${r.breakdown}</small></div>`).join('');
-        if(results.length > 0) document.getElementById('db-winner-area').innerHTML = `<div class="champion-box"><h2>🏆 Winners: ${results[0].names} (${results[0].total} pts)</h2><button class="btn-save-comp" onclick="saveDoublesRecord('${results[0].names}', '${results[0].total}')">Save to Previous Competitions</button></div>`;
+        if(results.length > 0) document.getElementById('db-winner-area').innerHTML = `<div class="champion-box"><h2>🏆 Winners: ${results[0].names} (${results[0].total} pts)</h2><button class="btn-save-comp" onclick="saveDoublesRecord('${results[0].names}', '${results[0].total}')">Save to Records</button></div>`;
         document.getElementById('btnPrintDb').classList.remove('hidden');
     }
 
@@ -417,8 +410,17 @@
 
     function renderDashboard() {
         const s = document.getElementById('dashSeason').value;
-        const comps = rounds.filter(r => r.season === s).reduce((acc, r) => { const k = `${r.date}|${r.courseId}`; if (!acc[k]) acc[k] = { date: r.date, course: r.courseName, id: r.courseId, count: 0 }; acc[k].count++; return acc; }, {});
-        document.getElementById('dash-list').innerHTML = Object.values(comps).map(c => `<div class="item-row" onclick="viewDetail('${c.date}','${c.id}')"><span><b>${c.course}</b><br><small>${formatDateDisplay(c.date)}</small></span><span>${c.count} Players ></span></div>`).join('');
+        const comps = rounds.filter(r => r.season === s).reduce((acc, r) => { 
+            const k = `${r.date}|${r.courseId}`; 
+            if (!acc[k]) acc[k] = { date: r.date, course: r.courseName, id: r.courseId, count: 0 }; 
+            acc[k].count++; 
+            return acc; 
+        }, {});
+        document.getElementById('dash-list').innerHTML = Object.values(comps).map(c => `
+            <div class="item-row" onclick="viewDetail('${c.date}','${c.id}')">
+                <span><b>${c.course}</b><br><small>${formatDateDisplay(c.date)}</small></span>
+                <span>${c.count} Players ></span>
+            </div>`).join('');
     }
 
     function updateScorecardFromHistory() {
@@ -510,8 +512,25 @@
     function viewDetail(d, cid) {
         document.getElementById('dash-detail').classList.remove('hidden');
         const filtered = rounds.filter(r => r.date === d && String(r.courseId) === String(cid)).sort((a,b)=>b.points-a.points);
-        document.getElementById('detail-title').innerText = filtered[0].courseName + " (" + formatDateDisplay(d) + ")";
-        document.getElementById('detail-results').innerHTML = filtered.map((r,i)=>`<div class="item-row"><span>${i+1}. ${r.playerName}</span><b>${r.points} pts</b></div>`).join('');
+        if (filtered.length > 0) {
+            document.getElementById('detail-title').innerText = filtered[0].courseName + " (" + formatDateDisplay(d) + ")";
+            document.getElementById('detail-results').innerHTML = filtered.map((r,i)=>`<div class="item-row"><span>${i+1}. ${r.playerName}</span><b>${r.points} pts</b></div>`).join('');
+        }
+    }
+
+    function exportToCSV() {
+        if(rounds.length === 0) return alert("No data to export.");
+        let csv = "Date,Season,Player,Course,Points,H1,H2,H3,H4,H5,H6,H7,H8,H9,H10,H11,H12,H13,H14,H15,H16,H17,H18\n";
+        rounds.forEach(r => {
+            let row = `${r.date},${r.season},"${r.playerName}","${r.courseName}",${r.points},${r.scores.join(',')}\n`;
+            csv += row;
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `Golf_Rounds_${new Date().toLocaleDateString()}.csv`);
+        a.click();
     }
 </script>
 
