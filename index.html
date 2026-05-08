@@ -80,7 +80,40 @@
     <button onclick="showTab('tab-singles')" id="btn-singles">Singles (KO)</button>
     <button onclick="showTab('tab-setup')" id="btn-setup">Setup</button>
 </div>
+<div class="nav no-print">
+    <!-- Existing buttons ... -->
+    <button onclick="showTab('tab-team')" id="btn-team">Team</button>
+    <button onclick="showTab('tab-setup')" id="btn-setup">Setup</button>
+</div>
+<!-- TEAM COMPETITION -->
+<div id="tab-team" class="tab-content hidden">
+    <div class="card">
+        <h3>Team Competition (4-Player)</h3>
+        <label style="font-size:12px;">Match Date:</label>
+        <input type="text" id="teamDate" placeholder="dd/mm/yyyy">
+        
+        <div id="team-step1">
+            <p style="font-size:12px;">1. Select players for Team 1, 2, etc. (Multiples of 4):</p>
+            <div id="team-player-selector" class="selector-list"></div>
+            <button class="btn" onclick="setupTeamCards()">Create Team Scorecards</button>
+        </div>
 
+        <div id="team-step2" class="hidden">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <p style="font-size:12px;">2. Scoring (Best 2 per hole / Best 4 on 9 & 18):</p>
+                <button class="btn-outline" onclick="syncTeamScores()">Sync with History</button>
+            </div>
+            <div id="team-scorecards"></div>
+            <button class="btn" onclick="calculateTeamResults()">Calculate Team Results</button>
+            <button class="btn-outline" style="width:100%" onclick="resetTeamView()">Back to Selection</button>
+        </div>
+
+        <hr>
+        <div id="team-output"></div>
+        <div id="team-winner-area"></div>
+        <button id="btnPrintTeam" class="btn-outline hidden" style="width:100%; margin-top:10px;" onclick="window.print()">Print / Export PDF</button>
+    </div>
+</div>
 <div class="container">
     <!-- DASHBOARD (HISTORY) -->
     <div id="tab-dash" class="tab-content">
@@ -165,7 +198,8 @@
                     <button class="btn-outline" onclick="updateScorecardFromHistory()">Sync with History</button>
                 </div>
                 <div id="doubles-scorecards"></div>
-                <button class="btn" onclick="calculateDoublesResults()">Calculate Results</button>
+                <button class="btn"
+ onclick="calculateDoublesResults()">Calculate Results</button>
                 <button class="btn-outline" style="width:100%" onclick="showDbStep1()">Back to Selection</button>
             </div>
 
@@ -297,7 +331,143 @@
         localStorage.setItem('g_pastComps', JSON.stringify(pastComps));
         localStorage.setItem('g_club', JSON.stringify(club));
     }
+let activeTeams = [];
 
+// Extend showTab to handle the Team Tab
+// Note: Add this logic inside your existing showTab(id) function
+if(id === 'tab-team') {
+    renderTeamPlayerSelector();
+    const now = new Date();
+    document.getElementById('teamDate').value = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+}
+
+function renderTeamPlayerSelector() {
+    document.getElementById('team-player-selector').innerHTML = players.map(p => `
+        <div class="selector-item">
+            <label>${p.name}</label>
+            <input type="checkbox" class="team-ck" value="${p.id}">
+        </div>`).join('');
+}
+
+function setupTeamCards() {
+    const ids = Array.from(document.querySelectorAll('.team-ck:checked')).map(i => i.value);
+    if(ids.length < 4 || ids.length % 4 !== 0) return alert("Please select players in groups of 4.");
+    
+    activeTeams = [];
+    for(let i=0; i < ids.length; i+=4) {
+        activeTeams.push([ids[i], ids[i+1], ids[i+2], ids[i+3]]);
+    }
+    
+    renderTeamScorecards();
+    document.getElementById('team-step1').classList.add('hidden');
+    document.getElementById('team-step2').classList.remove('hidden');
+}
+
+function renderTeamScorecards() {
+    let html = '';
+    activeTeams.forEach((teamIds, tIdx) => {
+        html += `<div class="team-box"><b>Team ${tIdx + 1}</b><div style="font-size:10px; margin-bottom:5px;">`;
+        teamIds.forEach(pId => {
+            const p = players.find(x => x.id == pId);
+            html += `<div class="item-row" style="padding:4px;">
+                ${p.name} <span id="sync-status-${pId}" style="color:var(--danger)">[No Data]</span>
+            </div>`;
+        });
+        html += `</div></div>`;
+    });
+    document.getElementById('team-scorecards').innerHTML = html;
+}
+
+function syncTeamScores() {
+    const targetDate = parseDateInput(document.getElementById('teamDate').value);
+    let foundCount = 0;
+
+    activeTeams.flat().forEach(pId => {
+        const round = rounds.find(r => r.date === targetDate && String(r.playerId) === String(pId));
+        const statusEl = document.getElementById(`sync-status-${pId}`);
+        if(round && round.scores) {
+            statusEl.innerText = "[Synced]";
+            statusEl.style.color = "var(--success)";
+            statusEl.dataset.scores = JSON.stringify(round.scores);
+            foundCount++;
+        } else {
+            statusEl.innerText = "[No Score Found Today]";
+            statusEl.style.color = "var(--danger)";
+        }
+    });
+    alert(`Synced scores for ${foundCount} players.`);
+}
+
+function calculateTeamResults() {
+    const results = activeTeams.map((teamIds, tIdx) => {
+        let teamTotal = 0;
+        let holeScores = []; // 2D array: holes 1-18, scores for each player
+
+        for(let h=0; h<18; h++) {
+            let scoresAtHole = [];
+            teamIds.forEach(pId => {
+                const sData = document.getElementById(`sync-status-${pId}`).dataset.scores;
+                const pScores = sData ? JSON.parse(sData) : Array(18).fill(0);
+                scoresAtHole.push(Number(pScores[h]) || 0);
+            });
+            
+            // Sort descending to get best scores first
+            scoresAtHole.sort((a, b) => b - a);
+
+            if (h === 8 || h === 17) { // Hole 9 and 18 (index 8 and 17)
+                teamTotal += scoresAtHole.reduce((a, b) => a + b, 0); // Best 4 (All)
+            } else {
+                teamTotal += (scoresAtHole[0] + scoresAtHole[1]); // Best 2
+            }
+        }
+
+        const teamNames = teamIds.map(id => players.find(p => p.id == id).name).join(", ");
+        return { names: teamNames, total: teamTotal };
+    }).sort((a, b) => b.total - a.total);
+
+    displayTeamLeaderboard(results);
+}
+
+function displayTeamLeaderboard(results) {
+    const output = document.getElementById('team-output');
+    output.innerHTML = `<h4>Team Leaderboard</h4>` + results.map((r, i) => `
+        <div class="match-card ${i === 0 ? 'winner-row' : ''}">
+            <div class="item-row">
+                <span>${i+1}. <b>${r.names}</b></span>
+                <span><b>${r.total} pts</b></span>
+            </div>
+        </div>`).join('');
+
+    if(results.length > 0) {
+        document.getElementById('team-winner-area').innerHTML = `
+            <div class="champion-box">
+                <h2>🏆 Winning Team: ${results[0].names}</h2>
+                <p>Score: ${results[0].total} pts</p>
+                <button class="btn-save-comp" onclick="saveTeamToHistory('${results[0].names}', ${results[0].total})">Save to History</button>
+            </div>`;
+    }
+    document.getElementById('btnPrintTeam').classList.remove('hidden');
+}
+
+function saveTeamToHistory(names, score) {
+    const entry = {
+        id: Date.now(),
+        type: 'Team (4-Player)',
+        winner: names,
+        date: document.getElementById('teamDate').value,
+        detail: score + ' pts'
+    };
+    pastComps.push(entry);
+    saveData();
+    alert("Team Result Saved to History!");
+    showTab('tab-dash');
+}
+
+function resetTeamView() {
+    document.getElementById('team-step2').classList.add('hidden');
+    document.getElementById('team-step1').classList.remove('hidden');
+    document.getElementById('team-winner-area').innerHTML = '';
+}
     // BACKUP FUNCTION
     function backupData() {
         const data = {
@@ -382,7 +552,8 @@
     function populateRoundSelectors() {
         const cSel = document.getElementById('rCourse');
         const pSel = document.getElementById('rPlayer');
-        cSel.innerHTML = '<option value="">Select Course</option>' + courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        cSel.innerHTML = '<option value="">Select Course</option>' + courses.map(c => `<option
+ value="${c.id}">${c.name}</option>`).join('');
         pSel.innerHTML = '<option value="">Select Player</option>' + players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     }
 
@@ -554,7 +725,8 @@
         const results = tempTeams.map((t, idx) => {
             const p1 = parseInt(document.querySelectorAll('.db-p1')[idx].value) || 0, p2 = parseInt(document.querySelectorAll('.db-p2')[idx].value) || 0;
             return { names: `${t.p1.name} & ${t.p2.name}`, total: p1 + p2, breakdown: `${p1} + ${p2}` };
-        }).sort((a,b) => b.total - a.total);
+        }).sort((a,b) => b.total
+ - a.total);
         document.getElementById('doubles-output').innerHTML = `<h4>Leaderboard (${document.getElementById('dbDate').value})</h4>` + results.map((r, i) => `<div class="match-card ${i===0?'winner-row':''}"><div class="item-row"><span>${i+1}. <b>${r.names}</b></span><span><b>${r.total} pts</b></span></div><small style="color:#666">Individual: ${r.breakdown}</small></div>`).join('');
         if(results.length > 0) document.getElementById('db-winner-area').innerHTML = `<div class="champion-box"><h2>🏆 Winners: ${results[0].names} (${results[0].total} pts)</h2><button class="btn-save-comp" onclick="saveDoublesRecord('${results[0].names}', '${results[0].total}')">Save to History</button></div>`;
         document.getElementById('btnPrintDb').classList.remove('hidden');
