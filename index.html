@@ -8,33 +8,27 @@
         :root { --primary: #1b5e20; --accent: #ffd700; --danger: #d32f2f; --light: #f4f4f4; --success: #2e7d32; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #e0e0e0; color: #333; }
         
-        /* Header */
         .header { background: white; padding: 15px; border-bottom: 3px solid var(--accent); display: flex; align-items: center; gap: 15px; }
         .header h1 { margin: 0; color: var(--primary); font-size: 1.2rem; flex-grow: 1; }
 
-        /* Navigation & Dropdown */
         .nav { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 1000; }
-        .nav button, .dropbtn { flex: 1; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-bottom: 4px solid transparent; transition: 0.3s; }
+        .nav button, .dropbtn { flex: 1; padding: 14px 5px; border: none; background: none; color: white; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; border-bottom: 4px solid transparent; }
         .nav button.active, .dropbtn.active { border-bottom: 4px solid var(--accent); background: rgba(255,255,255,0.1); }
         
         .dropdown { flex: 1; position: relative; display: inline-block; }
         .dropdown-content { display: none; position: absolute; background-color: var(--primary); min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.2); z-index: 1001; top: 100%; left: 0; }
         .dropdown-content button { text-align: left; width: 100%; padding: 12px 15px; border: none; color: white; background: none; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .dropdown-content button:hover { background-color: rgba(255,255,255,0.2); }
         .dropdown:hover .dropdown-content { display: block; }
 
-        /* Main Layout */
         .container { padding: 15px; max-width: 900px; margin: auto; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .hidden { display: none !important; }
         
-        /* Forms */
         input, select, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         .btn { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
         .btn-outline { background: white; color: var(--primary); border: 2px solid var(--primary); padding: 8px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-del { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; width: auto; font-size: 11px; }
         
-        /* Lists & Grids */
         .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
         .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 10px 0; }
         .hole-input { text-align: center; font-size: 10px; }
@@ -67,7 +61,7 @@
 </div>
 
 <div class="container">
-    <!-- HISTORY -->
+    <!-- DASHBOARD -->
     <div id="tab-dash" class="tab-content">
         <div class="card">
             <h3>Recent Activity</h3>
@@ -75,7 +69,7 @@
         </div>
     </div>
 
-    <!-- ROUND ENTRY -->
+    <!-- ENTRY -->
     <div id="tab-comp" class="tab-content hidden">
         <div class="card">
             <h3>Record Round</h3>
@@ -87,10 +81,10 @@
         </div>
     </div>
 
-    <!-- TOURNAMENT TABS -->
-    <div id="tab-doubles" class="tab-content hidden"><div class="card"><h3>Doubles Tournament</h3><div id="doubles-content">Coming Soon...</div></div></div>
-    <div id="tab-pairs" class="tab-content hidden"><div class="card"><h3>Pairs Matchplay</h3><div id="pairs-content">Coming Soon...</div></div></div>
-    <div id="tab-singles" class="tab-content hidden"><div class="card"><h3>Singles Matchplay</h3><div id="singles-content">Coming Soon...</div></div></div>
+    <!-- COMPS (DUMMY CONTENT FOR NOW) -->
+    <div id="tab-doubles" class="tab-content hidden"><div class="card"><h3>Doubles Tournament</h3></div></div>
+    <div id="tab-pairs" class="tab-content hidden"><div class="card"><h3>Pairs Matchplay</h3></div></div>
+    <div id="tab-singles" class="tab-content hidden"><div class="card"><h3>Singles Matchplay</h3></div></div>
 
     <!-- STATS -->
     <div id="tab-stats" class="tab-content hidden">
@@ -111,9 +105,11 @@
         <div class="card">
             <h3>Data Backup & Restore</h3>
             <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Save your data to a file or restore from a backup.</p>
+            <!-- DOWNLOAD ACTION -->
             <button class="btn-outline" style="width:100%; margin-bottom: 10px;" onclick="backupData()">Download Backup (.json)</button>
             <hr>
-            <input type="file" id="restoreFile" accept=".json">
+            <!-- UPLOAD ACTION -->
+            <input type="file" id="restoreFile" accept=".json" style="border:none; padding: 10px 0;">
             <button class="btn-outline" style="width:100%" onclick="restoreData()">Upload & Restore Backup</button>
         </div>
 
@@ -137,6 +133,7 @@
 </div>
 
 <script>
+    // CORE DATA ARRAYS
     let players = [], courses = [], rounds = [], club = {name: "Golf Pro Manager"};
 
     function init() {
@@ -160,24 +157,24 @@
         localStorage.setItem('golf_club', JSON.stringify(club));
     }
 
-    // BACKUP AND RESTORE FUNCTIONS
+    // --- RESTORED BACKUP & RESTORE LOGIC ---
     function backupData() {
         const data = { players, courses, rounds, club };
         const blob = new Blob([JSON.stringify(data)], {type: "application/json"});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `golf_manager_backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `golf_backup_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
     }
 
     function restoreData() {
         const file = document.getElementById('restoreFile').files[0];
-        if(!file) return alert("Please select a file first.");
+        if(!file) return alert("Select a .json file first.");
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                if(confirm("This will overwrite all current data. Proceed?")) {
+                if(confirm("Restore this backup? Current local data will be replaced.")) {
                     players = data.players || [];
                     courses = data.courses || [];
                     rounds = data.rounds || [];
@@ -185,7 +182,7 @@
                     saveLocalStorage();
                     location.reload();
                 }
-            } catch(err) { alert("Error reading file. Ensure it is a valid backup."); }
+            } catch(err) { alert("Error reading file."); }
         };
         reader.readAsText(file);
     }
@@ -193,10 +190,8 @@
     function showTab(id) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
         document.querySelectorAll('.nav button, .dropbtn').forEach(b => b.classList.remove('active'));
-        
         document.getElementById(id).classList.remove('hidden');
         
-        // Handle dropdown highlighting
         if(['tab-doubles', 'tab-pairs', 'tab-singles'].includes(id)) {
             document.getElementById('btn-comps').classList.add('active');
         } else {
@@ -227,20 +222,12 @@
         const pId = document.getElementById('rPlayer').value;
         const cId = document.getElementById('rCourse').value;
         const date = document.getElementById('rDate').value;
-        if(!pId || !cId || !date) return alert("Fill all fields");
-
+        if(!pId || !cId || !date) return alert("Missing Info");
         let total = 0;
         document.querySelectorAll('.h-val').forEach(input => total += (parseInt(input.value) || 0));
-
-        rounds.push({
-            id: Date.now(),
-            pName: players.find(p => p.id == pId).name,
-            cName: courses.find(c => c.id == cId).name,
-            date: date,
-            score: total
-        });
+        rounds.push({ id: Date.now(), pName: players.find(p => p.id == pId).name, cName: courses.find(c => c.id == cId).name, date: date, score: total });
         saveLocalStorage();
-        alert("Round Saved!");
+        alert("Saved");
     }
 
     function renderRegistry() {
@@ -273,8 +260,7 @@
 
     function saveClubName() { club.name = document.getElementById('setupClubName').value; saveLocalStorage(); updateClubDisplay(); }
     function updateClubDisplay() { document.getElementById('header-club-name').innerText = club.name; }
-    function factoryReset() { if(confirm("WIPE EVERYTHING?")) { localStorage.clear(); location.reload(); } }
+    function factoryReset() { if(confirm("WIPE ALL DATA?")) { localStorage.clear(); location.reload(); } }
 </script>
-
 </body>
 </html>
