@@ -864,26 +864,19 @@ function exportMasterReport() {
     const dateInput = prompt("Enter the date to export (dd/mm/yyyy):");
     if (!dateInput) return;
 
-    // 1. Prepare data filters
-    const searchDateStr = parseDateInput(dateInput); // YYYY-MM-DD
+    const searchDateStr = parseDateInput(dateInput); 
     const dailyRounds = rounds.filter(r => r.date === searchDateStr);
-    
-    // Filter history for the exact date string entered (dd/mm/yyyy)
     const dailyComps = pastComps.filter(c => c.date === dateInput);
 
-    if (dailyRounds.length === 0 && dailyComps.length === 0) {
-        return alert("No data found for " + dateInput);
-    }
+    if (dailyRounds.length === 0 && dailyComps.length === 0) return alert("No data found.");
 
-    // 2. Setup the Report View
     document.getElementById('dash-main-view').classList.add('hidden');
     document.getElementById('dash-detail').classList.remove('hidden');
-    
     document.getElementById('report-club-name').innerText = club.name;
-    const rImg = document.getElementById('report-logo-img');
+    
     if(club.logo) { 
-        rImg.src = club.logo; 
-        rImg.style.display = 'inline-block'; 
+        document.getElementById('report-logo-img').src = club.logo; 
+        document.getElementById('report-logo-img').style.display = 'inline-block'; 
     }
 
     document.getElementById('detail-title').innerText = "Master Tournament Report";
@@ -891,47 +884,63 @@ function exportMasterReport() {
 
     let masterHtml = "";
 
-    // 3. Add Individual Rounds Section
+    // 1. Individual Leaderboard
     if (dailyRounds.length > 0) {
         dailyRounds.sort((a, b) => b.points - a.points);
         masterHtml += `<h4>Individual Leaderboard</h4>
             <table class="report-table">
-                <thead><tr><th>Pos</th><th>Player</th><th>Course</th><th>Pts</th></tr></thead>
-                <tbody>`;
-        dailyRounds.forEach((r, i) => {
-            masterHtml += `<tr>
-                <td>${i+1}</td>
-                <td>${r.playerName}</td>
-                <td>${r.courseName}</td>
-                <td><b>${r.points}</b></td>
-            </tr>`;
-        });
-        masterHtml += `</tbody></table><br>`;
+                <thead><tr><th>Pos</th><th>Player</th><th>Pts</th></tr></thead>
+                <tbody>` + 
+                dailyRounds.map((r, i) => `<tr><td>${i+1}</td><td>${r.playerName}</td><td>${r.points}</td></tr>`).join('') + 
+            `</tbody></table><br>`;
     }
 
-    // 4. Add Team/Tournament Results Section (The missing piece!)
+    // 2. Competition Summary
     if (dailyComps.length > 0) {
-        masterHtml += `<h4>Competition Results (Teams/Doubles)</h4>
+        masterHtml += `<h4>Competition Summary</h4>
             <table class="report-table">
-                <thead><tr><th>Event Type</th><th>Winner / Team</th><th>Result</th></tr></thead>
-                <tbody>`;
-        dailyComps.forEach(c => {
-            masterHtml += `<tr>
-                <td>${c.type}</td>
-                <td><b>${c.winner}</b></td>
-                <td>${c.detail || '-'}</td>
-            </tr>`;
-        });
-        masterHtml += `</tbody></table>`;
+                <thead><tr><th>Event</th><th>Winner / Players</th><th>Result</th></tr></thead>
+                <tbody>` + 
+                dailyComps.map(c => `<tr><td>${c.type}</td><td><b>${c.winner}</b></td><td>${c.detail}</td></tr>`).join('') + 
+            `</tbody></table><br>`;
     }
 
-    // 5. Inject HTML and Trigger Print
+    // 3. Winning Team Detailed Scorecard (The New Addition!)
+    // We look for the first 'Team Event' in the history for today
+    const teamWin = dailyComps.find(c => c.type === 'Team Event');
+    if (teamWin) {
+        // Extract the "Team X" part from the winner string
+        const teamKey = teamWin.winner.split(':')[0].trim(); 
+        const details = teamBreakdowns[teamKey];
+
+        if (details) {
+            masterHtml += `<div style="page-break-before: always;">
+                <h4>Winning Team Scorecard: ${teamKey}</h4>
+                <p style="font-size:12px;">${details.names.join(' / ')}</p>
+                <table class="report-table" style="font-size:11px;">
+                    <thead>
+                        <tr>
+                            <th>Hole</th>
+                            ${details.names.map(n => `<th>${n.split(' ')[0]}</th>`).join('')}
+                            <th>Counted</th>
+                        </tr>
+                    </thead>
+                    <tbody>` + 
+                    details.holes.map(h => `
+                        <tr>
+                            <td>${h.hole}${ (h.hole==9||h.hole==18) ? ' *' : '' }</td>
+                            ${h.all.map(p => `<td>${p}</td>`).join('')}
+                            <td style="background:#f0f0f0;"><b>${h.counted}</b></td>
+                        </tr>`).join('') + 
+                    `</tbody>
+                </table>
+                <p style="font-size:10px; color:#666;">* Holes 9 & 18: All scores count. Others: Best 2 count.</p>
+            </div>`;
+        }
+    }
+
     document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
-    
-    // Small delay to let the images/text render before the print dialog pops up
-    setTimeout(() => { 
-        window.print(); 
-    }, 500);
+    setTimeout(() => { window.print(); }, 500);
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
