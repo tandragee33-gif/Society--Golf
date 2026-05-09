@@ -621,39 +621,34 @@
     function showDbStep1() { document.getElementById('db-step1').classList.remove('hidden'); document.getElementById('db-step2').classList.add('hidden'); document.getElementById('btnPrintDb').classList.add('hidden'); }
 
 function saveRound() {
-    // 1. Get the IDs from the dropdowns
     const id = document.getElementById('editRoundId').value;
     const cId = document.getElementById('rCourse').value;
     const pId = document.getElementById('rPlayer').value;
     
-    // Safety check: Don't save if dropdowns are empty
-    if(!cId || !pId) return alert("Please select both a Course and a Player.");
+    if(!cId || !pId) return alert("Select course and player.");
     
+    // Find the course and player objects first
     const crs = courses.find(c => String(c.id) === String(cId));
     const plr = players.find(p => String(p.id) === String(pId));
-    const isoDate = parseDateInput(document.getElementById('rDate').value);
-
-    // 2. Get the strokes from the 18 input boxes
-    const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
     
-    // 3. Calculate points per hole (Stableford)
-    let totalPts = 0;
+    // Safety check in case the course or player wasn't found
+    if (!crs || !plr) return alert("Course or Player data missing in Registry.");
+
+    const isoDate = parseDateInput(document.getElementById('rDate').value);
+    const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
+
+    // Calculate the points array
     const ptsArray = scs.map((s, i) => {
-        if(s <= 0) return 0; // No score entered for this hole
-        
+        if(s <= 0) return 0;
         const par = parseInt(crs.pars[i]);
         const si = parseInt(crs.si[i]);
         const hc = parseInt(plr.handicap) || 0;
-        
-        // Calculate strokes allowed on this hole based on SI and Handicap
         const allow = Math.floor(hc/18) + (hc%18 >= si ? 1 : 0);
-        const holePoints = Math.max(0, par - (s - allow) + 2);
-        
-        totalPts += holePoints;
-        return holePoints;
+        return Math.max(0, par - (s - allow) + 2);
     });
 
-    // 4. Create the Round Object
+    const totalPts = ptsArray.reduce((a, b) => a + b, 0);
+
     const r = {
         id: id ? parseInt(id) : Date.now(),
         date: isoDate,
@@ -663,22 +658,22 @@ function saveRound() {
         playerName: plr.name,
         points: totalPts,
         scores: scs,
-        pointsArray: ptsArray, // This is what the Team tab needs
+        pointsArray: ptsArray, // This connects to your Team tab
         season: isoDate.split('-')[0]
     };
 
-    // 5. Update existing or push new
     if(id) {
         rounds = rounds.map(x => String(x.id) === String(id) ? r : x);
     } else {
         rounds.push(r);
     }
 
-    // 6. Save and Refresh
     saveData();
     resetRoundForm();
-    showTab('tab-stats'); // Move to stats to show it worked
-    alert("Round saved successfully!");
+    renderStats();    // Refresh the stats list
+    renderDashboard(); // Refresh history counts
+    showTab('tab-stats'); 
+    alert("Round Saved!");
 }
 
     function renderStats() {
