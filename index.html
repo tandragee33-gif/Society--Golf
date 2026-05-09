@@ -870,10 +870,15 @@ function exportMasterReport() {
 
     if (dailyRounds.length === 0 && dailyComps.length === 0) return alert("No data found.");
 
+    // Hide UI elements for a clean print
     document.getElementById('dash-main-view').classList.add('hidden');
     document.getElementById('dash-detail').classList.remove('hidden');
-    document.getElementById('report-club-name').innerText = club.name;
     
+    // Remove Print/Share buttons from the view if they exist in the detail container
+    const actionButtons = document.querySelector('.detail-actions');
+    if (actionButtons) actionButtons.style.display = 'none';
+
+    document.getElementById('report-club-name').innerText = club.name;
     if(club.logo) { 
         document.getElementById('report-logo-img').src = club.logo; 
         document.getElementById('report-logo-img').style.display = 'inline-block'; 
@@ -882,32 +887,37 @@ function exportMasterReport() {
     document.getElementById('detail-title').innerText = "Tournament Master Report";
     document.getElementById('detail-date').innerText = dateInput;
 
-    // INJECT CUSTOM CSS FOR ALIGNMENT
     let masterHtml = `
     <style>
-        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
-        .report-table th, .report-table td { border-bottom: 1px solid #eee; padding: 10px 5px; text-align: left; font-size: 13px; overflow: hidden; }
-        .report-table th { background-color: #f8f9fa; text-transform: uppercase; font-size: 11px; color: #555; }
+        @media print { .no-print { display: none; } }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; table-layout: fixed; }
+        .report-table th, .report-table td { border-bottom: 1px solid #ddd; padding: 12px 8px; text-align: left; font-size: 14px; }
+        .report-table th { background-color: #f2f2f2; font-size: 12px; color: #333; }
         
-        /* Column Widths for Individual Table */
-        .col-pos { width: 40px; }
-        .col-player { width: 250px; }
-        .col-pts { width: 60px; text-align: right; }
+        .section-header { border-bottom: 2px solid #222; padding-bottom: 5px; margin-top: 35px; white-space: nowrap; font-size: 18px; width: 100%; }
+        
+        /* Column Control */
+        .col-pos { width: 10%; }
+        .col-player { width: 70%; }
+        .col-pts { width: 20%; text-align: right; }
+        .col-event { width: 25%; }
+        .col-winner { width: 55%; }
+        .col-result { width: 20%; text-align: right; }
 
-        /* Column Widths for Competition Summary */
-        .col-event { width: 120px; }
-        .col-winner { width: auto; }
-        .col-result { width: 80px; text-align: right; }
-
-        .section-header { border-bottom: 2px solid #333; margin-top: 30px; padding-bottom: 5px; font-size: 16px; }
-        .scorecard-header { font-size: 14px; margin-top: 20px; color: #2c3e50; }
+        /* Scorecard Equal Widths */
+        .scorecard-table th, .scorecard-table td { text-align: center; width: auto; border: 1px solid #ccc; }
+        .hole-col { width: 60px; font-weight: bold; }
+        .total-col { width: 80px; background: #f9f9f9; font-weight: bold; }
+        
+        .winner-symbol { color: #d4af37; margin-right: 8px; font-size: 18px; }
+        .footer-note { font-size: 11px; color: #555; margin-top: 10px; white-space: nowrap; width: 100%; }
     </style>`;
 
-    // 1. INDIVIDUAL LEADERBOARD (Has Pos/Player/Pts)
+    // 1. INDIVIDUAL LEADERBOARD
     if (dailyRounds.length > 0) {
         dailyRounds.sort((a, b) => b.points - a.points);
         masterHtml += `
-            <h4 class="section-header">Individual Leaderboard</h4>
+            <div class="section-header">Individual Leaderboard</div>
             <table class="report-table">
                 <thead>
                     <tr>
@@ -920,16 +930,16 @@ function exportMasterReport() {
                 dailyRounds.map((r, i) => `
                     <tr>
                         <td class="col-pos">${i+1}</td>
-                        <td class="col-player">${r.playerName}</td>
+                        <td class="col-player">${i === 0 ? '<span class="winner-symbol">🏆</span>' : ''}${r.playerName}</td>
                         <td class="col-pts"><b>${r.points}</b></td>
                     </tr>`).join('') + 
             `</tbody></table>`;
     }
 
-    // 2. COMPETITION SUMMARY (No Pos/Player/Pts - uses specialized headers)
+    // 2. EVENT RESULTS
     if (dailyComps.length > 0) {
         masterHtml += `
-            <h4 class="section-header">Event Results</h4>
+            <div class="section-header">Event Results</div>
             <table class="report-table">
                 <thead>
                     <tr>
@@ -942,13 +952,13 @@ function exportMasterReport() {
                 dailyComps.map(c => `
                     <tr>
                         <td class="col-event">${c.type}</td>
-                        <td class="col-winner"><b>${c.winner}</b></td>
+                        <td class="col-winner"><span class="winner-symbol">🏆</span><b>${c.winner}</b></td>
                         <td class="col-result"><b>${c.detail}</b></td>
                     </tr>`).join('') + 
             `</tbody></table>`;
     }
 
-    // 3. WINNING TEAM DETAILED SCORECARD
+    // 3. CHAMPIONS SCORECARD
     const teamEvents = dailyComps.filter(c => c.type === 'Team Event');
     if (teamEvents.length > 0) {
         teamEvents.sort((a, b) => (parseInt(b.detail) || 0) - (parseInt(a.detail) || 0));
@@ -959,34 +969,34 @@ function exportMasterReport() {
         if (details) {
             masterHtml += `
             <div style="page-break-before: always;">
-                <h4 class="section-header">Champions Scorecard: ${teamKey}</h4>
-                <p style="margin: 5px 0 15px 0;">Players: <i>${details.names.join(', ')}</i></p>
-                <table class="report-table" style="text-align: center;">
+                <div class="section-header">Champions Scorecard: ${teamKey}</div>
+                <div style="margin: 20px 0;"></div>
+                <table class="report-table scorecard-table">
                     <thead>
                         <tr style="background: #333; color: white;">
-                            <th style="color: white; width: 60px;">Hole</th>
+                            <th class="hole-col" style="color: white;">Hole</th>
                             ${details.names.map(n => `<th style="color: white;">${n.split(' ')[0]}</th>`).join('')}
-                            <th style="color: white; width: 70px;">Hole Total</th>
+                            <th class="total-col" style="color: white;">Total</th>
                         </tr>
                     </thead>
                     <tbody>` + 
                     details.holes.map(h => `
                         <tr>
-                            <td>${h.hole}${ (h.hole==9||h.hole==18) ? ' <b>*</b>' : '' }</td>
+                            <td class="hole-col">Hole ${h.hole}${ (h.hole==9||h.hole==18) ? '*' : '' }</td>
                             ${h.all.map(p => `<td>${p}</td>`).join('')}
-                            <td style="background:#f2f2f2; font-weight:bold;">${h.counted}</td>
+                            <td class="total-col">${h.counted}</td>
                         </tr>`).join('') + 
                     `</tbody>
                 </table>
-                <p style="font-size:10px; color:#777;">* Denotes all scores counted (Holes 9 & 18). Otherwise, best 2 scores count.</p>
+                <div class="footer-note">* Denotes all scores counted (Holes 9 & 18). Otherwise, best 2 scores count.</div>
             </div>`;
         }
     }
 
     document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
     
-    // Slight delay to ensure CSS styles are applied before print dialog
-    setTimeout(() => { window.print(); }, 600);
+    // Auto-trigger print
+    setTimeout(() => { window.print(); }, 700);
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
