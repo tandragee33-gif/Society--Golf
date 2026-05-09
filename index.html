@@ -945,35 +945,45 @@ function exportMasterReport() {
             `</tbody></table>`;
     }
 
-   // 2. EVENT RESULTS (Now Sorted by Points)
+  // 2. EVENT RESULTS (Grouped by Type and Sorted by Score)
     if (dailyComps.length > 0) {
-        // Sort the history entries so the highest "pts" come first
-        const sortedComps = [...dailyComps].sort((a, b) => {
-            const scoreA = parseInt(a.detail) || 0;
-            const scoreB = parseInt(b.detail) || 0;
-            return scoreB - scoreA;
-        });
+        // First, group the results by their 'type' (Team Event, Doubles, etc.)
+        const groupedComps = dailyComps.reduce((acc, comp) => {
+            if (!acc[comp.type]) acc[comp.type] = [];
+            acc[comp.type].push(comp);
+            return acc;
+        }, {});
 
-        masterHtml += `
-            <div class="section-header">Event Results</div>
-            <table class="report-table">
-                <thead>
-                    <tr>
-                        <th class="w-event">Event Type</th>
-                        <th>Winner / Team Members</th>
-                        <th class="w-pts">Result</th>
-                    </tr>
-                </thead>
-                <tbody>` + 
-                sortedComps.map((c, i) => `
-                    <tr>
-                        <td>${c.type}</td>
-                        <td>${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}<b>${c.winner}</b></td>
-                        <td class="w-pts"><b>${c.detail}</b></td>
-                    </tr>`).join('') + 
-            `</tbody></table>`;
+        masterHtml += `<div class="section-header">Event Results</div>`;
+
+        // Iterate through each group (e.g., first the Team Events, then the Doubles)
+        for (const [eventType, entries] of Object.entries(groupedComps)) {
+            // Sort entries within this specific group by score
+            const sortedEntries = entries.sort((a, b) => {
+                const scoreA = parseInt(a.detail) || 0;
+                const scoreB = parseInt(b.detail) || 0;
+                return scoreB - scoreA;
+            });
+
+            masterHtml += `
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th class="w-event">${eventType}</th>
+                            <th>Player / Team Members</th>
+                            <th class="w-pts">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>` + 
+                    sortedEntries.map((c, i) => `
+                        <tr>
+                            <td class="w-event">${i === 0 ? '<b>Winner</b>' : (i + 1) + ' Place'}</td>
+                            <td>${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}<b>${c.winner}</b></td>
+                            <td class="w-pts"><b>${c.detail}</b></td>
+                        </tr>`).join('') + 
+                `</tbody></table>`;
+        }
     }
-
     // 3. CHAMPIONS SCORECARD
     const teamWin = dailyComps.filter(c => c.type === 'Team Event')
                               .sort((a,b) => (parseInt(b.detail)||0) - (parseInt(a.detail)||0))[0];
