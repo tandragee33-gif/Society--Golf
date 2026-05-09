@@ -870,18 +870,19 @@ function exportMasterReport() {
 
     if (dailyRounds.length === 0 && dailyComps.length === 0) return alert("No data found.");
 
-    // Hide UI elements for a clean print
+    // Clean display for printing
     document.getElementById('dash-main-view').classList.add('hidden');
     document.getElementById('dash-detail').classList.remove('hidden');
     
-    // Remove Print/Share buttons from the view if they exist in the detail container
-    const actionButtons = document.querySelector('.detail-actions');
-    if (actionButtons) actionButtons.style.display = 'none';
+    // Hide the Action Buttons (Print/Share/PDF) automatically
+    const actionArea = document.querySelector('.detail-actions');
+    if (actionArea) actionArea.style.display = 'none';
 
     document.getElementById('report-club-name').innerText = club.name;
     if(club.logo) { 
-        document.getElementById('report-logo-img').src = club.logo; 
-        document.getElementById('report-logo-img').style.display = 'inline-block'; 
+        const rImg = document.getElementById('report-logo-img');
+        rImg.src = club.logo; 
+        rImg.style.display = 'inline-block'; 
     }
 
     document.getElementById('detail-title').innerText = "Tournament Master Report";
@@ -889,29 +890,37 @@ function exportMasterReport() {
 
     let masterHtml = `
     <style>
-        @media print { .no-print { display: none; } }
-        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; table-layout: fixed; }
-        .report-table th, .report-table td { border-bottom: 1px solid #ddd; padding: 12px 8px; text-align: left; font-size: 14px; }
-        .report-table th { background-color: #f2f2f2; font-size: 12px; color: #333; }
+        .report-wrapper { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 35px; table-layout: fixed; }
+        .report-table th, .report-table td { border-bottom: 1px solid #ddd; padding: 10px 5px; text-align: left; }
         
-        .section-header { border-bottom: 2px solid #222; padding-bottom: 5px; margin-top: 35px; white-space: nowrap; font-size: 18px; width: 100%; }
-        
-        /* Column Control */
-        .col-pos { width: 10%; }
-        .col-player { width: 70%; }
-        .col-pts { width: 20%; text-align: right; }
-        .col-event { width: 25%; }
-        .col-winner { width: 55%; }
-        .col-result { width: 20%; text-align: right; }
+        .section-header { 
+            border-bottom: 2px solid #000; 
+            font-size: 18px; 
+            font-weight: bold; 
+            margin: 40px 0 15px 0; 
+            padding-bottom: 3px;
+            white-space: nowrap;
+            display: block;
+            width: 100%;
+        }
 
-        /* Scorecard Equal Widths */
-        .scorecard-table th, .scorecard-table td { text-align: center; width: auto; border: 1px solid #ccc; }
-        .hole-col { width: 60px; font-weight: bold; }
-        .total-col { width: 80px; background: #f9f9f9; font-weight: bold; }
+        .winner-tag { color: #b8860b; font-size: 1.2em; margin-right: 5px; }
         
-        .winner-symbol { color: #d4af37; margin-right: 8px; font-size: 18px; }
-        .footer-note { font-size: 11px; color: #555; margin-top: 10px; white-space: nowrap; width: 100%; }
-    </style>`;
+        /* Column Widths for Main Tables */
+        .w-pos { width: 50px; }
+        .w-pts { width: 80px; text-align: right; }
+        .w-event { width: 130px; }
+        
+        /* Scorecard Grid - Equal Column Distribution */
+        .score-grid { table-layout: fixed; text-align: center; border: 1px solid #333; }
+        .score-grid th, .score-grid td { border: 1px solid #ccc; padding: 8px 2px; font-size: 12px; }
+        .hole-num { width: 70px; background: #f2f2f2; font-weight: bold; }
+        .pts-sum { width: 70px; background: #eee; font-weight: bold; }
+
+        .note-line { font-size: 11px; color: #444; margin-top: 8px; white-space: nowrap; border-top: 1px solid #eee; padding-top: 5px; }
+    </style>
+    <div class="report-wrapper">`;
 
     // 1. INDIVIDUAL LEADERBOARD
     if (dailyRounds.length > 0) {
@@ -921,17 +930,17 @@ function exportMasterReport() {
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th class="col-pos">Pos</th>
-                        <th class="col-player">Player Name</th>
-                        <th class="col-pts">Points</th>
+                        <th class="w-pos">Pos</th>
+                        <th>Player Name</th>
+                        <th class="w-pts">Points</th>
                     </tr>
                 </thead>
                 <tbody>` + 
                 dailyRounds.map((r, i) => `
                     <tr>
-                        <td class="col-pos">${i+1}</td>
-                        <td class="col-player">${i === 0 ? '<span class="winner-symbol">🏆</span>' : ''}${r.playerName}</td>
-                        <td class="col-pts"><b>${r.points}</b></td>
+                        <td>${i+1}</td>
+                        <td>${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}${r.playerName}</td>
+                        <td class="w-pts"><b>${r.points}</b></td>
                     </tr>`).join('') + 
             `</tbody></table>`;
     }
@@ -943,60 +952,60 @@ function exportMasterReport() {
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th class="col-event">Event Type</th>
-                        <th class="col-winner">Winner / Team Members</th>
-                        <th class="col-result">Result</th>
+                        <th class="w-event">Event Type</th>
+                        <th>Winner / Team Members</th>
+                        <th class="w-pts">Result</th>
                     </tr>
                 </thead>
                 <tbody>` + 
                 dailyComps.map(c => `
                     <tr>
-                        <td class="col-event">${c.type}</td>
-                        <td class="col-winner"><span class="winner-symbol">🏆</span><b>${c.winner}</b></td>
-                        <td class="col-result"><b>${c.detail}</b></td>
+                        <td>${c.type}</td>
+                        <td><span class="winner-tag">🏆</span><b>${c.winner}</b></td>
+                        <td class="w-pts"><b>${c.detail}</b></td>
                     </tr>`).join('') + 
             `</tbody></table>`;
     }
 
     // 3. CHAMPIONS SCORECARD
-    const teamEvents = dailyComps.filter(c => c.type === 'Team Event');
-    if (teamEvents.length > 0) {
-        teamEvents.sort((a, b) => (parseInt(b.detail) || 0) - (parseInt(a.detail) || 0));
-        const trueWinner = teamEvents[0];
-        const teamKey = trueWinner.winner.split(':')[0].trim(); 
+    const teamWin = dailyComps.filter(c => c.type === 'Team Event')
+                              .sort((a,b) => (parseInt(b.detail)||0) - (parseInt(a.detail)||0))[0];
+
+    if (teamWin) {
+        const teamKey = teamWin.winner.split(':')[0].trim(); 
         const details = teamBreakdowns[teamKey];
 
         if (details) {
             masterHtml += `
             <div style="page-break-before: always;">
                 <div class="section-header">Champions Scorecard: ${teamKey}</div>
-                <div style="margin: 20px 0;"></div>
-                <table class="report-table scorecard-table">
+                <table class="report-table score-grid">
                     <thead>
-                        <tr style="background: #333; color: white;">
-                            <th class="hole-col" style="color: white;">Hole</th>
-                            ${details.names.map(n => `<th style="color: white;">${n.split(' ')[0]}</th>`).join('')}
-                            <th class="total-col" style="color: white;">Total</th>
+                        <tr style="background: #222; color: #fff;">
+                            <th class="hole-num">Hole</th>
+                            ${details.names.map(n => `<th style="color:white;">${n.split(' ')[0]}</th>`).join('')}
+                            <th class="pts-sum">Pts</th>
                         </tr>
                     </thead>
                     <tbody>` + 
                     details.holes.map(h => `
                         <tr>
-                            <td class="hole-col">Hole ${h.hole}${ (h.hole==9||h.hole==18) ? '*' : '' }</td>
+                            <td class="hole-num">Hole ${h.hole}${ (h.hole==9||h.hole==18) ? '*' : '' }</td>
                             ${h.all.map(p => `<td>${p}</td>`).join('')}
-                            <td class="total-col">${h.counted}</td>
+                            <td class="pts-sum">${h.counted}</td>
                         </tr>`).join('') + 
                     `</tbody>
                 </table>
-                <div class="footer-note">* Denotes all scores counted (Holes 9 & 18). Otherwise, best 2 scores count.</div>
+                <div class="note-line">* Denotes all scores counted (Holes 9 & 18). Otherwise, best 2 scores count.</div>
             </div>`;
         }
     }
 
+    masterHtml += `</div>`;
     document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
     
-    // Auto-trigger print
-    setTimeout(() => { window.print(); }, 700);
+    // Slight delay for rendering, then print
+    setTimeout(() => { window.print(); }, 800);
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
