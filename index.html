@@ -620,16 +620,38 @@
 
     function showDbStep1() { document.getElementById('db-step1').classList.remove('hidden'); document.getElementById('db-step2').classList.add('hidden'); document.getElementById('btnPrintDb').classList.add('hidden'); }
 
-    function saveRound() {
-        const id = document.getElementById('editRoundId').value, cId = document.getElementById('rCourse').value, pId = document.getElementById('rPlayer').value;
-        if(!cId || !pId) return alert("Select course and player.");
-        const crs = courses.find(c => String(c.id) === String(cId)), plr = players.find(p => String(p.id) === String(pId)), isoDate = parseDateInput(document.getElementById('rDate').value);
-        const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
-        let pts = 0; scs.forEach((s, i) => { if(s > 0) { const par = parseInt(crs.pars[i]), si = parseInt(crs.si[i]), hc = parseInt(plr.handicap), allow = Math.floor(hc/18) + (hc%18 >= si ? 1 : 0); pts += Math.max(0, par - (s - allow) + 2); } });
-        const r = { id: id ? parseInt(id) : Date.now(), date: isoDate, courseId: crs.id, courseName: crs.name, playerId: plr.id, playerName: plr.name, points: pts, scores: scs, season: isoDate.split('-')[0] };
-        if(id) rounds = rounds.map(x => String(x.id) === String(id) ? r : x); else rounds.push(r);
-        saveData(); resetRoundForm(); showTab('tab-stats');
-    }
+function saveRound() {
+    // ... existing code (getting course, player, etc.) ...
+
+    // 1. Calculate points per hole (this is the missing link!)
+    const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
+    
+    const ptsArray = scs.map((s, i) => {
+        if(s <= 0) return 0;
+        const par = parseInt(crs.pars[i]);
+        const si = parseInt(crs.si[i]);
+        const hc = parseInt(plr.handicap);
+        const allow = Math.floor(hc/18) + (hc%18 >= si ? 1 : 0);
+        return Math.max(0, par - (s - allow) + 2);
+    });
+
+    const pts = ptsArray.reduce((a, b) => a + b, 0); // Total points
+
+    const r = {
+        id: id ? parseInt(id) : Date.now(),
+        date: isoDate,
+        courseId: crs.id,
+        courseName: crs.name,
+        playerId: plr.id,
+        playerName: plr.name,
+        points: pts,
+        scores: scs,         // Individual strokes
+        pointsArray: ptsArray, // <--- MAKE SURE THIS LINE IS HERE
+        season: isoDate.split('-')[0]
+    };
+
+    // ... rest of your saveRound code ...
+}
 
     function renderStats() {
         const filterVal = document.getElementById('statsFilterDate').value; 
@@ -738,18 +760,16 @@ function calculateTeamResults() {
 
         for (let i = 0; i < 18; i++) {
             let holeNum = i + 1;
-            let pPoints = []; // We are now collecting Points
+            let pPoints = []; 
 
-            // Look through the team members
             team.members.forEach(player => {
-                // Find the round for this player on this date
                 const round = rounds.find(r => r.date === matchDate && r.playerName === player.name);
                 
-                // CRITICAL FIX: Ensure we use the 'points' array from the round, not 'scores' (strokes)
-                // If the round has a 'points' array, use that. Otherwise, default to 0.
                 let pointsForHole = 0;
-                if (round && round.points && round.points[i] !== undefined) {
-                    pointsForHole = parseInt(round.points[i]) || 0;
+                
+                // CHANGE THIS LINE: Change 'round.points' to 'round.pointsArray'
+                if (round && round.pointsArray && round.pointsArray[i] !== undefined) {
+                    pointsForHole = parseInt(round.pointsArray[i]) || 0;
                 }
                 
                 pPoints.push(pointsForHole);
@@ -757,10 +777,8 @@ function calculateTeamResults() {
 
             let holePointsSum = 0;
             if (holeNum === 9 || holeNum === 18) {
-                // Rule: All 4 players' points count
                 holePointsSum = pPoints.reduce((a, b) => a + b, 0); 
             } else {
-                // Rule: Best 2 players' points count
                 let sorted = [...pPoints].sort((a, b) => b - a);
                 holePointsSum = (sorted[0] || 0) + (sorted[1] || 0); 
             }
@@ -769,7 +787,6 @@ function calculateTeamResults() {
             holes.push({ hole: holeNum, all: pPoints, counted: holePointsSum });
         }
 
-        // Save data for the detail view
         teamBreakdowns[`Team ${team.id}`] = { names: team.members.map(m => m.name), holes: holes };
 
         return { 
@@ -777,14 +794,15 @@ function calculateTeamResults() {
             total: teamTotal, 
             players: team.members.map(m => m.name).join(', ') 
         };
-    }).sort((a, b) => b.total - a.total); // Sort highest points to the top
+    }).sort((a, b) => b.total - a.total);
 
-    // Refresh the results list on the screen
-    document.getElementById('team-results-output').innerHTML = `<h4>Leaderboard (Points Based)</h4>` + leaderboard.map((r, i) => `
+    document.getElementById('team-results-output').innerHTML = 
+    `<h4>Leaderboard (Points Based)</h4>` +
+    leaderboard.map((r, i) => `
         <div class="match-card" onclick="viewTeamDetail('${r.name}', ${r.total})" style="cursor:pointer">
             <div class="item-row">
-                <span><b>${i+1}. ${r.name}</b><br><small>${r.players}</small></span>
-                <span><b>${r.total} pts ></b></span>
+               <span><b>${i+1}. ${r.name}</b><br><small>${r.players}</small></span>
+               <span><b>${r.total} pts ></b></span>
             </div>
         </div>`).join('');
 }
@@ -868,8 +886,6 @@ function exportMasterReport() {
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
-    
-    // Create the record
     const entry = { 
         id: Date.now(), 
         type: 'Team Competition', 
@@ -877,12 +893,10 @@ function saveTeamToHistory(teamName, totalScore) {
         date: matchDate, 
         detail: totalScore + ' pts' 
     };
-    
-    // Add to pastComps and save
     pastComps.push(entry); 
     saveData(); 
-    
-    alert("Team result saved to History!");
+    renderPastComps();
+    alert("Saved!");
 }
 </script>
 
