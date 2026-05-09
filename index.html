@@ -984,28 +984,28 @@ function exportMasterReport() {
                 `</tbody></table>`;
         }
     }
-    // 3. CHAMPIONS SCORECARD
-    const teamWin = dailyComps.filter(c => c.type === 'Team Event')
-                              .sort((a,b) => (parseInt(b.detail)||0) - (parseInt(a.detail)||0))[0];
+ // 3. CHAMPIONS SCORECARD (Permanent Data Version)
+    const teamEvents = dailyComps.filter(c => c.type === 'Team Event');
+    
+    if (teamEvents.length > 0) {
+        teamEvents.sort((a, b) => (parseInt(b.detail) || 0) - (parseInt(a.detail) || 0));
+        const trueWinner = teamEvents[0];
 
-    if (teamWin) {
-        const teamKey = teamWin.winner.split(':')[0].trim(); 
-        const details = teamBreakdowns[teamKey];
-
-        if (details) {
+        // Access the breakdown directly from the saved history entry
+        if (trueWinner.breakdown) {
             masterHtml += `
             <div style="page-break-before: always;">
-                <div class="section-header">Champions Scorecard: ${teamKey}</div>
+                <div class="section-header">Champions Scorecard: ${trueWinner.winner.split(':')[0]}</div>
                 <table class="report-table score-grid">
                     <thead>
                         <tr style="background: #222; color: #fff;">
-                            <th class="hole-num">Hole</th>
-                            ${details.names.map(n => `<th style="color:white;">${n.split(' ')[0]}</th>`).join('')}
-                            <th class="pts-sum">Pts</th>
+                            <th class="hole-num" style="color:white; width:20%;">Hole</th>
+                            ${trueWinner.playerNames.map(n => `<th style="color:white;">${n.split(' ')[0]}</th>`).join('')}
+                            <th class="pts-sum" style="color:white; width:20%;">Total</th>
                         </tr>
                     </thead>
                     <tbody>` + 
-                    details.holes.map(h => `
+                    trueWinner.breakdown.map(h => `
                         <tr>
                             <td class="hole-num">Hole ${h.hole}${ (h.hole==9||h.hole==18) ? '*' : '' }</td>
                             ${h.all.map(p => `<td>${p}</td>`).join('')}
@@ -1027,23 +1027,25 @@ function exportMasterReport() {
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
     
-    // 1. Find the specific team in your active teams to get the names
-    const teamData = competitionTeams.find(t => `Team ${t.id}` === teamName);
-    const playerNames = teamData ? teamData.members.map(m => m.name).join(', ') : "";
+    // Find the specific team breakdown from our temporary memory
+    // We use the 'teamName' (e.g., "Team 1") as the key
+    const currentBreakdown = teamBreakdowns[teamName];
     
-    // 2. Create the entry with names included in the winner field
     const entry = { 
         id: Date.now(), 
         type: 'Team Event', 
-        winner: `${teamName}: ${playerNames}`, // This adds names to the report
+        winner: `${teamName}: ${currentBreakdown ? currentBreakdown.names.join(', ') : ''}`, 
         date: matchDate, 
-        detail: totalScore + ' pts' 
+        detail: totalScore + ' pts',
+        // NEW: Save the full hole-by-hole data inside the history entry
+        breakdown: currentBreakdown ? currentBreakdown.holes : null,
+        playerNames: currentBreakdown ? currentBreakdown.names : []
     };
     
     pastComps.push(entry); 
-    saveData(); 
+    saveData(); // This saves it to localStorage
     renderPastComps();
-    alert("Team Result & Players saved to History!");
+    alert("Team Result Saved Permanently!");
 }
 </script>
 
