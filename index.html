@@ -621,22 +621,39 @@
     function showDbStep1() { document.getElementById('db-step1').classList.remove('hidden'); document.getElementById('db-step2').classList.add('hidden'); document.getElementById('btnPrintDb').classList.add('hidden'); }
 
 function saveRound() {
-    // ... existing code (getting course, player, etc.) ...
+    // 1. Get the IDs from the dropdowns
+    const id = document.getElementById('editRoundId').value;
+    const cId = document.getElementById('rCourse').value;
+    const pId = document.getElementById('rPlayer').value;
+    
+    // Safety check: Don't save if dropdowns are empty
+    if(!cId || !pId) return alert("Please select both a Course and a Player.");
+    
+    const crs = courses.find(c => String(c.id) === String(cId));
+    const plr = players.find(p => String(p.id) === String(pId));
+    const isoDate = parseDateInput(document.getElementById('rDate').value);
 
-    // 1. Calculate points per hole (this is the missing link!)
+    // 2. Get the strokes from the 18 input boxes
     const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
     
+    // 3. Calculate points per hole (Stableford)
+    let totalPts = 0;
     const ptsArray = scs.map((s, i) => {
-        if(s <= 0) return 0;
+        if(s <= 0) return 0; // No score entered for this hole
+        
         const par = parseInt(crs.pars[i]);
         const si = parseInt(crs.si[i]);
-        const hc = parseInt(plr.handicap);
+        const hc = parseInt(plr.handicap) || 0;
+        
+        // Calculate strokes allowed on this hole based on SI and Handicap
         const allow = Math.floor(hc/18) + (hc%18 >= si ? 1 : 0);
-        return Math.max(0, par - (s - allow) + 2);
+        const holePoints = Math.max(0, par - (s - allow) + 2);
+        
+        totalPts += holePoints;
+        return holePoints;
     });
 
-    const pts = ptsArray.reduce((a, b) => a + b, 0); // Total points
-
+    // 4. Create the Round Object
     const r = {
         id: id ? parseInt(id) : Date.now(),
         date: isoDate,
@@ -644,13 +661,24 @@ function saveRound() {
         courseName: crs.name,
         playerId: plr.id,
         playerName: plr.name,
-        points: pts,
-        scores: scs,         // Individual strokes
-        pointsArray: ptsArray, // <--- MAKE SURE THIS LINE IS HERE
+        points: totalPts,
+        scores: scs,
+        pointsArray: ptsArray, // This is what the Team tab needs
         season: isoDate.split('-')[0]
     };
 
-    // ... rest of your saveRound code ...
+    // 5. Update existing or push new
+    if(id) {
+        rounds = rounds.map(x => String(x.id) === String(id) ? r : x);
+    } else {
+        rounds.push(r);
+    }
+
+    // 6. Save and Refresh
+    saveData();
+    resetRoundForm();
+    showTab('tab-stats'); // Move to stats to show it worked
+    alert("Round saved successfully!");
 }
 
     function renderStats() {
