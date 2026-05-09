@@ -905,40 +905,59 @@ function exportMasterReport() {
             `</tbody></table><br>`;
     }
 
-    // 3. Winning Team Detailed Scorecard (The New Addition!)
-    // We look for the first 'Team Event' in the history for today
-    const teamWin = dailyComps.find(c => c.type === 'Team Event');
-    if (teamWin) {
-        // Extract the "Team X" part from the winner string
-        const teamKey = teamWin.winner.split(':')[0].trim(); 
+  // 3. Winning Team Detailed Scorecard (Smart Search)
+    // First, find all team events for this specific date
+    const teamEvents = dailyComps.filter(c => c.type === 'Team Event');
+    
+    if (teamEvents.length > 0) {
+        // Sort them by points (detail field) to find the actual highest score
+        // We parse "45 pts" into the number 45
+        teamEvents.sort((a, b) => {
+            const scoreA = parseInt(a.detail) || 0;
+            const scoreB = parseInt(b.detail) || 0;
+            return scoreB - scoreA;
+        });
+
+        const trueWinner = teamEvents[0]; // The top of the sorted list
+        const teamKey = trueWinner.winner.split(':')[0].trim(); 
         const details = teamBreakdowns[teamKey];
 
         if (details) {
-            masterHtml += `<div style="page-break-before: always;">
-                <h4>Winning Team Scorecard: ${teamKey}</h4>
-                <p style="font-size:12px;">${details.names.join(' / ')}</p>
+            masterHtml += `<div style="page-break-before: always; border-top: 2px solid #333; padding-top: 20px;">
+                <h4 style="margin-bottom:5px;">Tournament Champions: ${teamKey}</h4>
+                <p style="font-size:14px; color:var(--primary); font-weight:bold; margin-top:0;">
+                    Score: ${trueWinner.detail}
+                </p>
+                <p style="font-size:12px; margin-bottom:15px;">Players: ${details.names.join(' / ')}</p>
+                
                 <table class="report-table" style="font-size:11px;">
                     <thead>
                         <tr>
                             <th>Hole</th>
                             ${details.names.map(n => `<th>${n.split(' ')[0]}</th>`).join('')}
-                            <th>Counted</th>
+                            <th>Pts</th>
                         </tr>
                     </thead>
                     <tbody>` + 
                     details.holes.map(h => `
                         <tr>
-                            <td>${h.hole}${ (h.hole==9||h.hole==18) ? ' *' : '' }</td>
+                            <td>Hole ${h.hole}${ (h.hole==9||h.hole==18) ? ' <b>*</b>' : '' }</td>
                             ${h.all.map(p => `<td>${p}</td>`).join('')}
-                            <td style="background:#f0f0f0;"><b>${h.counted}</b></td>
+                            <td style="background:#f9f9f9; font-weight:bold;">${h.counted}</td>
                         </tr>`).join('') + 
                     `</tbody>
                 </table>
-                <p style="font-size:10px; color:#666;">* Holes 9 & 18: All scores count. Others: Best 2 count.</p>
+                <div style="font-size:10px; color:#666; margin-top:10px; font-style:italic;">
+                    * Holes 9 & 18: All 4 scores count. All other holes: Best 2 scores count.
+                </div>
             </div>`;
+        } else {
+            // Fallback if the session was refreshed and teamBreakdowns is gone
+            masterHtml += `<p style="font-size:11px; color:#d32f2f;">
+                <i>Note: Full scorecard only available immediately after calculation.</i>
+            </p>`;
         }
     }
-
     document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
     setTimeout(() => { window.print(); }, 500);
 }
