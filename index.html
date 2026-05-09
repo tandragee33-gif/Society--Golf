@@ -738,34 +738,49 @@ function calculateTeamResults() {
 
         for (let i = 0; i < 18; i++) {
             let holeNum = i + 1;
-            let pScores = [];
+            let pPoints = []; // We are now collecting Points
 
-            // Get scores for all 4 players for this specific hole
+            // Look through the team members
             team.members.forEach(player => {
+                // Find the round for this player on this date
                 const round = rounds.find(r => r.date === matchDate && r.playerName === player.name);
-                pScores.push(round ? (parseInt(round.scores[i]) || 0) : 0);
+                
+                // CRITICAL FIX: Ensure we use the 'points' array from the round, not 'scores' (strokes)
+                // If the round has a 'points' array, use that. Otherwise, default to 0.
+                let pointsForHole = 0;
+                if (round && round.points && round.points[i] !== undefined) {
+                    pointsForHole = parseInt(round.points[i]) || 0;
+                }
+                
+                pPoints.push(pointsForHole);
             });
 
-            let holePoints = 0;
+            let holePointsSum = 0;
             if (holeNum === 9 || holeNum === 18) {
-                holePoints = pScores.reduce((a, b) => a + b, 0); // Count all 4
+                // Rule: All 4 players' points count
+                holePointsSum = pPoints.reduce((a, b) => a + b, 0); 
             } else {
-                let sorted = [...pScores].sort((a, b) => b - a);
-                holePoints = (sorted[0] || 0) + (sorted[1] || 0); // Count best 2
+                // Rule: Best 2 players' points count
+                let sorted = [...pPoints].sort((a, b) => b - a);
+                holePointsSum = (sorted[0] || 0) + (sorted[1] || 0); 
             }
 
-            teamTotal += holePoints;
-            holes.push({ hole: holeNum, all: pScores, counted: holePoints });
+            teamTotal += holePointsSum;
+            holes.push({ hole: holeNum, all: pPoints, counted: holePointsSum });
         }
 
-        // Save data so we can show it when clicked
+        // Save data for the detail view
         teamBreakdowns[`Team ${team.id}`] = { names: team.members.map(m => m.name), holes: holes };
 
-        return { name: `Team ${team.id}`, total: teamTotal, players: team.members.map(m => m.name).join(', ') };
-    }).sort((a, b) => b.total - a.total);
+        return { 
+            name: `Team ${team.id}`, 
+            total: teamTotal, 
+            players: team.members.map(m => m.name).join(', ') 
+        };
+    }).sort((a, b) => b.total - a.total); // Sort highest points to the top
 
-    // This makes the rows clickable
-    document.getElementById('team-results-output').innerHTML = `<h4>Leaderboard (Click Team for Details)</h4>` + leaderboard.map((r, i) => `
+    // Refresh the results list on the screen
+    document.getElementById('team-results-output').innerHTML = `<h4>Leaderboard (Points Based)</h4>` + leaderboard.map((r, i) => `
         <div class="match-card" onclick="viewTeamDetail('${r.name}', ${r.total})" style="cursor:pointer">
             <div class="item-row">
                 <span><b>${i+1}. ${r.name}</b><br><small>${r.players}</small></span>
