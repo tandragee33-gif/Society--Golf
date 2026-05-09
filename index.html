@@ -94,6 +94,9 @@
                 <h3>Recent Rounds</h3>
                 <select id="dashSeason" onchange="renderDashboard()"></select>
                 <div id="dash-list"></div>
+<button class="btn-share" onclick="exportMasterReport()" style="margin-top:10px; background: #000;">
+    Print Master Report (All Events)
+</button>
             </div>
         </div>
 
@@ -242,6 +245,14 @@
         
         <div id="team-results-output" style="margin-top:20px;"></div>
     </div>
+<!-- TEAM DETAIL POPUP -->
+<div id="tm-details" class="hidden card" style="border: 2px solid var(--primary); margin-top: 20px;">
+    <div class="no-print">
+        <button class="btn-outline" onclick="document.getElementById('tm-details').classList.add('hidden')">Close Details</button>
+        <button class="btn-share" onclick="window.print()">Print This Team</button>
+    </div>
+    <div id="tm-details-content"></div>
+</div>
 </div>
     <!-- SETUP -->
     <div id="tab-setup" class="tab-content hidden">
@@ -715,32 +726,51 @@ function renderActiveTeams() {
     `).join('');
 }
 
+let teamBreakdowns = {}; // This is a memory bank for the details
+
 function calculateTeamResults() {
     const matchDate = parseDateInput(document.getElementById('tmDate').value);
+    teamBreakdowns = {}; 
+
     const leaderboard = competitionTeams.map(team => {
         let teamTotal = 0;
-        let holeScores = Array.from({ length: 18 }, () => []);
+        let holes = []; 
 
-        team.members.forEach(player => {
-            const round = rounds.find(r => r.date === matchDate && r.playerName === player.name);
-            if (round) round.scores.forEach((s, i) => holeScores[i].push(parseInt(s) || 0));
-        });
+        for (let i = 0; i < 18; i++) {
+            let holeNum = i + 1;
+            let pScores = [];
 
-        holeScores.forEach((scores, i) => {
-            const holeNum = i + 1;
+            // Get scores for all 4 players for this specific hole
+            team.members.forEach(player => {
+                const round = rounds.find(r => r.date === matchDate && r.playerName === player.name);
+                pScores.push(round ? (parseInt(round.scores[i]) || 0) : 0);
+            });
+
+            let holePoints = 0;
             if (holeNum === 9 || holeNum === 18) {
-                teamTotal += scores.reduce((a, b) => a + b, 0); 
+                holePoints = pScores.reduce((a, b) => a + b, 0); // Count all 4
             } else {
-                const best2 = scores.sort((a, b) => b - a).slice(0, 2);
-                teamTotal += best2.reduce((a, b) => a + b, 0); 
+                let sorted = [...pScores].sort((a, b) => b - a);
+                holePoints = (sorted[0] || 0) + (sorted[1] || 0); // Count best 2
             }
-        });
-        return { name: `Team ${team.id}`, total: teamTotal, names: team.members.map(m => m.name).join(', ') };
+
+            teamTotal += holePoints;
+            holes.push({ hole: holeNum, all: pScores, counted: holePoints });
+        }
+
+        // Save data so we can show it when clicked
+        teamBreakdowns[`Team ${team.id}`] = { names: team.members.map(m => m.name), holes: holes };
+
+        return { name: `Team ${team.id}`, total: teamTotal, players: team.members.map(m => m.name).join(', ') };
     }).sort((a, b) => b.total - a.total);
 
-    document.getElementById('team-results-output').innerHTML = `<h4>Leaderboard</h4>` + leaderboard.map((r, i) => `
-        <div class="match-card ${i===0?'winner-row':''}">
-            <div class="item-row"><span><b>${i+1}. ${r.name}</b><br><small>${r.names}</small></span><span><b>${r.total} pts</b></span></div>
+    // This makes the rows clickable
+    document.getElementById('team-results-output').innerHTML = `<h4>Leaderboard (Click Team for Details)</h4>` + leaderboard.map((r, i) => `
+        <div class="match-card" onclick="viewTeamDetail('${r.name}', ${r.total})" style="cursor:pointer">
+            <div class="item-row">
+                <span><b>${i+1}. ${r.name}</b><br><small>${r.players}</small></span>
+                <span><b>${r.total} pts ></b></span>
+            </div>
         </div>`).join('');
 }
 
@@ -748,6 +778,84 @@ function resetTeamComp() {
     competitionTeams = [];
     document.getElementById('tm-active-teams').innerHTML = '';
     document.getElementById('team-results-output').innerHTML = '';
+}
+function viewTeamDetail(teamName, totalScore) {
+    const data = teamBreakdowns[teamName];
+    document.getElementById('tm-details').classList.remove('hidden');
+    
+    let tableHtml = `<h3>${teamName} Breakdown</h3><p>${data.names.join(' / ')}</p>`;
+    tableHtml += `<table class="report-table">
+                    <tr><th>Hole</th><th>Player Scores</th><th>Pts Counted</th></tr>`;
+    
+    data.holes.forEach(h => {
+        tableHtml += `<tr>
+            <td>Hole ${h.hole} ${ (h.hole==9||h.hole==18) ? '<b>*</b>' : '' }</td>
+            <td>${h.all.join(', ')}</td>
+            <td><b>${h.counted}</b></td>
+        </tr>`;
+    });
+    
+    tableHtml += `<tr><td colspan="2"><b>FINAL TOTAL</b></td><td><b>${totalScore}</b></td></tr></table>`;
+    
+    document.getElementById('tm-details-content').innerHTML = tableHtml;
+    document.getElementById('tm-details').scrollIntoView({ behavior: 'smooth' });
+}
+function exportMasterReport() {
+    // 1. Ask the user which date they want to see
+    const dateInput = prompt("Enter the date for the Master Report (dd/mm/yyyy):");
+    if (!dateInput) return; // Exit if they click cancel
+
+    const searchDateStr = parseDateInput(dateInput); // Changes dd/mm/yyyy to yyyy-mm-dd
+    
+    // 2. Find Individual Rounds for that date
+    const dailyRounds = rounds.filter(r => r.date === searchDateStr);
+    
+    // 3. Find Saved Winners (Teams, Doubles, Matchplay) for that date
+    const dailyComps = pastComps.filter(c => c.date === dateInput);
+
+    // If nothing is found, tell the user
+    if (dailyRounds.length === 0 && dailyComps.length === 0) {
+        return alert("No data found for " + dateInput);
+    }
+
+    // 4. Prepare the screen to show the report
+    document.getElementById('dash-main-view').classList.add('hidden');
+    document.getElementById('dash-detail').classList.remove('hidden');
+    document.getElementById('detail-title').innerText = "Master Tournament Report";
+    document.getElementById('detail-date').innerText = dateInput;
+
+    let masterHtml = "";
+
+    // 5. Build the Individual Table if rounds exist
+    if (dailyRounds.length > 0) {
+        dailyRounds.sort((a, b) => b.points - a.points); // Highest points first
+        masterHtml += `<h4>Individual Leaderboard</h4>
+            <table class="report-table">
+                <thead><tr><th>Pos</th><th>Player</th><th>Course</th><th>Pts</th></tr></thead>
+                <tbody>`;
+        dailyRounds.forEach((r, i) => {
+            masterHtml += `<tr><td>${i+1}</td><td>${r.playerName}</td><td>${r.courseName}</td><td>${r.points}</td></tr>`;
+        });
+        masterHtml += `</tbody></table><br>`;
+    }
+
+    // 6. Build the Competition Table if winners were saved
+    if (dailyComps.length > 0) {
+        masterHtml += `<h4>Competition Winners</h4>
+            <table class="report-table">
+                <thead><tr><th>Event</th><th>Winner</th><th>Result</th></tr></thead>
+                <tbody>`;
+        dailyComps.forEach(c => {
+            masterHtml += `<tr><td>${c.type}</td><td><b>${c.winner}</b></td><td>${c.detail || '-'}</td></tr>`;
+        });
+        masterHtml += `</tbody></table>`;
+    }
+
+    // 7. Put all this info onto the page
+    document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
+
+    // 8. Open the print window
+    setTimeout(() => { window.print(); }, 500);
 }
 </script>
 
