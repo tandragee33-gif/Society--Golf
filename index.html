@@ -945,8 +945,15 @@ function exportMasterReport() {
             `</tbody></table>`;
     }
 
-    // 2. EVENT RESULTS
+   // 2. EVENT RESULTS (Now Sorted by Points)
     if (dailyComps.length > 0) {
+        // Sort the history entries so the highest "pts" come first
+        const sortedComps = [...dailyComps].sort((a, b) => {
+            const scoreA = parseInt(a.detail) || 0;
+            const scoreB = parseInt(b.detail) || 0;
+            return scoreB - scoreA;
+        });
+
         masterHtml += `
             <div class="section-header">Event Results</div>
             <table class="report-table">
@@ -958,10 +965,10 @@ function exportMasterReport() {
                     </tr>
                 </thead>
                 <tbody>` + 
-                dailyComps.map(c => `
+                sortedComps.map((c, i) => `
                     <tr>
                         <td>${c.type}</td>
-                        <td><span class="winner-tag">🏆</span><b>${c.winner}</b></td>
+                        <td>${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}<b>${c.winner}</b></td>
                         <td class="w-pts"><b>${c.detail}</b></td>
                     </tr>`).join('') + 
             `</tbody></table>`;
