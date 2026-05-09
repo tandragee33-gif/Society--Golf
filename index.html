@@ -861,19 +861,24 @@ function viewTeamDetail(teamName, totalScore) {
     document.getElementById('tm-details').scrollIntoView({ behavior: 'smooth' });
 }
 function exportMasterReport() {
-    const dateInput = prompt("Enter the date (dd/mm/yyyy):");
+    const dateInput = prompt("Enter the date to export (dd/mm/yyyy):");
     if (!dateInput) return;
 
-    const searchDateStr = parseDateInput(dateInput);
+    // 1. Prepare data filters
+    const searchDateStr = parseDateInput(dateInput); // YYYY-MM-DD
     const dailyRounds = rounds.filter(r => r.date === searchDateStr);
+    
+    // Filter history for the exact date string entered (dd/mm/yyyy)
     const dailyComps = pastComps.filter(c => c.date === dateInput);
 
-    if (dailyRounds.length === 0 && dailyComps.length === 0) return alert("No data found.");
+    if (dailyRounds.length === 0 && dailyComps.length === 0) {
+        return alert("No data found for " + dateInput);
+    }
 
+    // 2. Setup the Report View
     document.getElementById('dash-main-view').classList.add('hidden');
     document.getElementById('dash-detail').classList.remove('hidden');
     
-    // This part adds the Logo and Club Name to the report
     document.getElementById('report-club-name').innerText = club.name;
     const rImg = document.getElementById('report-logo-img');
     if(club.logo) { 
@@ -885,27 +890,48 @@ function exportMasterReport() {
     document.getElementById('detail-date').innerText = dateInput;
 
     let masterHtml = "";
+
+    // 3. Add Individual Rounds Section
     if (dailyRounds.length > 0) {
         dailyRounds.sort((a, b) => b.points - a.points);
-        masterHtml += `<h4>Individual Leaderboard</h4><table class="report-table">
-            <thead><tr><th>Pos</th><th>Player</th><th>Pts</th></tr></thead><tbody>`;
+        masterHtml += `<h4>Individual Leaderboard</h4>
+            <table class="report-table">
+                <thead><tr><th>Pos</th><th>Player</th><th>Course</th><th>Pts</th></tr></thead>
+                <tbody>`;
         dailyRounds.forEach((r, i) => {
-            masterHtml += `<tr><td>${i+1}</td><td>${r.playerName}</td><td>${r.points}</td></tr>`;
+            masterHtml += `<tr>
+                <td>${i+1}</td>
+                <td>${r.playerName}</td>
+                <td>${r.courseName}</td>
+                <td><b>${r.points}</b></td>
+            </tr>`;
         });
         masterHtml += `</tbody></table><br>`;
     }
 
+    // 4. Add Team/Tournament Results Section (The missing piece!)
     if (dailyComps.length > 0) {
-        masterHtml += `<h4>Competition Winners</h4><table class="report-table">
-            <thead><tr><th>Event</th><th>Winner</th><th>Result</th></tr></thead><tbody>`;
+        masterHtml += `<h4>Competition Results (Teams/Doubles)</h4>
+            <table class="report-table">
+                <thead><tr><th>Event Type</th><th>Winner / Team</th><th>Result</th></tr></thead>
+                <tbody>`;
         dailyComps.forEach(c => {
-            masterHtml += `<tr><td>${c.type}</td><td><b>${c.winner}</b></td><td>${c.detail || '-'}</td></tr>`;
+            masterHtml += `<tr>
+                <td>${c.type}</td>
+                <td><b>${c.winner}</b></td>
+                <td>${c.detail || '-'}</td>
+            </tr>`;
         });
         masterHtml += `</tbody></table>`;
     }
 
+    // 5. Inject HTML and Trigger Print
     document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
-    setTimeout(() => { window.print(); }, 500);
+    
+    // Small delay to let the images/text render before the print dialog pops up
+    setTimeout(() => { 
+        window.print(); 
+    }, 500);
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
