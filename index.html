@@ -935,17 +935,24 @@ function exportMasterReport() {
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
+    
+    // 1. Find the specific team in your active teams to get the names
+    const teamData = competitionTeams.find(t => `Team ${t.id}` === teamName);
+    const playerNames = teamData ? teamData.members.map(m => m.name).join(', ') : "";
+    
+    // 2. Create the entry with names included in the winner field
     const entry = { 
         id: Date.now(), 
-        type: 'Team Competition', 
-        winner: teamName, 
+        type: 'Team Event', 
+        winner: `${teamName}: ${playerNames}`, // This adds names to the report
         date: matchDate, 
         detail: totalScore + ' pts' 
     };
+    
     pastComps.push(entry); 
     saveData(); 
     renderPastComps();
-    alert("Saved!");
+    alert("Team Result & Players saved to History!");
 }
 </script>
 
