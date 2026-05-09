@@ -620,16 +620,71 @@
 
     function showDbStep1() { document.getElementById('db-step1').classList.remove('hidden'); document.getElementById('db-step2').classList.add('hidden'); document.getElementById('btnPrintDb').classList.add('hidden'); }
 
-    function saveRound() {
-        const id = document.getElementById('editRoundId').value, cId = document.getElementById('rCourse').value, pId = document.getElementById('rPlayer').value;
-        if(!cId || !pId) return alert("Select course and player.");
-        const crs = courses.find(c => String(c.id) === String(cId)), plr = players.find(p => String(p.id) === String(pId)), isoDate = parseDateInput(document.getElementById('rDate').value);
-        const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
-        let pts = 0; scs.forEach((s, i) => { if(s > 0) { const par = parseInt(crs.pars[i]), si = parseInt(crs.si[i]), hc = parseInt(plr.handicap), allow = Math.floor(hc/18) + (hc%18 >= si ? 1 : 0); pts += Math.max(0, par - (s - allow) + 2); } });
-        const r = { id: id ? parseInt(id) : Date.now(), date: isoDate, courseId: crs.id, courseName: crs.name, playerId: plr.id, playerName: plr.name, points: pts, scores: scs, season: isoDate.split('-')[0] };
-        if(id) rounds = rounds.map(x => String(x.id) === String(id) ? r : x); else rounds.push(r);
-        saveData(); resetRoundForm(); showTab('tab-stats');
-    }
+  function saveRound() {
+    const pId = document.getElementById('rPlayer').value;
+    const cId = document.getElementById('rCourse').value;
+    const dateInput = document.getElementById('rDate').value;
+    
+    if(!pId || !cId || !dateInput) return alert("Please select player, course, and date.");
+
+    const player = players.find(p => p.id == pId);
+    const course = courses.find(c => c.id == cId);
+    const scoreInputs = document.querySelectorAll('.round-scores-val');
+    
+    let scores = [];
+    let holePoints = [];
+    let totalPoints = 0;
+
+    scoreInputs.forEach((input, index) => {
+        const s = parseInt(input.value) || 0;
+        scores.push(s);
+        
+        // Basic Stableford Calculation: Par = 2pts, Birdie = 3pts, Bogey = 1pt
+        let par = course.pars[index] || 4;
+        let pts = 0;
+        if (s > 0) {
+            pts = Math.max(0, (par + 2) - s);
+        }
+        holePoints.push(pts);
+        totalPoints += pts;
+    });
+
+    const newRound = {
+        id: Date.now(),
+        playerName: player.name,
+        courseId: cId,
+        courseName: course.name,
+        date: parseDateInput(dateInput),
+        season: dateInput.split('/')[2] || new Date().getFullYear().toString(),
+        scores: scores,
+        pointsArray: holePoints, // <--- CRITICAL: The team event needs this list!
+        points: totalPoints
+    };
+
+    rounds.push(newRound);
+    saveData();
+    alert("Round Saved! Team scoring is now possible for this date.");
+    resetRoundForm();
+    showTab('tab-dash');
+}
+
+    // 4. Create the "Folder" for this round
+    const newRound = {
+        id: Date.now(),
+        playerName: player.name,
+        courseName: course.name,
+        date: parseDateInput(dateInput),
+        season: dateInput.split('/')[2],
+        scores: holeScores,
+        pointsArray: holePoints, // This is the vital part for the Team Tab!
+        points: totalPts
+    };
+
+    rounds.push(newRound);
+    saveData();
+    alert("Round Saved! The Team Tab can now see these points.");
+    showTab('tab-dash');
+}
 
     function renderStats() {
         const filterVal = document.getElementById('statsFilterDate').value; 
@@ -883,6 +938,77 @@ function saveTeamToHistory(teamName, totalScore) {
     saveData(); 
     
     alert("Team result saved to History!");
+}
+let competitionTeams = [];
+
+function renderTeamSelector() {
+    document.getElementById('team-selector').innerHTML = players.map(p => `
+        <div class="selector-item">
+            <label>${p.name}</label>
+            <input type="checkbox" class="tm-ck" value="${p.id}">
+        </div>`).join('');
+}
+
+function addTeam() {
+    const selectedCheckboxes = document.querySelectorAll('.tm-ck:checked');
+    if (selectedCheckboxes.length !== 4) return alert("Please select exactly 4 players for a team.");
+    
+    const teamMembers = Array.from(selectedCheckboxes).map(ck => players.find(p => p.id == ck.value));
+    const teamId = competitionTeams.length + 1;
+    
+    competitionTeams.push({ id: teamId, members: teamMembers });
+    
+    // Clear checkboxes
+    selectedCheckboxes.forEach(ck => ck.checked = false);
+    
+    renderActiveTeams();
+}
+
+function renderActiveTeams() {
+    document.getElementById('tm-active-teams').innerHTML = competitionTeams.map(t => `
+        <div class="team-box">
+            <b>Team ${t.id}:</b> ${t.members.map(m => m.name).join(', ')}
+        </div>`).join('');
+}
+
+function calculateTeamResults() {
+    const matchDate = parseDateInput(document.getElementById('tmDate').value);
+    if (!matchDate) return alert("Please enter a match date.");
+
+    const leaderboard = competitionTeams.map(team => {
+        let teamTotal = 0;
+        for (let i = 0; i < 18; i++) {
+            let holeNum = i + 1;
+            let holePoints = [];
+
+            team.members.forEach(player => {
+                const round = rounds.find(r => r.date === matchDate && r.playerName === player.name);
+                let p = (round && round.pointsArray) ? (parseInt(round.pointsArray[i]) || 0) : 0;
+                holePoints.push(p);
+            });
+
+            // Rules: All 4 count on 9 & 18. Best 2 count on others.
+            if (holeNum === 9 || holeNum === 18) {
+                teamTotal += holePoints.reduce((a, b) => a + b, 0);
+            } else {
+                holePoints.sort((a, b) => b - a);
+                teamTotal += (holePoints[0] || 0) + (holePoints[1] || 0);
+            }
+        }
+        return { name: `Team ${team.id}`, total: teamTotal, players: team.members.map(m => m.name).join(', ') };
+    }).sort((a, b) => b.total - a.total);
+
+    document.getElementById('team-results-output').innerHTML = `<h3>Leaderboard</h3>` + leaderboard.map((r, i) => `
+        <div class="match-card">
+            <b>${i+1}. ${r.name}</b> - ${r.total} pts<br>
+            <small>${r.players}</small>
+        </div>`).join('');
+}
+
+function resetTeamComp() {
+    competitionTeams = [];
+    document.getElementById('tm-active-teams').innerHTML = "";
+    document.getElementById('team-results-output').innerHTML = "";
 }
 </script>
 
