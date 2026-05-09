@@ -879,87 +879,114 @@ function exportMasterReport() {
         document.getElementById('report-logo-img').style.display = 'inline-block'; 
     }
 
-    document.getElementById('detail-title').innerText = "Master Tournament Report";
+    document.getElementById('detail-title').innerText = "Tournament Master Report";
     document.getElementById('detail-date').innerText = dateInput;
 
-    let masterHtml = "";
+    // INJECT CUSTOM CSS FOR ALIGNMENT
+    let masterHtml = `
+    <style>
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
+        .report-table th, .report-table td { border-bottom: 1px solid #eee; padding: 10px 5px; text-align: left; font-size: 13px; overflow: hidden; }
+        .report-table th { background-color: #f8f9fa; text-transform: uppercase; font-size: 11px; color: #555; }
+        
+        /* Column Widths for Individual Table */
+        .col-pos { width: 40px; }
+        .col-player { width: 250px; }
+        .col-pts { width: 60px; text-align: right; }
 
-    // 1. Individual Leaderboard
+        /* Column Widths for Competition Summary */
+        .col-event { width: 120px; }
+        .col-winner { width: auto; }
+        .col-result { width: 80px; text-align: right; }
+
+        .section-header { border-bottom: 2px solid #333; margin-top: 30px; padding-bottom: 5px; font-size: 16px; }
+        .scorecard-header { font-size: 14px; margin-top: 20px; color: #2c3e50; }
+    </style>`;
+
+    // 1. INDIVIDUAL LEADERBOARD (Has Pos/Player/Pts)
     if (dailyRounds.length > 0) {
         dailyRounds.sort((a, b) => b.points - a.points);
-        masterHtml += `<h4>Individual Leaderboard</h4>
+        masterHtml += `
+            <h4 class="section-header">Individual Leaderboard</h4>
             <table class="report-table">
-                <thead><tr><th>Pos</th><th>Player</th><th>Pts</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th class="col-pos">Pos</th>
+                        <th class="col-player">Player Name</th>
+                        <th class="col-pts">Points</th>
+                    </tr>
+                </thead>
                 <tbody>` + 
-                dailyRounds.map((r, i) => `<tr><td>${i+1}</td><td>${r.playerName}</td><td>${r.points}</td></tr>`).join('') + 
-            `</tbody></table><br>`;
+                dailyRounds.map((r, i) => `
+                    <tr>
+                        <td class="col-pos">${i+1}</td>
+                        <td class="col-player">${r.playerName}</td>
+                        <td class="col-pts"><b>${r.points}</b></td>
+                    </tr>`).join('') + 
+            `</tbody></table>`;
     }
 
-    // 2. Competition Summary
+    // 2. COMPETITION SUMMARY (No Pos/Player/Pts - uses specialized headers)
     if (dailyComps.length > 0) {
-        masterHtml += `<h4>Competition Summary</h4>
+        masterHtml += `
+            <h4 class="section-header">Event Results</h4>
             <table class="report-table">
-                <thead><tr><th>Event</th><th>Winner / Players</th><th>Result</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th class="col-event">Event Type</th>
+                        <th class="col-winner">Winner / Team Members</th>
+                        <th class="col-result">Result</th>
+                    </tr>
+                </thead>
                 <tbody>` + 
-                dailyComps.map(c => `<tr><td>${c.type}</td><td><b>${c.winner}</b></td><td>${c.detail}</td></tr>`).join('') + 
-            `</tbody></table><br>`;
+                dailyComps.map(c => `
+                    <tr>
+                        <td class="col-event">${c.type}</td>
+                        <td class="col-winner"><b>${c.winner}</b></td>
+                        <td class="col-result"><b>${c.detail}</b></td>
+                    </tr>`).join('') + 
+            `</tbody></table>`;
     }
 
-  // 3. Winning Team Detailed Scorecard (Smart Search)
-    // First, find all team events for this specific date
+    // 3. WINNING TEAM DETAILED SCORECARD
     const teamEvents = dailyComps.filter(c => c.type === 'Team Event');
-    
     if (teamEvents.length > 0) {
-        // Sort them by points (detail field) to find the actual highest score
-        // We parse "45 pts" into the number 45
-        teamEvents.sort((a, b) => {
-            const scoreA = parseInt(a.detail) || 0;
-            const scoreB = parseInt(b.detail) || 0;
-            return scoreB - scoreA;
-        });
-
-        const trueWinner = teamEvents[0]; // The top of the sorted list
+        teamEvents.sort((a, b) => (parseInt(b.detail) || 0) - (parseInt(a.detail) || 0));
+        const trueWinner = teamEvents[0];
         const teamKey = trueWinner.winner.split(':')[0].trim(); 
         const details = teamBreakdowns[teamKey];
 
         if (details) {
-            masterHtml += `<div style="page-break-before: always; border-top: 2px solid #333; padding-top: 20px;">
-                <h4 style="margin-bottom:5px;">Tournament Champions: ${teamKey}</h4>
-                <p style="font-size:14px; color:var(--primary); font-weight:bold; margin-top:0;">
-                    Score: ${trueWinner.detail}
-                </p>
-                <p style="font-size:12px; margin-bottom:15px;">Players: ${details.names.join(' / ')}</p>
-                
-                <table class="report-table" style="font-size:11px;">
+            masterHtml += `
+            <div style="page-break-before: always;">
+                <h4 class="section-header">Champions Scorecard: ${teamKey}</h4>
+                <p style="margin: 5px 0 15px 0;">Players: <i>${details.names.join(', ')}</i></p>
+                <table class="report-table" style="text-align: center;">
                     <thead>
-                        <tr>
-                            <th>Hole</th>
-                            ${details.names.map(n => `<th>${n.split(' ')[0]}</th>`).join('')}
-                            <th>Pts</th>
+                        <tr style="background: #333; color: white;">
+                            <th style="color: white; width: 60px;">Hole</th>
+                            ${details.names.map(n => `<th style="color: white;">${n.split(' ')[0]}</th>`).join('')}
+                            <th style="color: white; width: 70px;">Hole Total</th>
                         </tr>
                     </thead>
                     <tbody>` + 
                     details.holes.map(h => `
                         <tr>
-                            <td>Hole ${h.hole}${ (h.hole==9||h.hole==18) ? ' <b>*</b>' : '' }</td>
+                            <td>${h.hole}${ (h.hole==9||h.hole==18) ? ' <b>*</b>' : '' }</td>
                             ${h.all.map(p => `<td>${p}</td>`).join('')}
-                            <td style="background:#f9f9f9; font-weight:bold;">${h.counted}</td>
+                            <td style="background:#f2f2f2; font-weight:bold;">${h.counted}</td>
                         </tr>`).join('') + 
                     `</tbody>
                 </table>
-                <div style="font-size:10px; color:#666; margin-top:10px; font-style:italic;">
-                    * Holes 9 & 18: All 4 scores count. All other holes: Best 2 scores count.
-                </div>
+                <p style="font-size:10px; color:#777;">* Denotes all scores counted (Holes 9 & 18). Otherwise, best 2 scores count.</p>
             </div>`;
-        } else {
-            // Fallback if the session was refreshed and teamBreakdowns is gone
-            masterHtml += `<p style="font-size:11px; color:#d32f2f;">
-                <i>Note: Full scorecard only available immediately after calculation.</i>
-            </p>`;
         }
     }
+
     document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
-    setTimeout(() => { window.print(); }, 500);
+    
+    // Slight delay to ensure CSS styles are applied before print dialog
+    setTimeout(() => { window.print(); }, 600);
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
