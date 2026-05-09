@@ -861,6 +861,56 @@ function saveTeamToHistory(teamName, totalScore) {
     
     alert("Team result saved to History!");
 }
+function calculateTeamResults() {
+    const matchDate = document.getElementById('tmDate').value.trim();
+    
+    if (competitionTeams.length === 0) {
+        alert("You haven't added any teams yet!");
+        return;
+    }
+
+    const results = competitionTeams.map(team => {
+        let teamTotal = 0;
+        
+        for (let i = 0; i < 18; i++) {
+            let holeScores = team.members.map(m => {
+                // We search for a round matching the name AND date
+                const r = rounds.find(rd => 
+                    rd.date.trim() === matchDate && 
+                    rd.playerName.toLowerCase() === m.name.toLowerCase()
+                );
+                
+                if (!r) {
+                    console.log(`Missing round for ${m.name} on ${matchDate}`);
+                    return 0; 
+                }
+                return r.pointsArray[i] || 0;
+            });
+
+            holeScores.sort((a, b) => b - a);
+
+            // Scoring Logic: Holes 9 (index 8) and 18 (index 17) count everyone
+            if (i === 8 || i === 17) {
+                teamTotal += holeScores.reduce((a, b) => a + b, 0);
+            } else {
+                // Other holes count top 2
+                teamTotal += (holeScores[0] || 0) + (holeScores[1] || 0);
+            }
+        }
+        return { name: `Team ${team.id}`, score: teamTotal };
+    });
+
+    if (results.every(r => r.score === 0)) {
+        alert("Found the teams, but found 0 rounds for the date: " + matchDate);
+    }
+
+    document.getElementById('team-results-output').innerHTML = results.map(r => `
+        <div class="item-row">
+            <strong>${r.name}</strong>
+            <span>${r.score} points</span>
+        </div>
+    `).join('');
+}
 </script>
 
 </body>
