@@ -142,6 +142,23 @@
             <select id="rCourse"><option value="">Select Course</option></select>
             <select id="rPlayer"><option value="">Select Player</option></select>
             <div class="score-grid" id="round-scores"></div>
+<!-- Special Awards Section -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 8px; border: 1px solid #eee;">
+    <div>
+        <label style="font-size:11px; font-weight:bold;">Longest Drive?</label>
+        <select id="rLongDrive">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+        </select>
+    </div>
+    <div>
+        <label style="font-size:11px; font-weight:bold;">Nearest Pin?</label>
+        <select id="rNearPin">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+        </select>
+    </div>
+</div>
             <button class="btn" onclick="saveRound()">Save Result</button>
             <button class="btn-outline" style="width:100%" onclick="resetRoundForm()">Clear / New</button>
         </div>
@@ -479,7 +496,15 @@
         document.getElementById('report-club-name').innerText = club.name;
         const rImg = document.getElementById('report-logo-img');
         if(club.logo) { rImg.src = club.logo; rImg.style.display = 'inline-block'; }
-        document.getElementById('detail-results').innerHTML = filtered.map((r, i) => `<tr><td>${i+1}</td><td>${r.playerName}</td><td>${r.points}</td></tr>`).join('');
+        document.getElementById('detail-results').innerHTML = filtered.map((r, i) => `<tr><td>return `<tr>
+    <td>${i+1}</td>
+    <td>${r.playerName}</td>
+    <td>${r.points}</td>
+    <td>
+        ${r.longDrive ? '🚀' : ''} 
+        ${r.nearPin ? '🎯' : ''}
+    </td>
+</tr>`;`).join('');
     }
 
     function closeDetail() {
@@ -649,18 +674,16 @@ function saveRound() {
 
     const totalPts = ptsArray.reduce((a, b) => a + b, 0);
 
-    const r = {
-        id: id ? parseInt(id) : Date.now(),
-        date: isoDate,
-        courseId: crs.id,
-        courseName: crs.name,
-        playerId: plr.id,
-        playerName: plr.name,
-        points: totalPts,
-        scores: scs,
-        pointsArray: ptsArray, // This connects to your Team tab
-        season: isoDate.split('-')[0]
-    };
+const r = {
+    id: id ? parseInt(id) : Date.now(),
+    date: isoDate,
+    courseId: crs.id,
+    // ... other lines here ...
+    pointsArray: ptsArray,
+    season: isoDate.split('-')[0], 
+    longDrive: document.getElementById('rLongDrive').value === "Yes",
+    nearPin: document.getElementById('rNearPin').value === "Yes"
+};
 
     if(id) {
         rounds = rounds.map(x => String(x.id) === String(id) ? r : x);
