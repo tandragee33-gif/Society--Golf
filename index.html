@@ -1057,8 +1057,47 @@ function saveTeamToHistory(teamName, totalScore) {
     alert("Team Result Saved Permanently!");
 }
 function saveSpecialPrizes() {
-    // 1. Get the date from your date input box
-    const tourneyDate = document.getElementById('tmDate').value; 
+    // 1. Get the date from the input
+    const dateInput = document.getElementById('tmDate').value; 
+    if (!dateInput) return alert("Please select a date first");
+
+    // Fix the date format to dd/mm/yyyy so the report can find it
+    const formattedDate = formatDateForHistory(dateInput);
+    
+    const ldName = document.getElementById('ld-name').value;
+    const ldHole = document.getElementById('ld-hole').value;
+    const ctpName = document.getElementById('ctp-name').value;
+    const ctpHole = document.getElementById('ctp-hole').value;
+
+    if (ldName) {
+        pastComps.push({
+            date: formattedDate, // Using the fixed date
+            type: "Longest Drive",
+            winner: ldName,
+            detail: "Hole " + ldHole
+        });
+    }
+
+    if (ctpName) {
+        pastComps.push({
+            date: formattedDate, // Using the fixed date
+            type: "Closest to Pin",
+            winner: ctpName,
+            detail: "Hole " + ctpHole
+        });
+    }
+
+    saveData(); 
+    if (typeof renderPastComps === "function") renderPastComps();
+    alert("Special Prizes Saved to History!");
+}
+
+// Simple helper to make sure the date is dd/mm/yyyy
+function formatDateForHistory(dateStr) {
+    if (!dateStr.includes('-')) return dateStr; // already formatted
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
+}
     
     // 2. Get the values from the boxes we just made
     const ldName = document.getElementById('ld-name').value;
