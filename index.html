@@ -142,6 +142,22 @@
             <select id="rCourse"><option value="">Select Course</option></select>
             <select id="rPlayer"><option value="">Select Player</option></select>
             <div class="score-grid" id="round-scores"></div>
+<div style="margin: 10px 0; display: flex; gap: 10px;">
+    <div style="flex: 1;">
+        <label style="font-size: 11px; display: block;">Longest Drive</label>
+        <select id="rLongDrive" style="width: 100%;">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+        </select>
+    </div>
+    <div style="flex: 1;">
+        <label style="font-size: 11px; display: block;">Nearest Pin</label>
+        <select id="rNearPin" style="width: 100%;">
+            <option value="No">No</option>
+            <option value="Yes">Yes</option>
+        </select>
+    </div>
+</div>
             <button class="btn" onclick="saveRound()">Save Result</button>
             <button class="btn-outline" style="width:100%" onclick="resetRoundForm()">Clear / New</button>
         </div>
