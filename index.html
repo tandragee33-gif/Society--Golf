@@ -479,18 +479,34 @@
             </div>`).join('');
     }
 
-    function viewDetail(date, courseId) {
-        const filtered = rounds.filter(r => r.date === date && String(r.courseId) === String(courseId)).sort((a,b) => b.points - a.points);
-        if(filtered.length === 0) return;
-        document.getElementById('dash-main-view').classList.add('hidden');
-        document.getElementById('dash-detail').classList.remove('hidden');
-        document.getElementById('detail-title').innerText = filtered[0].courseName;
-        document.getElementById('detail-date').innerText = formatDateDisplay(date);
-        document.getElementById('report-club-name').innerText = club.name;
-        const rImg = document.getElementById('report-logo-img');
-        if(club.logo) { rImg.src = club.logo; rImg.style.display = 'inline-block'; }
-        document.getElementById('detail-results').innerHTML = filtered.map((r, i) => `<tr><td>${i+1}</td><td>${r.playerName}</td><td>${r.points}</td></tr>`).join('');
-    }
+function viewDetail(date, courseId) {
+    const filtered = rounds.filter(r => r.date === date && String(r.courseId) === String(courseId)).sort((a,b) => b.points - a.points);
+    
+    if(filtered.length === 0) return;
+    
+    document.getElementById('dash-main-view').classList.add('hidden');
+    document.getElementById('dash-detail').classList.remove('hidden');
+    document.getElementById('detail-title').innerText = filtered[0].courseName;
+    document.getElementById('detail-date').innerText = formatDateDisplay(date);
+    document.getElementById('report-club-name').innerText = club.name;
+    
+    const rImg = document.getElementById('report-logo-img');
+    if(club.logo) { rImg.src = club.logo; rImg.style.display = 'inline-block'; }
+
+    // Updated Table Body with Awards Column
+    document.getElementById('detail-results').innerHTML = filtered.map((r, i) => {
+        let awards = "";
+        if (r.longDrive) awards += "🚀";
+        if (r.nearPin) awards += "🎯";
+        
+        return `<tr>
+            <td>${i+1}</td>
+            <td>${r.playerName}</td>
+            <td>${r.points}</td>
+            <td style="font-size:1.2em;">${awards}</td>
+        </tr>`;
+    }).join('');
+}
 
     function closeDetail() {
         document.getElementById('dash-main-view').classList.remove('hidden');
@@ -927,19 +943,19 @@ function exportMasterReport() {
             <thead>
                 <tr>
                     <th class="col-rank">Position</th>
-                    <th>Player Name</th>
-                    <th class="col-pts">Points</th>
+                    <th>Player Name</th><th class="col-pts">Points</th><th>Awards</th> 
                 </tr>
             </thead>
             <tbody>` + 
-            dailyRounds.map((r, i) => `
-                <tr class="${i === 0 ? 'winner-row' : ''}">
-                    <td class="col-rank">${i+1}</td>
-                    <td>${i === 0 ? '<span class="trophy">🏆</span>' : ''}${r.playerName}</td>
-                    <td class="col-pts">${r.points}</td>
-                </tr>`).join('') + 
-            `</tbody></table>`;
-    }
+          dailyRounds.map((r, i) => `
+        <tr class="${i === 0 ? 'winner-row' : ''}">
+            <td class="col-rank">${i+1}</td>
+            <td>${i === 0 ? '<span class="trophy">🏆</span>' : ''}${r.playerName}</td>
+            <td class="col-pts">${r.points}</td>
+            <td>${r.longDrive ? 'LD ' : ''}${r.nearPin ? 'NP' : ''}</td>
+        </tr>`).join('') + 
+    `</tbody></table>`;
+}
 
     // 2. SEGMENTED EVENT RESULTS
     if (dailyComps.length > 0) {
