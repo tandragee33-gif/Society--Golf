@@ -147,6 +147,26 @@
         </div>
     </div>
 
+<div style="margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background: #fdfdfd;">
+    <h3 style="margin-bottom: 10px;">Special Prizes</h3>
+    
+    <div style="margin-bottom: 10px;">
+        <label>Longest Drive:</label><br>
+        <input type="text" id="ld-name" placeholder="Winner's Name" style="padding: 8px; width: 65%;">
+        <input type="number" id="ld-hole" placeholder="Hole" style="padding: 8px; width: 30%;">
+    </div>
+
+    <div style="margin-bottom: 15px;">
+        <label>Closest to Pin:</label><br>
+        <input type="text" id="ctp-name" placeholder="Winner's Name" style="padding: 8px; width: 65%;">
+        <input type="number" id="ctp-hole" placeholder="Hole" style="padding: 8px; width: 30%;">
+    </div>
+
+    <button onclick="saveSpecialPrizes()" style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+        Save Special Prizes
+    </button>
+</div>
+
     <!-- DOUBLES -->
     <div id="tab-doubles" class="tab-content hidden">
         <div class="card">
@@ -1035,6 +1055,41 @@ function saveTeamToHistory(teamName, totalScore) {
     saveData(); // This saves it to localStorage
     renderPastComps();
     alert("Team Result Saved Permanently!");
+}
+function saveSpecialPrizes() {
+    // 1. Get the date from your date input box
+    const tourneyDate = document.getElementById('tmDate').value; 
+    
+    // 2. Get the values from the boxes we just made
+    const ldName = document.getElementById('ld-name').value;
+    const ldHole = document.getElementById('ld-hole').value;
+    const ctpName = document.getElementById('ctp-name').value;
+    const ctpHole = document.getElementById('ctp-hole').value;
+
+    // 3. If you typed a name for Longest Drive, save it
+    if (ldName) {
+        pastComps.push({
+            date: tourneyDate,
+            type: "Longest Drive",
+            winner: ldName,
+            detail: "Hole " + ldHole
+        });
+    }
+
+    // 4. If you typed a name for Closest to Pin, save it
+    if (ctpName) {
+        pastComps.push({
+            date: tourneyDate,
+            type: "Closest to Pin",
+            winner: ctpName,
+            detail: "Hole " + ctpHole
+        });
+    }
+
+    // 5. Permanent Save & Refresh
+    saveData(); 
+    renderPastComps(); // Updates the list on your screen
+    alert("Special Prizes Saved!");
 }
 </script>
 
