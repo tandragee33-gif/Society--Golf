@@ -315,6 +315,19 @@
         const [y, m, d] = dateStr.split('-');
         return `${d}/${m}/${y}`;
     }
+function getTieBreaker(pointsArray) {
+    if (!pointsArray || pointsArray.length < 18) return 0;
+    
+    const back9 = pointsArray.slice(9, 18).reduce((a, b) => a + b, 0);
+    const last6 = pointsArray.slice(12, 18).reduce((a, b) => a + b, 0);
+    const last3 = pointsArray.slice(15, 18).reduce((a, b) => a + b, 0);
+    const last1 = pointsArray[17];
+
+    // This creates a "weighted" number for sorting
+    // Example: 36 points with 18 on back 9 becomes 36.18...
+    return (back9 * 0.01) + (last6 * 0.0001) + (last3 * 0.000001) + (last1 * 0.00000001);
+}
+
 
     function parseDateInput(displayStr) {
         const parts = displayStr.split('/');
@@ -480,7 +493,11 @@
     }
 
 function viewDetail(date, courseId) {
-    const filtered = rounds.filter(r => r.date === date && String(r.courseId) === String(courseId)).sort((a,b) => b.points - a.points);
+    const filtered = rounds.filter(r => r.date === date && String(r.courseId) === String(courseId)).sort((a,b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    // If points are equal, use the tie-breaker
+    return getTieBreaker(b.pointsArray) - getTieBreaker(a.pointsArray);
+});
     
     if(filtered.length === 0) return;
     
@@ -937,7 +954,10 @@ function exportMasterReport() {
 
     // 1. INDIVIDUAL LEADERBOARD
     if (dailyRounds.length > 0) {
-        dailyRounds.sort((a, b) => b.points - a.points);
+        dailyRounds.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    return getTieBreaker(b.pointsArray) - getTieBreaker(a.pointsArray);
+});
         reportContent += `<div class="section-title">Individual Leaderboard</div>
         <table>
             <thead>
