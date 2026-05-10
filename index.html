@@ -198,6 +198,26 @@
         </div>
     </div>
 
+<div style="margin: 20px 0; padding: 15px; border: 2px solid #222; border-radius: 8px; background: #f9f9f9;">
+    <h3 style="margin-bottom: 10px;">Special Prizes</h3>
+    
+    <p>Longest Drive:</p>
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+        <input type="text" id="ld-name" placeholder="Player Name" style="flex: 2; padding: 10px;">
+        <input type="number" id="ld-hole" placeholder="Hole #" style="flex: 1; padding: 10px;">
+    </div>
+
+    <p>Closest to Pin:</p>
+    <div style="display: flex; gap: 5px; margin-bottom: 15px;">
+        <input type="text" id="ctp-name" placeholder="Player Name" style="flex: 2; padding: 10px;">
+        <input type="number" id="ctp-hole" placeholder="Hole #" style="flex: 1; padding: 10px;">
+    </div>
+
+    <button onclick="saveSpecialPrizes()" style="width: 100%; padding: 12px; background: #28a745; color: white; font-weight: bold; border: none; border-radius: 5px;">
+        Save Special Prizes
+    </button>
+</div>
+
     <!-- PAIRS KNOCKOUT -->
     <div id="tab-pairs" class="tab-content hidden">
         <div class="card">
@@ -928,14 +948,52 @@ function exportMasterReport() {
             `</tbody></table>`;
     }
 
-    // 2. SEGMENTED EVENT RESULTS
+   // 2. SEGMENTED EVENT RESULTS (Handles Teams, Longest Drive, and Closest to Pin)
     if (dailyComps.length > 0) {
-        // Group results by their type (e.g., "Team Event", "Doubles", etc.)
         const groups = dailyComps.reduce((acc, comp) => {
             if (!acc[comp.type]) acc[comp.type] = [];
             acc[comp.type].push(comp);
             return acc;
         }, {});
+
+        Object.keys(groups).forEach(type => {
+            const entries = groups[type];
+            
+            entries.sort((a, b) => {
+                const scoreA = parseInt(a.detail) || 0;
+                const scoreB = parseInt(b.detail) || 0;
+                return scoreB - scoreA;
+            });
+
+            reportContent += `<div class="section-title">${type} Results</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-rank">Position</th>
+                        <th>Winner / Team Members</th>
+                        <th class="col-pts">Result</th>
+                    </tr>
+                </thead>
+                <tbody>` + 
+                entries.map((c, i) => {
+                    // This part decides if we show "WINNER" or "2nd Place", etc.
+                    let positionLabel;
+                    if (c.type === "Longest Drive" || c.type === "Closest to Pin") {
+                        positionLabel = "<b>WINNER</b>";
+                    } else {
+                        positionLabel = i === 0 ? "<b>WINNER</b>" : (i + 1) + " Place";
+                    }
+
+                    return `
+                    <tr class="${i === 0 ? 'winner-row' : ''}">
+                        <td class="col-rank">${positionLabel}</td>
+                        <td><span class="trophy">🏆</span><b>${c.winner}</b></td>
+                        <td class="col-pts">${c.detail}</td>
+                    </tr>`;
+                }).join('') + 
+                `</tbody></table>`;
+        });
+    }
 
         // Loop through each group to create its own table
         Object.keys(groups).forEach(type => {
@@ -1036,6 +1094,45 @@ function saveTeamToHistory(teamName, totalScore) {
     renderPastComps();
     alert("Team Result Saved Permanently!");
 }
+function saveSpecialPrizes() {
+    // Get the date you selected for the tournament
+    const tourneyDate = document.getElementById('tmDate').value; 
+    
+    const ldName = document.getElementById('ld-name').value;
+    const ldHole = document.getElementById('ld-hole').value;
+    const ctpName = document.getElementById('ctp-name').value;
+    const ctpHole = document.getElementById('ctp-hole').value;
+
+    // Save Longest Drive if a name was entered
+    if (ldName) {
+        pastComps.push({
+            date: tourneyDate,
+            type: "Longest Drive",
+            winner: ldName,
+            detail: "Hole " + ldHole
+        });
+    }
+
+    // Save Closest to Pin if a name was entered
+    if (ctpName) {
+        pastComps.push({
+            date: tourneyDate,
+            type: "Closest to Pin",
+            winner: ctpName,
+            detail: "Hole " + ctpHole
+        });
+    }
+
+    saveData(); // This saves it to your phone/PC permanently
+    alert("Special Prizes Saved!");
+    
+    // Clear the boxes so they are ready for next time
+    document.getElementById('ld-name').value = '';
+    document.getElementById('ld-hole').value = '';
+    document.getElementById('ctp-name').value = '';
+    document.getElementById('ctp-hole').value = '';
+}
+
 </script>
 
 </body>
