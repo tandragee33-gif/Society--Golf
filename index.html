@@ -870,11 +870,9 @@ function exportMasterReport() {
 
     if (dailyRounds.length === 0 && dailyComps.length === 0) return alert("No data found.");
 
-    // Clean display for printing
     document.getElementById('dash-main-view').classList.add('hidden');
     document.getElementById('dash-detail').classList.remove('hidden');
     
-    // Hide the Action Buttons (Print/Share/PDF) automatically
     const actionArea = document.querySelector('.detail-actions');
     if (actionArea) actionArea.style.display = 'none';
 
@@ -890,35 +888,37 @@ function exportMasterReport() {
 
     let masterHtml = `
     <style>
-        .report-wrapper { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; }
-        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 35px; table-layout: fixed; }
-        .report-table th, .report-table td { border-bottom: 1px solid #ddd; padding: 10px 5px; text-align: left; }
+        .report-wrapper { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; padding: 10px; }
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; table-layout: fixed; }
+        .report-table th, .report-table td { border-bottom: 1px solid #ccc; padding: 12px 10px; text-align: left; }
         
+        /* THE TITLES: Styled to stand out */
         .section-header { 
-            border-bottom: 2px solid #000; 
-            font-size: 18px; 
-            font-weight: bold; 
-            margin: 40px 0 15px 0; 
-            padding-bottom: 3px;
+            background-color: #f0f0f0;
+            border-left: 5px solid #222;
+            font-size: 20px; 
+            font-weight: 800; 
+            margin: 50px 0 20px 0; 
+            padding: 10px 15px;
             white-space: nowrap;
-            display: block;
-            width: 100%;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
 
-        .winner-tag { color: #b8860b; font-size: 1.2em; margin-right: 5px; }
+        .winner-tag { color: #b8860b; font-size: 1.3em; margin-right: 8px; }
         
-        /* Column Widths for Main Tables */
-        .w-pos { width: 50px; }
-        .w-pts { width: 80px; text-align: right; }
-        .w-event { width: 130px; }
+        /* WIDER COLUMNS for Leaderboards */
+        .w-pos { width: 60px; }
+        .w-pts { width: 100px; text-align: right; font-size: 16px; }
+        .w-event { width: 180px; font-weight: bold; }
         
-        /* Scorecard Grid - Equal Column Distribution */
-        .score-grid { table-layout: fixed; text-align: center; border: 1px solid #333; }
-        .score-grid th, .score-grid td { border: 1px solid #ccc; padding: 8px 2px; font-size: 12px; }
-        .hole-num { width: 70px; background: #f2f2f2; font-weight: bold; }
-        .pts-sum { width: 70px; background: #eee; font-weight: bold; }
+        /* Scorecard Layout */
+        .score-grid { table-layout: fixed; text-align: center; border: 2px solid #222; }
+        .score-grid th, .score-grid td { border: 1px solid #bbb; padding: 10px 2px; font-size: 13px; }
+        .hole-num { width: 85px; background: #f9f9f9; font-weight: bold; }
+        .pts-sum { width: 85px; background: #eee; font-weight: bold; }
 
-        .note-line { font-size: 11px; color: #444; margin-top: 8px; white-space: nowrap; border-top: 1px solid #eee; padding-top: 5px; }
+        .note-line { font-size: 12px; color: #444; margin-top: 12px; white-space: nowrap; border-top: 2px solid #eee; padding-top: 10px; font-style: italic; }
     </style>
     <div class="report-wrapper">`;
 
@@ -929,25 +929,24 @@ function exportMasterReport() {
             <div class="section-header">Individual Leaderboard</div>
             <table class="report-table">
                 <thead>
-                    <tr>
-                        <th class="w-pos">Pos</th>
+                    <tr style="background:#f9f9f9;">
+                        <th class="w-pos">Rank</th>
                         <th>Player Name</th>
-                        <th class="w-pts">Points</th>
+                        <th class="w-pts">Total Pts</th>
                     </tr>
                 </thead>
                 <tbody>` + 
                 dailyRounds.map((r, i) => `
                     <tr>
-                        <td>${i+1}</td>
-                        <td>${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}${r.playerName}</td>
+                        <td class="w-pos">${i+1}</td>
+                        <td style="font-size:16px;">${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}${r.playerName}</td>
                         <td class="w-pts"><b>${r.points}</b></td>
                     </tr>`).join('') + 
             `</tbody></table>`;
     }
 
-  // 2. EVENT RESULTS (Grouped by Type and Sorted by Score)
+    // 2. EVENT RESULTS (Grouped and Sorted)
     if (dailyComps.length > 0) {
-        // First, group the results by their 'type' (Team Event, Doubles, etc.)
         const groupedComps = dailyComps.reduce((acc, comp) => {
             if (!acc[comp.type]) acc[comp.type] = [];
             acc[comp.type].push(comp);
@@ -956,72 +955,65 @@ function exportMasterReport() {
 
         masterHtml += `<div class="section-header">Event Results</div>`;
 
-        // Iterate through each group (e.g., first the Team Events, then the Doubles)
         for (const [eventType, entries] of Object.entries(groupedComps)) {
-            // Sort entries within this specific group by score
-            const sortedEntries = entries.sort((a, b) => {
-                const scoreA = parseInt(a.detail) || 0;
-                const scoreB = parseInt(b.detail) || 0;
-                return scoreB - scoreA;
-            });
+            const sortedEntries = entries.sort((a, b) => (parseInt(b.detail) || 0) - (parseInt(a.detail) || 0));
 
             masterHtml += `
                 <table class="report-table">
                     <thead>
-                        <tr>
+                        <tr style="background:#f9f9f9;">
                             <th class="w-event">${eventType}</th>
-                            <th>Player / Team Members</th>
+                            <th>Winner / Team Members</th>
                             <th class="w-pts">Result</th>
                         </tr>
                     </thead>
                     <tbody>` + 
                     sortedEntries.map((c, i) => `
                         <tr>
-                            <td class="w-event">${i === 0 ? '<b>Winner</b>' : (i + 1) + ' Place'}</td>
-                            <td>${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}<b>${c.winner}</b></td>
+                            <td class="w-event" style="color:#555;">${i === 0 ? '<b>WINNER</b>' : (i + 1) + ' Place'}</td>
+                            <td style="font-size:16px;">${i === 0 ? '<span class="winner-tag">🏆</span>' : ''}<b>${c.winner}</b></td>
                             <td class="w-pts"><b>${c.detail}</b></td>
                         </tr>`).join('') + 
                 `</tbody></table>`;
         }
     }
- // 3. CHAMPIONS SCORECARD (Permanent Data Version)
-    const teamEvents = dailyComps.filter(c => c.type === 'Team Event');
-    
-    if (teamEvents.length > 0) {
-        teamEvents.sort((a, b) => (parseInt(b.detail) || 0) - (parseInt(a.detail) || 0));
-        const trueWinner = teamEvents[0];
 
-        // Access the breakdown directly from the saved history entry
-        if (trueWinner.breakdown) {
-            masterHtml += `
-            <div style="page-break-before: always;">
-                <div class="section-header">Champions Scorecard: ${trueWinner.winner.split(':')[0]}</div>
-                <table class="report-table score-grid">
-                    <thead>
-                        <tr style="background: #222; color: #fff;">
-                            <th class="hole-num" style="color:white; width:20%;">Hole</th>
-                            ${trueWinner.playerNames.map(n => `<th style="color:white;">${n.split(' ')[0]}</th>`).join('')}
-                            <th class="pts-sum" style="color:white; width:20%;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>` + 
-                    trueWinner.breakdown.map(h => `
-                        <tr>
-                            <td class="hole-num">Hole ${h.hole}${ (h.hole==9||h.hole==18) ? '*' : '' }</td>
-                            ${h.all.map(p => `<td>${p}</td>`).join('')}
-                            <td class="pts-sum">${h.counted}</td>
-                        </tr>`).join('') + 
-                    `</tbody>
-                </table>
-                <div class="note-line">* Denotes all scores counted (Holes 9 & 18). Otherwise, best 2 scores count.</div>
-            </div>`;
-        }
+    // 3. CHAMPIONS SCORECARD (Permanent Storage Version)
+    const teamWin = dailyComps.filter(c => c.type === 'Team Event')
+                              .sort((a,b) => (parseInt(b.detail)||0) - (parseInt(a.detail)||0))[0];
+
+    if (teamWin && (teamWin.breakdown || teamBreakdowns[teamWin.winner.split(':')[0].trim()])) {
+        const teamKey = teamWin.winner.split(':')[0].trim();
+        const bld = teamWin.breakdown || teamBreakdowns[teamKey].holes;
+        const pNames = teamWin.playerNames || teamBreakdowns[teamKey].names;
+
+        masterHtml += `
+        <div style="page-break-before: always;">
+            <div class="section-header">Champions Scorecard: ${teamKey}</div>
+            <table class="report-table score-grid">
+                <thead>
+                    <tr style="background: #222; color: #fff;">
+                        <th class="hole-num">HOLE</th>
+                        ${pNames.map(n => `<th style="color:white;">${n.split(' ')[0].toUpperCase()}</th>`).join('')}
+                        <th class="pts-sum">HOLE TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>` + 
+                bld.map(h => `
+                    <tr>
+                        <td class="hole-num">Hole ${h.hole}${ (h.hole==9||h.hole==18) ? '*' : '' }</td>
+                        ${h.all.map(p => `<td>${p}</td>`).join('')}
+                        <td class="pts-sum">${h.counted}</td>
+                    </tr>`).join('') + 
+                `</tbody>
+            </table>
+            <div class="note-line">* All scores count for Holes 9 & 18. For all other holes, the best 2 scores count.</div>
+        </div>`;
     }
 
     masterHtml += `</div>`;
     document.getElementById('detail-results').parentElement.innerHTML = masterHtml;
     
-    // Slight delay for rendering, then print
     setTimeout(() => { window.print(); }, 800);
 }
 function saveTeamToHistory(teamName, totalScore) {
