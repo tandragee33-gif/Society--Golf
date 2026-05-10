@@ -864,7 +864,6 @@ function exportMasterReport() {
     const dateInput = prompt("Enter the date to export (dd/mm/yyyy):");
     if (!dateInput) return;
 
-    // 1. DATA COLLECTION
     const searchDateStr = parseDateInput(dateInput); 
     const dailyRounds = rounds.filter(r => r.date === searchDateStr);
     const dailyComps = pastComps.filter(c => c.date === dateInput);
@@ -873,135 +872,147 @@ function exportMasterReport() {
         return alert("No data found for this date.");
     }
 
-    // 2. BUILD THE HTML CONTENT
+    // 1. PREPARE THE LOGO
+    let logoHtml = '';
+    if (club.logo) {
+        logoHtml = `<img src="${club.logo}" style="max-height: 80px; margin-bottom: 10px;">`;
+    }
+
     let reportContent = `
     <html>
     <head>
         <title>Tournament Report - ${dateInput}</title>
         <style>
-            body { font-family: sans-serif; padding: 20px; color: #333; }
-            .header { text-align: center; margin-bottom: 30px; }
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; line-height: 1.4; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
             .section-title { 
-                background: #f0f0f0; 
+                background: #f4f4f4; 
                 border-left: 6px solid #222; 
-                padding: 10px; 
-                margin: 25px 0 10px 0; 
+                padding: 12px; 
+                margin: 30px 0 10px 0; 
                 font-weight: bold;
                 text-transform: uppercase;
+                letter-spacing: 1px;
             }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
-            th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 14px; }
-            th { background: #f8f8f8; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }
+            th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: left; font-size: 14px; }
+            th { background: #f8f8f8; color: #666; text-transform: uppercase; font-size: 11px; }
             
-            /* Column Widths */
-            .col-small { width: 60px; }
-            .col-pts { width: 80px; text-align: right; }
+            .col-rank { width: 60px; text-align: center; }
+            .col-pts { width: 90px; text-align: right; font-weight: bold; }
             
-            /* Scorecard Grid */
-            .score-grid td, .score-grid th { text-align: center; font-size: 12px; padding: 5px; }
+            .winner-row { background-color: #fffdf0; }
+            .trophy { color: #d4af37; margin-right: 5px; font-size: 1.2em; }
+
+            .score-grid td, .score-grid th { text-align: center; font-size: 12px; padding: 8px 2px; }
+            .h-num { background: #f9f9f9; font-weight: bold; width: 70px; }
             
-            @media print {
-                .no-print { display: none; }
-                body { padding: 0; }
-            }
+            @media print { body { padding: 0; } .section-title { -webkit-print-color-adjust: exact; } }
         </style>
     </head>
     <body>
         <div class="header">
-            <h1>${club.name}</h1>
-            <h2>Tournament Report</h2>
-            <p>${dateInput}</p>
+            ${logoHtml}
+            <h1 style="margin:0;">${club.name}</h1>
+            <h3 style="margin:5px 0; color:#666;">Tournament Master Report</h3>
+            <p>Date: ${dateInput}</p>
         </div>`;
 
-    // Individual Table
+    // 2. INDIVIDUAL LEADERBOARD (Sorted)
     if (dailyRounds.length > 0) {
         dailyRounds.sort((a, b) => b.points - a.points);
         reportContent += `<div class="section-title">Individual Leaderboard</div>
         <table>
             <thead>
                 <tr>
-                    <th class="col-small">Rank</th>
+                    <th class="col-rank">Rank</th>
                     <th>Player Name</th>
                     <th class="col-pts">Points</th>
                 </tr>
             </thead>
             <tbody>` + 
             dailyRounds.map((r, i) => `
-                <tr>
-                    <td>${i+1}</td>
-                    <td>${i === 0 ? '🏆 ' : ''}${r.playerName}</td>
-                    <td class="col-pts"><b>${r.points}</b></td>
+                <tr class="${i === 0 ? 'winner-row' : ''}">
+                    <td class="col-rank">${i+1}</td>
+                    <td>${i === 0 ? '<span class="trophy">🏆</span>' : ''}${r.playerName}</td>
+                    <td class="col-pts">${r.points}</td>
                 </tr>`).join('') + 
             `</tbody></table>`;
     }
 
-    // Event Results
+    // 3. TEAM EVENT RESULTS (Sorted by Score)
     if (dailyComps.length > 0) {
-        reportContent += `<div class="section-title">Event Results</div>`;
-        dailyComps.forEach(c => {
-            reportContent += `
-            <table>
-                <thead>
-                    <tr>
-                        <th>${c.type}</th>
-                        <th>Winner</th>
-                        <th class="col-pts">Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Result</td>
-                        <td>🏆 <b>${c.winner}</b></td>
-                        <td class="col-pts"><b>${c.detail}</b></td>
-                    </tr>
-                </tbody>
-            </table>`;
+        // We sort the events by the points hidden in the 'detail' string (e.g. "42 pts")
+        const sortedTeams = dailyComps.sort((a, b) => {
+            const scoreA = parseInt(a.detail) || 0;
+            const scoreB = parseInt(b.detail) || 0;
+            return scoreB - scoreA;
         });
+
+        reportContent += `<div class="section-title">Event Results</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 120px;">Position</th>
+                    <th>Winner / Team Members</th>
+                    <th class="col-pts">Result</th>
+                </tr>
+            </thead>
+            <tbody>` + 
+            sortedTeams.map((c, i) => `
+                <tr class="${i === 0 ? 'winner-row' : ''}">
+                    <td>${i === 0 ? '<b>WINNER</b>' : (i+1) + ' Place'}</td>
+                    <td>${i === 0 ? '<span class="trophy">🏆</span>' : ''}<b>${c.winner}</b></td>
+                    <td class="col-pts">${c.detail}</td>
+                </tr>`).join('') + 
+            `</tbody></table>`;
     }
 
-    // Winning Team Scorecard
-    const teamWin = dailyComps.filter(c => c.type === 'Team Event').sort((a,b) => (parseInt(b.detail)||0) - (parseInt(a.detail)||0))[0];
-    if (teamWin) {
-        const teamKey = teamWin.winner.split(':')[0].trim();
-        const details = teamWin.breakdown ? teamWin : teamBreakdowns[teamKey];
+    // 4. CHAMPIONS SCORECARD
+    const topTeam = dailyComps.filter(c => c.type === 'Team Event')
+                              .sort((a, b) => (parseInt(b.detail) || 0) - (parseInt(a.detail) || 0))[0];
+
+    if (topTeam) {
+        const teamKey = topTeam.winner.split(':')[0].trim();
+        const details = topTeam.breakdown ? topTeam : teamBreakdowns[teamKey];
+        
         if (details) {
             const hData = details.breakdown || details.holes;
             const names = details.playerNames || details.names;
+
             reportContent += `
                 <div style="page-break-before: always;">
                     <div class="section-title">Champions Scorecard: ${teamKey}</div>
                     <table class="score-grid">
                         <thead>
                             <tr style="background:#222; color:#fff;">
-                                <th style="width:60px;">Hole</th>
+                                <th class="h-num" style="color:white;">Hole</th>
                                 ${names.map(n => `<th style="color:white;">${n.split(' ')[0]}</th>`).join('')}
-                                <th style="width:60px;">Total</th>
+                                <th style="color:white; width:70px;">Total</th>
                             </tr>
                         </thead>
                         <tbody>` + 
                         hData.map(h => `
                             <tr>
-                                <td>${h.hole}</td>
+                                <td class="h-num">Hole ${h.hole}${ (h.hole==9||h.hole==18) ? '*' : '' }</td>
                                 ${h.all.map(p => `<td>${p}</td>`).join('')}
-                                <td style="background:#eee;"><b>${h.counted}</b></td>
+                                <td style="background:#f2f2f2; font-weight:bold;">${h.counted}</td>
                             </tr>`).join('') + 
                         `</tbody>
                     </table>
+                    <p style="font-size:11px; font-style:italic;">* Holes 9 & 18: All scores count. Other holes: Best 2 scores count.</p>
                 </div>`;
         }
     }
 
     reportContent += `</body></html>`;
 
-    // 3. OPEN IN NEW WINDOW AND PRINT
+    // 5. PRINTING
     const printWindow = window.open('', '_blank');
     printWindow.document.write(reportContent);
     printWindow.document.close();
     
-    // Give images/styles a moment to load then print
-    setTimeout(() => {
-        printWindow.print();
-    }, 500);
+    setTimeout(() => { printWindow.print(); }, 600);
 }
 function saveTeamToHistory(teamName, totalScore) {
     const matchDate = document.getElementById('tmDate').value;
