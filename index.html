@@ -861,6 +861,12 @@ function viewTeamDetail(teamName, totalScore) {
     document.getElementById('tm-details').scrollIntoView({ behavior: 'smooth' });
 }
 function exportMasterReport() {
+
+// 1. Reset the container so it doesn't squeeze the report
+const detailContainer = document.getElementById('dash-detail');
+detailContainer.style.padding = "0";
+detailContainer.style.margin = "0";
+
     const dateInput = prompt("Enter the date to export (dd/mm/yyyy):");
     if (!dateInput) return;
 
@@ -886,74 +892,61 @@ function exportMasterReport() {
     document.getElementById('detail-title').innerText = "Tournament Master Report";
     document.getElementById('detail-date').innerText = dateInput;
 
-   let masterHtml = `
+  let masterHtml = `
+    <!-- This tells phones to use the full screen width, not zoom out -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <style>
-        /* 1. RESET: Kill default margins that cause the "Cramped Left" look */
+        /* 1. BASIC RESET: Removes hidden gaps on the left/right */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        body, html { width: 100%; margin: 0; padding: 0; }
-
+        /* 2. THE WRAPPER: Ensures content fills the page nicely */
         .report-wrapper { 
-            font-family: 'Helvetica Neue', Arial, sans-serif; 
-            color: #1a1a1a; 
+            font-family: Arial, sans-serif; 
             width: 100%; 
-            padding: 20px; /* Standard padding for all sides */
-            margin: 0 auto;
+            padding: 20px; 
+            background: white; 
         }
 
+        /* 3. THE TITLES: Makes them bold and easy to find */
+        .section-header { 
+            background-color: #f0f0f0 !important;
+            border-left: 6px solid #222;
+            font-size: 18px; 
+            font-weight: bold; 
+            margin: 30px 0 15px 0; 
+            padding: 10px;
+            text-transform: uppercase;
+            -webkit-print-color-adjust: exact; /* Forces color in PDFs */
+        }
+
+        /* 4. THE TABLES: Forces them to be full width */
         .report-table { 
             width: 100%; 
             border-collapse: collapse; 
-            margin-bottom: 40px; 
-            table-layout: fixed; /* Keeps columns in place */
+            margin-bottom: 30px; 
+            table-layout: fixed; /* Keeps columns from moving */
         }
 
         .report-table th, .report-table td { 
-            border-bottom: 1px solid #ccc; 
-            padding: 12px 8px; 
-            text-align: left; 
-            overflow: hidden;
-        }
-        
-        .section-header { 
-            background-color: #f0f0f0;
-            border-left: 6px solid #222;
-            font-size: 20px; 
-            font-weight: 800; 
-            margin: 40px 0 20px 0; 
-            padding: 12px 15px;
-            text-transform: uppercase;
-            width: 100%;
+            border-bottom: 1px solid #ddd; 
+            padding: 10px 5px; 
+            text-align: left;
+            font-size: 14px;
         }
 
-        /* Column Controls */
-        .w-pos { width: 15%; }
-        .w-pts { width: 20%; text-align: right; }
-        .w-event { width: 30%; }
+        /* 5. SCORECARD: Makes sure the hole numbers stay small and names stay wide */
+        .score-grid th, .score-grid td { border: 1px solid #ccc; text-align: center; }
+        .hole-num { width: 65px; background: #f9f9f9 !important; font-weight: bold; }
+        .pts-sum { width: 70px; background: #eee !important; font-weight: bold; }
 
-        /* SCORECARD: Fixed width per player */
-        .score-grid { border: 2px solid #222; }
-        .score-grid th, .score-grid td { border: 1px solid #bbb; padding: 8px 2px; text-align: center; }
-        .hole-num { width: 70px; background: #f9f9f9; font-weight: bold; }
-        .pts-sum { width: 75px; background: #eee; font-weight: bold; }
-
-        /* PRINT OVERRIDES: Forces the phone to use A4 width */
+        /* 6. PDF/PRINT FIX: Ensures it looks great on the actual paper/PDF */
         @media print {
             @page { margin: 1cm; }
-            .report-wrapper { padding: 0; width: 100%; }
-            .section-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .report-table { width: 100% !important; }
-        }
-
-        /* MOBILE SCREEN VIEW (Before you hit print) */
-        @media screen and (max-width: 600px) {
-            .report-wrapper { padding: 10px; }
-            .section-header { font-size: 16px; }
-            .report-table td { font-size: 13px; }
-            .w-pos { width: 50px; }
-            .w-pts { width: 70px; }
+            .report-wrapper { padding: 0; }
         }
     </style>
+    
     <div class="report-wrapper">`;
 
     // 1. INDIVIDUAL LEADERBOARD
