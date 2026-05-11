@@ -556,7 +556,11 @@ function viewDetail(date, courseId) {
             const lastRound = t.rounds[t.rounds.length - 1];
             if(lastRound.length === 1 && lastRound[0].win) {
                 const champ = lastRound[0].win === 'A' ? lastRound[0].uA.name : lastRound[0].uB.name;
-                winArea.innerHTML = `<div class="champion-box"><h2>🏆 Champion: ${champ}</h2><button class="btn-save-comp" onclick="saveTournamentRecord('${type}', '${champ}')">Save to History</button></div>`;
+winArea.innerHTML = '<div class="champion-box">' +
+    '<h2>🏆 Champion: ' + champ + '</h2>' +
+    '<p>Result: <input type="text" id="match-score-input" placeholder="4&3" style="width:60px"></p>' +
+    '<button class="btn-save-comp" onclick="saveTournamentRecord(\'' + type + '\', \'' + champ + '\')">Save to History</button>' +
+    '</div>';
             }
         }
     }
@@ -602,11 +606,24 @@ function viewDetail(date, courseId) {
         }
     }
 
-    function saveTournamentRecord(type, winner) {
-        const entry = { id: Date.now(), type: type==='pairs'?'Pairs KO':'Singles KO', winner: winner, date: new Date().toLocaleDateString() };
-        pastComps.push(entry); saveData(); alert("Record Saved!");
-        resetT(type); showTab('tab-dash');
-    }
+function saveTournamentRecord(type, winner) {
+    // Line 1: Get the score from the box
+    const score = document.getElementById('match-score-input') ? document.getElementById('match-score-input').value : '';
+
+    const entry = { 
+        id: Date.now(), 
+        type: type === 'pairs' ? 'Pairs KO' : 'Singles KO', 
+        winner: winner, 
+        date: new Date().toLocaleDateString('en-GB'),
+        // Line 2: Add the score to the entry
+        detail: score ? "Score: " + score : ""
+    };
+    pastComps.push(entry); 
+    saveData(); 
+    alert("Saved!");
+    resetT(type); 
+    showTab('tab-dash');
+}
 
     function resetT(type) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }
 
