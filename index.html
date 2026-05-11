@@ -134,6 +134,8 @@
             <label style="font-size:12px;">Date (dd/mm/yyyy):</label>
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
             <select id="rCourse"><option value="">Select Course</option></select>
+<button type="button" onclick="fetchGolfCourseData()">Fetch Data from API</button>
+<div id="apiStatus" style="font-size: 0.8em; color: blue;"></div>
             <select id="rPlayer"><option value="">Select Player</option></select>
             <div class="score-grid" id="round-scores"></div>
 <div style="margin: 10px 0; display: flex; gap: 10px;">
@@ -1210,6 +1212,42 @@ function colorLive(input) {
     function hideGuide() {
         document.getElementById('guideBox').style.display = 'none';
     }
+async function fetchGolfCourseData() {
+    const key = localStorage.getItem('golf_api_key');
+    const status = document.getElementById('apiStatus');
+    
+    if (!key) {
+        return alert("Please save your API Key in the Admin section first!");
+    }
+
+    status.innerText = "Searching for course...";
+
+    try {
+        // We 'await' the response so the app doesn't freeze
+        const response = await fetch(`https://www.golfcourseapi.com/api/v1/course/YOUR_COURSE_ID`, {
+            headers: {
+                'x-api-key': key
+            }
+        });
+
+        if (!response.ok) throw new Error("Course not found or API limit reached.");
+
+        const data = await response.json();
+        
+        // This is where we tell the app which numbers go where
+        fillCourseData(data);
+        status.innerText = "✅ Data loaded!";
+        
+    } catch (error) {
+        status.innerText = "❌ Error: " + error.message;
+    }
+}
+
+function fillCourseData(data) {
+    // This is a placeholder. Once you have a real API response, 
+    // we will map their data (e.g., data.holes[0].par) to your input boxes.
+    console.log("Data received from API:", data);
+}
 </script>
 
 </body>
