@@ -556,17 +556,10 @@ function viewDetail(date, courseId) {
             const lastRound = t.rounds[t.rounds.length - 1];
             if(lastRound.length === 1 && lastRound[0].win) {
                 const champ = lastRound[0].win === 'A' ? lastRound[0].uA.name : lastRound[0].uB.name;
-               winArea.innerHTML = `
-    <div class="champion-box">
-        <h2>🏆 Champion: ${champ}</h2>
-        <div style="margin-top:10px; margin-bottom:15px;">
-            <label style="display:block; font-size:14px; margin-bottom:5px;">Match Result:</label>
-            <input type="text" id="match-score-input" placeholder="e.g. 4&3 or 1up" style="padding:8px; border-radius:4px; border:1px solid #ccc; width:140px;">
-        </div>
-        <button class="btn-save-comp" onclick="saveTournamentRecord('${type}', '${champ}')">
-            Save to History
-        </button>
-    </div>`;
+                winArea.innerHTML = `<div class="champion-box"><h2>🏆 Champion: ${champ}</h2><button class="btn-save-comp" onclick="saveTournamentRecord('${type}', '${champ}')">Save to History</button></div>`;
+            }
+        }
+    }
 
     function initTourney(type) {
         const ids = Array.from(document.querySelectorAll(`.${type}-ck:checked`)).map(i => i.value);
@@ -609,30 +602,11 @@ function viewDetail(date, courseId) {
         }
     }
 
-function saveTournamentRecord(type, winner) {
-    // 1. Grab the text you typed into the box
-    const scoreBox = document.getElementById('match-score-input');
-    const finalScore = scoreBox ? scoreBox.value : '';
-
-    // 2. Create the history entry
-    const entry = { 
-        id: Date.now(), 
-        type: type === 'pairs' ? 'Pairs KO' : 'Singles KO', 
-        winner: winner, 
-        date: new Date().toLocaleDateString('en-GB'),
-        // We put the score here so it shows up in history
-        detail: finalScore ? `Result: ${finalScore}` : '' 
-    };
-    
-    // 3. Save it to the database
-    pastComps.push(entry); 
-    saveData(); 
-    
-    // 4. Clean up and go home
-    alert("Match Result Saved!");
-    resetT(type); 
-    showTab('tab-dash');
-}
+    function saveTournamentRecord(type, winner) {
+        const entry = { id: Date.now(), type: type==='pairs'?'Pairs KO':'Singles KO', winner: winner, date: new Date().toLocaleDateString() };
+        pastComps.push(entry); saveData(); alert("Record Saved!");
+        resetT(type); showTab('tab-dash');
+    }
 
     function resetT(type) { if(type==='pairs') pairsT=null; else singlesT=null; saveData(); renderMatchplay(type); }
 
