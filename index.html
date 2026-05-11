@@ -265,7 +265,9 @@
 </div>
 </div>
     <!-- SETUP -->
-    <div id="tab-setup" class="tab-content hidden">
+    <div id="tab-setup" class="tab-content hidden"> <button type="button" onclick="showGuide()" style="width:100%; background:#3498db; color:white; padding:12px; border:none; border-radius:8px; margin-bottom:15px; cursor:pointer; font-weight:bold;">
+    📖 View App User Guide
+</button>
         <div class="card">
             <h3>Club Profile</h3>
             <input type="text" id="setupClubName" placeholder="Club Name">
@@ -1117,7 +1119,22 @@ function saveTeamToHistory(teamName, totalScore) {
     renderPastComps();
     alert("Team Result Saved Permanently!");
 }
-</script>
+function showGuide() {
+    document.getElementById('guideBox').style.display = 'block';
+}
 
+function hideGuide() {
+    document.getElementById('guideBox').style.display = 'none';
+}
+</script>
+<div id="guideBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border-radius:12px; z-index:9999; width:85%; max-height:80vh; overflow-y:auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; border: 1px solid #ccc;">
+    <h2 style="color:#2c3e50; margin-top:0;">⛳ Society Manager Guide</h2>
+    <hr>
+    <p><strong>1. Scoring:</strong> Enter actual strokes. The app calculates Stableford points automatically.</p>
+    <p><strong>2. Tie-Breakers:</strong> Ties are settled by "Countback" (Back 9 > Last 6 > Last 3).</p>
+    <p><strong>3. Handicaps:</strong> Winners get cut by 2.0. Last place gets +1.0 for the next round.</p>
+    <p><strong>4. Matchplay:</strong> Type the result (e.g., 4&3) in the box when a tournament ends.</p>
+    <button onclick="hideGuide()" style="width:100%; background:#e74c3c; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">Close Guide</button>
+</div>
 </body>
 </html>
