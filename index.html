@@ -770,12 +770,23 @@ document.getElementById('rNearPin').value = 'No';
         document.getElementById('admin-courses').innerHTML = courses.map(c => `<div class="item-row"><span>${c.name}</span><div style="display:flex; gap:5px;"><button class="btn-outline" onclick="editCourse('${c.id}')">Edit</button><button class="btn-del" onclick="deleteCourse('${c.id}')">Delete</button></div></div>`).join('');
     }
 
-    function editPlayer(id) { 
-        const p = players.find(x => String(x.id) === String(id));
-        document.getElementById('editPlayerId').value = p.id;
-        document.getElementById('pName').value = p.name;
-        document.getElementById('pHC').value = p.handicap;
+function editPlayer(id) { 
+    // We convert both to String to ensure they match perfectly
+    const p = players.find(x => String(x.id) === String(id));
+    
+    if (!p) {
+        console.error("Player not found:", id);
+        return;
     }
+
+    // This puts the data into the input boxes
+    document.getElementById('editPlayerId').value = p.id;
+    document.getElementById('pName').value = p.name;
+    document.getElementById('pHC').value = p.handicap;
+    
+    // Optional: Scroll to the top of the form so you see the data is there
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
     function deletePlayer(id) { if(confirm("Delete?")) { players = players.filter(x => String(x.id) !== String(id)); saveData(); renderAdmin(); } }
 
