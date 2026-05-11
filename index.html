@@ -315,12 +315,6 @@ function getScoreColor(pts) {
     if (pts === 2) return '#2980b9'; // Blue (Good)
     return '#333';                   // Black (Standard)
 }
-function colorLive(input) {
-    const val = parseInt(input.value);
-    if (val >= 7) { input.style.color = '#e74c3c'; }      // Red (Bad)
-    else if (val <= 3 && val > 0) { input.style.color = '#27ae60'; } // Green (Good)
-    else { input.style.color = '#333'; }                 // Black (Normal)
-}
     let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, pastComps = [], club = { name: "Golf Pro Manager", logo: "" };
     let tempTeams = [];
 
@@ -426,7 +420,7 @@ function getTieBreaker(pointsArray) {
             const el = document.getElementById(g);
             el.innerHTML = '';
             for(let i=1; i<=18; i++) {
-el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val" oninput="colorLive(this)"></div>`;
+                el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val"></div>`;
             }
         });
     }
@@ -765,7 +759,6 @@ if (allScores.length >= 3) { // Only adjust if at least 3 players played
     renderDashboard(); // Refresh history counts
     showTab('tab-stats'); 
     alert("Round Saved!");
-document.querySelectorAll('.round-scores-val').forEach(input => colorLive(input));
 }
 
     function renderStats() {
@@ -1169,15 +1162,6 @@ function hideGuide() {
 </div>
 
 <script>
-function colorLive(input) {
-    const val = parseInt(input.value);
-    if (!val) { input.style.color = '#333'; return; }
-    
-    // If strokes are high (7+), make it Red. If low (1-3), make it Green.
-    if (val >= 7) { input.style.color = '#e74c3c'; } 
-    else if (val <= 3) { input.style.color = '#27ae60'; } 
-    else { input.style.color = '#333'; }
-}
     // THESE ARE THE MUSCLES THAT MAKE THE BUTTON WORK
     function showGuide() {
         document.getElementById('guideBox').style.display = 'block';
