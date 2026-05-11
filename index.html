@@ -320,11 +320,15 @@
 <script>
 // Save the key to the phone's memory
 function saveApiKey() {
-    const key = document.getElementById('apiKeyInput').value;
+    let key = document.getElementById('apiKeyInput').value;
+    
+    // THE FIX: This removes any spaces or hidden characters from the start/end
+    key = key.trim(); 
+
     if (key) {
         localStorage.setItem('golf_api_key', key);
         document.getElementById('keyStatus').innerText = "✅ Saved!";
-        document.getElementById('apiKeyInput').value = ""; // Clear the box
+        document.getElementById('apiKeyInput').value = ""; 
     }
 }
 
