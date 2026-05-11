@@ -795,13 +795,26 @@ function savePlayer() {
     }
 
 function editPlayer(id) { 
-    // We convert both to String to ensure they match perfectly
+    // 1. Force the page to the top (so you see the form)
+    window.scrollTo(0, 0);
+
+    // 2. Find the player - we use String() to make sure 'p123' matches 'p123'
     const p = players.find(x => String(x.id) === String(id));
-    
+
+    // 3. Check if player exists
     if (!p) {
-        console.error("Player not found:", id);
-        return;
+        alert("Error: Could not find player with ID: " + id);
+        return; 
     }
+
+    // 4. Fill the boxes
+    document.getElementById('editPlayerId').value = p.id;
+    document.getElementById('pName').value = p.name;
+    document.getElementById('pHC').value = p.handicap;
+    
+    // 5. Change the button text (Optional, but helpful)
+    // If you have a button with an ID, you can make it say "Update Player"
+}
 
     // This puts the data into the input boxes
     document.getElementById('editPlayerId').value = p.id;
