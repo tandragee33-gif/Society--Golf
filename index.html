@@ -751,12 +751,36 @@ document.getElementById('rNearPin').value = 'No';
         populateRoundSelectors();
     }
 
-    function savePlayer() {
-        const id = document.getElementById('editPlayerId').value, p = { id: id || 'p' + Date.now(), name: document.getElementById('pName').value, handicap: document.getElementById('pHC').value };
-        if(id) players = players.map(x => String(x.id) === String(id) ? p : x); else players.push(p);
-        document.getElementById('editPlayerId').value = ''; document.getElementById('pName').value = ''; document.getElementById('pHC').value = '';
-        saveData(); renderAdmin();
+function savePlayer() {
+    const id = document.getElementById('editPlayerId').value;
+    const name = document.getElementById('pName').value;
+    const hc = document.getElementById('pHC').value;
+
+    if (!name) return alert("Please enter a name");
+
+    const p = { 
+        id: id || 'p' + Date.now(), // Use existing ID if editing, otherwise make new one
+        name: name, 
+        handicap: hc 
+    };
+
+    if (id) {
+        // Update existing player
+        players = players.map(x => String(x.id) === String(id) ? p : x);
+    } else {
+        // Add new player
+        players.push(p);
     }
+
+    // CLEAR the hidden ID so the next save isn't an edit!
+    document.getElementById('editPlayerId').value = '';
+    document.getElementById('pName').value = '';
+    document.getElementById('pHC').value = '';
+
+    saveData();
+    renderAdmin();
+    alert("Player list updated!");
+}
 
     function saveCourse() {
         const id = document.getElementById('editCourseId').value, c = { id: id || 'c' + Date.now(), name: document.getElementById('cName').value, pars: Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value), si: Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value) };
