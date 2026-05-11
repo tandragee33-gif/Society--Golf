@@ -134,17 +134,6 @@
             <label style="font-size:12px;">Date (dd/mm/yyyy):</label>
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
             <select id="rCourse"><option value="">Select Course</option></select>
-<div style="margin-bottom: 15px;">
-    <label style="font-size: 12px; display: block;">Search for Course:</label>
-    <div style="display: flex; gap: 5px;">
-        <input type="text" id="courseSearchInput" placeholder="Enter course name..." style="flex: 1;">
-        <button type="button" onclick="searchGolfCourses()">Search</button>
-    </div>
-    <select id="searchResultsList" size="5" style="width: 100%; margin-top: 5px; display: none;" onchange="selectCourseFromSearch()">
-    </select>
-</div>
-<button type="button" onclick="fetchGolfCourseData()">Fetch Data from API</button>
-<div id="apiStatus" style="font-size: 0.8em; color: blue;"></div>
             <select id="rPlayer"><option value="">Select Player</option></select>
             <div class="score-grid" id="round-scores"></div>
 <div style="margin: 10px 0; display: flex; gap: 10px;">
@@ -318,89 +307,8 @@
         <button class="btn-del" style="width:100%" onclick="factoryReset()">Master Data Wipe</button>
     </div>
 </div>
-<div class="card" style="margin-top: 20px; border-top: 2px dashed #ccc;">
-    <h4>Admin Settings</h4>
-    <p style="font-size: 0.8em; color: #666;">Enter your API Key here. It stays on your phone.</p>
-    <input type="password" id="apiKeyInput" placeholder="Paste API Key here...">
-    <button onclick="saveApiKey()">Save Key</button>
-    <span id="keyStatus"></span>
-</div>
 
 <script>
-async function searchGolfCourses() {
-    const query = document.getElementById('courseSearchInput').value;
-    const key = localStorage.getItem('golf_api_key');
-    const resultsList = document.getElementById('searchResultsList');
-
-    if (!query) return alert("Please enter a course name!");
-    
-    document.getElementById('apiStatus').innerText = "Searching...";
-
-    try {
-        // Step 1: Search for clubs matching the name
-        const response = await fetch(`https://golfcourseapi.com/api/v1/clubs?name=${query}`, {
-            headers: { 'Authorization': `Bearer ${key}` }
-        });
-        
-        const data = await response.json();
-        
-        // Clear old results and show the list
-        resultsList.innerHTML = '<option value="">-- Select the correct club --</option>';
-        resultsList.style.display = 'block';
-
-        // Loop through results (Note: some APIs use 'data.clubs' or 'data.results')
-        const clubs = data.clubs || data.results || [];
-        
-        clubs.forEach(club => {
-            let option = document.createElement('option');
-            option.value = club.id; 
-            option.text = `${club.name} (${club.city || club.state})`;
-            resultsList.add(option);
-        });
-
-        document.getElementById('apiStatus').innerText = `Found ${clubs.length} courses.`;
-
-    } catch (err) {
-        document.getElementById('apiStatus').innerText = "❌ Search failed.";
-        console.error(err);
-    }
-}
-
-function selectCourseFromSearch() {
-    const list = document.getElementById('searchResultsList');
-    const selectedId = list.value;
-    if (!selectedId) return;
-    
-    // Step 2: Now fetch the full scorecard using the ID!
-    fetchGolfCourseData(selectedId);
-    
-    // Optional: Hide the search list once selected
-    list.style.display = 'none';
-}
-// Save the key to the phone's memory
-function saveApiKey() {
-    let key = document.getElementById('apiKeyInput').value;
-
-    // .trim() removes spaces from the start and end
-    // .replace() here removes any characters that aren't letters, numbers, or basic dashes
-    const cleanKey = key.trim().replace(/[^\x00-\x7F]/g, "");
-
-    if (cleanKey) {
-        localStorage.setItem('golf_api_key', cleanKey);
-        document.getElementById('keyStatus').innerText = "✅ Saved & Cleaned!";
-        document.getElementById('apiKeyInput').value = ""; 
-    } else {
-        alert("Please enter a valid key.");
-    }
-}
-
-// Check if a key exists when the app opens
-window.onload = function() {
-    const savedKey = localStorage.getItem('golf_api_key');
-    if (savedKey) {
-        document.getElementById('keyStatus').innerText = "🔑 Key is active";
-    }
-};
 // PUT THIS AT THE TOP OF THE FIRST SCRIPT TAG
 function getScoreColor(pts) {
     if (pts >= 3) return '#27ae60'; // Green (Great)
@@ -1278,61 +1186,6 @@ function colorLive(input) {
     function hideGuide() {
         document.getElementById('guideBox').style.display = 'none';
     }
-async function fetchGolfCourseData() {
-    const key = localStorage.getItem('golf_api_key');
-    const status = document.getElementById('apiStatus');
-    
-    if (!key) {
-        return alert("Please save your API Key in the Admin section first!");
-    }
-
-    status.innerText = "Searching for course...";
-
-    try {
-        // We 'await' the response so the app doesn't freeze
-// Replace this with the ACTUAL URL from your golf API provider
-const response = await fetch(`https://www.golfcourseapi.com/api/v1/course/12345`, { 
-    headers: {
-        'x-api-key': key // Check if they want 'x-api-key' or 'Authorization'
-    }
-});
-
-        if (!response.ok) throw new Error("Course not found or API limit reached.");
-
-        const data = await response.json();
-        
-        // This is where we tell the app which numbers go where
-        fillCourseData(data);
-        status.innerText = "✅ Data loaded!";
-        
-    } catch (error) {
-        status.innerText = "❌ Error: " + error.message;
-    }
-}
-
-function fillCourseData(data) {
-    // This is a placeholder. Once you have a real API response, 
-    // we will map their data (e.g., data.holes[0].par) to your input boxes.
-    console.log("Data received from API:", data);
-}
-async function fetchGolfCourseData(courseId) {
-    const key = localStorage.getItem('golf_api_key');
-    
-    try {
-        // Fetch specific course data using the ID we just found
-        const response = await fetch(`https://golfcourseapi.com/api/v1/courses/${courseId}`, {
-            headers: { 'Authorization': `Bearer ${key}` }
-        });
-
-        const data = await response.json();
-        
-        // This is your function that fills the p1, s1, etc. boxes
-        fillCourseData(data);
-        
-    } catch (err) {
-        alert("Error loading specific course details.");
-    }
-}
 </script>
 
 </body>
