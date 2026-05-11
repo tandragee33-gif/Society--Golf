@@ -1127,14 +1127,44 @@ function hideGuide() {
     document.getElementById('guideBox').style.display = 'none';
 }
 </script>
-<div id="guideBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border-radius:12px; z-index:9999; width:85%; max-height:80vh; overflow-y:auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; border: 1px solid #ccc;">
-    <h2 style="color:#2c3e50; margin-top:0;">⛳ Society Manager Guide</h2>
-    <hr>
-    <p><strong>1. Scoring:</strong> Enter actual strokes. The app calculates Stableford points automatically.</p>
-    <p><strong>2. Tie-Breakers:</strong> Ties are settled by "Countback" (Back 9 > Last 6 > Last 3).</p>
-    <p><strong>3. Handicaps:</strong> Winners get cut by 2.0. Last place gets +1.0 for the next round.</p>
-    <p><strong>4. Matchplay:</strong> Type the result (e.g., 4&3) in the box when a tournament ends.</p>
-    <button onclick="hideGuide()" style="width:100%; background:#e74c3c; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">Close Guide</button>
+<!-- THE FULL GUIDE BOX -->
+<div id="guideBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:25px; border-radius:15px; z-index:9999; width:90%; max-height:85vh; overflow-y:auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; border: 1px solid #ccc; color: #333;">
+    <button onclick="hideGuide()" style="float:right; background:#e74c3c; color:white; border:none; border-radius:20px; width:30px; height:30px; cursor:pointer; font-weight:bold;">X</button>
+    
+    <h2 style="color:#2c3e50; margin-top:0;">⛳ Society Manager: Full Guide</h2>
+    <hr style="border: 0; height: 1px; background: #eee; margin-bottom: 20px;">
+
+    <h3 style="color:#2980b9;">1. Setup & Players</h3>
+    <p>• Add Course Name, Par, and Stroke Index (SI). Points calculate automatically based on these.</p>
+    <p>• Add players and handicaps. Edit them anytime in the 'Setup' tab.</p>
+
+    <h3 style="color:#2980b9;">2. Scoring a Round</h3>
+    <p>• Enter <b>Gross Strokes</b> for each hole in the 'Round' tab.</p>
+    <p>• <b>Awards:</b> Toggle 'Longest Drive' or 'Nearest Pin' to track trophies.</p>
+
+    <h3 style="color:#2980b9;">3. Tie-Breakers (Countback)</h3>
+    <p>Ties are settled by: <b>Back 9 > Last 6 > Last 3 > 18th Hole.</b></p>
+
+    <h3 style="color:#2980b9;">4. Automatic Handicaps</h3>
+    <p>• <b>Winner:</b> Handicap cut by <b>2.0</b>.</p>
+    <p>• <b>Last Place:</b> Handicap increased by <b>1.0</b>.</p>
+
+    <h3 style="color:#2980b9;">5. Matchplay Knockouts</h3>
+    <p>• Click names to advance. Record final scores (e.g., 4&3) in the box before saving.</p>
+
+    <button onclick="hideGuide()" style="width:100%; background:#27ae60; color:white; padding:15px; border:none; border-radius:10px; cursor:pointer; font-weight:bold; margin-top:20px;">Close Guide</button>
 </div>
+
+<script>
+    // THESE ARE THE MUSCLES THAT MAKE THE BUTTON WORK
+    function showGuide() {
+        document.getElementById('guideBox').style.display = 'block';
+    }
+
+    function hideGuide() {
+        document.getElementById('guideBox').style.display = 'none';
+    }
+</script>
+
 </body>
 </html>
