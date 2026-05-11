@@ -1127,14 +1127,31 @@ function hideGuide() {
     document.getElementById('guideBox').style.display = 'none';
 }
 </script>
-<div id="guideBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border-radius:12px; z-index:9999; width:85%; max-height:80vh; overflow-y:auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; border: 1px solid #ccc;">
-    <h2 style="color:#2c3e50; margin-top:0;">⛳ Society Manager Guide</h2>
-    <hr>
-    <p><strong>1. Scoring:</strong> Enter actual strokes. The app calculates Stableford points automatically.</p>
-    <p><strong>2. Tie-Breakers:</strong> Ties are settled by "Countback" (Back 9 > Last 6 > Last 3).</p>
-    <p><strong>3. Handicaps:</strong> Winners get cut by 2.0. Last place gets +1.0 for the next round.</p>
-    <p><strong>4. Matchplay:</strong> Type the result (e.g., 4&3) in the box when a tournament ends.</p>
-    <button onclick="hideGuide()" style="width:100%; background:#e74c3c; color:white; padding:10px; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px;">Close Guide</button>
-</div>
+<button onclick="hideGuide()" style="float:right; background:#e74c3c; color:white; border:none; border-radius:20px; width:30px; height:30px; cursor:pointer; font-weight:bold;">X</button>
+    
+    <h2 style="color:#2c3e50; margin-top:0;">⛳ Society Manager: Full Guide</h2>
+    <hr style="border: 0; height: 1px; background: #eee; margin-bottom: 20px;">
+
+    <h3 style="color:#2980b9; margin-bottom:5px;">1. Setup & Players</h3>
+    <p style="margin-top:0;">• <strong>Courses:</strong> Add the Name, Par, and Stroke Index (SI). Points calculate automatically based on these values.</p>
+    <p>• <strong>Players:</strong> Add names and starting handicaps. You can edit these anytime in the 'Setup' tab.</p>
+
+    <h3 style="color:#2980b9; margin-bottom:5px;">2. Scoring a Round</h3>
+    <p style="margin-top:0;">• Enter the <strong>actual strokes</strong> (gross score) for each hole in the 'Round' tab.</p>
+    <p>• <strong>Awards:</strong> Toggle 'Longest Drive' or 'Nearest Pin' for the players who won them to track trophies.</p>
+
+    <h3 style="color:#2980b9; margin-bottom:5px;">3. Tie-Breakers (Countback)</h3>
+    <p style="margin-top:0;">If points are tied, the winner is found by checking: <strong>Back 9 > Last 6 > Last 3 > 18th Hole.</strong></p>
+
+    <h3 style="color:#2980b9; margin-bottom:5px;">4. Automatic Handicaps</h3>
+    <p style="margin-top:0;">Handicaps adjust automatically when a round is saved:</p>
+    <p>• <strong>Winner:</strong> Handicap is cut by <strong>2.0</strong>.</p>
+    <p>• <strong>Last Place:</strong> Handicap is increased by <strong>1.0</strong>.</p>
+
+    <h3 style="color:#2980b9; margin-bottom:5px;">5. Matchplay Knockouts</h3>
+    <p style="margin-top:0;">• Use 'Singles' or 'Pairs' KO to generate brackets. Click a name to move them to the next round.</p>
+    <p>• <strong>Final:</strong> Enter the match score (e.g., 4&3) in the result box before saving.</p>
+
+    <button onclick="hideGuide()" style="width:100%; background:#27ae60; color:white; padding:15px; border:none; border-radius:10px; cursor:pointer; font-weight:bold; font-size:16px; margin-top:20px;">Close & Return to App</button>
 </body>
 </html>
