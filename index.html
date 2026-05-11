@@ -307,8 +307,32 @@
         <button class="btn-del" style="width:100%" onclick="factoryReset()">Master Data Wipe</button>
     </div>
 </div>
+<div class="card" style="margin-top: 20px; border-top: 2px dashed #ccc;">
+    <h4>Admin Settings</h4>
+    <p style="font-size: 0.8em; color: #666;">Enter your API Key here. It stays on your phone.</p>
+    <input type="password" id="apiKeyInput" placeholder="Paste API Key here...">
+    <button onclick="saveApiKey()">Save Key</button>
+    <span id="keyStatus"></span>
+</div>
 
 <script>
+// Save the key to the phone's memory
+function saveApiKey() {
+    const key = document.getElementById('apiKeyInput').value;
+    if (key) {
+        localStorage.setItem('golf_api_key', key);
+        document.getElementById('keyStatus').innerText = "✅ Saved!";
+        document.getElementById('apiKeyInput').value = ""; // Clear the box
+    }
+}
+
+// Check if a key exists when the app opens
+window.onload = function() {
+    const savedKey = localStorage.getItem('golf_api_key');
+    if (savedKey) {
+        document.getElementById('keyStatus').innerText = "🔑 Key is active";
+    }
+};
 // PUT THIS AT THE TOP OF THE FIRST SCRIPT TAG
 function getScoreColor(pts) {
     if (pts >= 3) return '#27ae60'; // Green (Great)
