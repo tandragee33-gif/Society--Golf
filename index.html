@@ -751,36 +751,12 @@ document.getElementById('rNearPin').value = 'No';
         populateRoundSelectors();
     }
 
-function savePlayer() {
-    const id = document.getElementById('editPlayerId').value;
-    const name = document.getElementById('pName').value;
-    const hc = document.getElementById('pHC').value;
-
-    if (!name) return alert("Please enter a name");
-
-    const p = { 
-        id: id || 'p' + Date.now(), // Use existing ID if editing, otherwise make new one
-        name: name, 
-        handicap: hc 
-    };
-
-    if (id) {
-        // Update existing player
-        players = players.map(x => String(x.id) === String(id) ? p : x);
-    } else {
-        // Add new player
-        players.push(p);
+    function savePlayer() {
+        const id = document.getElementById('editPlayerId').value, p = { id: id || 'p' + Date.now(), name: document.getElementById('pName').value, handicap: document.getElementById('pHC').value };
+        if(id) players = players.map(x => String(x.id) === String(id) ? p : x); else players.push(p);
+        document.getElementById('editPlayerId').value = ''; document.getElementById('pName').value = ''; document.getElementById('pHC').value = '';
+        saveData(); renderAdmin();
     }
-
-    // CLEAR the hidden ID so the next save isn't an edit!
-    document.getElementById('editPlayerId').value = '';
-    document.getElementById('pName').value = '';
-    document.getElementById('pHC').value = '';
-
-    saveData();
-    renderAdmin();
-    alert("Player list updated!");
-}
 
     function saveCourse() {
         const id = document.getElementById('editCourseId').value, c = { id: id || 'c' + Date.now(), name: document.getElementById('cName').value, pars: Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value), si: Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value) };
@@ -794,36 +770,12 @@ function savePlayer() {
         document.getElementById('admin-courses').innerHTML = courses.map(c => `<div class="item-row"><span>${c.name}</span><div style="display:flex; gap:5px;"><button class="btn-outline" onclick="editCourse('${c.id}')">Edit</button><button class="btn-del" onclick="deleteCourse('${c.id}')">Delete</button></div></div>`).join('');
     }
 
-function editPlayer(id) { 
-    // 1. Force the page to the top (so you see the form)
-    window.scrollTo(0, 0);
-
-    // 2. Find the player - we use String() to make sure 'p123' matches 'p123'
-    const p = players.find(x => String(x.id) === String(id));
-
-    // 3. Check if player exists
-    if (!p) {
-        alert("Error: Could not find player with ID: " + id);
-        return; 
+    function editPlayer(id) { 
+        const p = players.find(x => String(x.id) === String(id));
+        document.getElementById('editPlayerId').value = p.id;
+        document.getElementById('pName').value = p.name;
+        document.getElementById('pHC').value = p.handicap;
     }
-
-    // 4. Fill the boxes
-    document.getElementById('editPlayerId').value = p.id;
-    document.getElementById('pName').value = p.name;
-    document.getElementById('pHC').value = p.handicap;
-    
-    // 5. Change the button text (Optional, but helpful)
-    // If you have a button with an ID, you can make it say "Update Player"
-}
-
-    // This puts the data into the input boxes
-    document.getElementById('editPlayerId').value = p.id;
-    document.getElementById('pName').value = p.name;
-    document.getElementById('pHC').value = p.handicap;
-    
-    // Optional: Scroll to the top of the form so you see the data is there
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
 
     function deletePlayer(id) { if(confirm("Delete?")) { players = players.filter(x => String(x.id) !== String(id)); saveData(); renderAdmin(); } }
 
