@@ -309,6 +309,12 @@
 </div>
 
 <script>
+// PUT THIS AT THE TOP OF THE FIRST SCRIPT TAG
+function getScoreColor(pts) {
+    if (pts >= 3) return '#27ae60'; // Green (Great)
+    if (pts === 2) return '#2980b9'; // Blue (Good)
+    return '#333';                   // Black (Standard)
+}
     let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, pastComps = [], club = { name: "Golf Pro Manager", logo: "" };
     let tempTeams = [];
 
@@ -521,7 +527,7 @@ function viewDetail(date, courseId) {
         return `<tr>
             <td>${i+1}</td>
             <td>${r.playerName}</td>
-            <td>${r.points}</td>
+           <td style="color: ${getScoreColor(r.points)}; font-weight: bold;">${r.points}</td>
             <td style="font-size:1.2em;">${awards}</td>
         </tr>`;
     }).join('');
@@ -759,7 +765,7 @@ if (allScores.length >= 3) { // Only adjust if at least 3 players played
         const filterVal = document.getElementById('statsFilterDate').value; 
         let data = rounds.sort((a,b) => new Date(b.date) - new Date(a.date));
         if(filterVal) data = data.filter(r => r.date.startsWith(filterVal));
-        document.getElementById('stats-body').innerHTML = data.map(r => `<tr><td><b>${r.playerName}</b><br><small>${r.courseName}</small></td><td>${formatDateDisplay(r.date)}</td><td>${r.points}</td><td><button class="btn-outline" onclick="editRound('${r.id}')">Edit</button> <button class="btn-del" onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
+        document.getElementById('stats-body').innerHTML = data.map(r => `<tr><td><b>${r.playerName}</b><br><small>${r.courseName}</small></td><td>${formatDateDisplay(r.date)}</td><td style="color: ${getScoreColor(r.points)}; font-weight: bold;">${r.points}</td><td><button class="btn-outline" onclick="editRound('${r.id}')">Edit</button> <button class="btn-del" onclick="deleteRound('${r.id}')">X</button></td></tr>`).join('');
     }
 
     function clearStatsFilter() { document.getElementById('statsFilterDate').value = ''; renderStats(); }
