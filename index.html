@@ -1288,63 +1288,38 @@ document.querySelectorAll('.round-scores-val')[0]?.focus();
     }
 
 function saveCourse() {
-
-    const id =
-        document.getElementById(
-            'editCourseId'
-        ).value;
+    // 1. Get the data from the boxes
+    const id = document.getElementById('editCourseId').value;
+    const cNameInput = document.getElementById('cName');
 
     const c = {
         id: id || 'c' + Date.now(),
-
-        name:
-            document.getElementById(
-                'cName'
-            ).value,
-
-        pars: Array.from(
-            document.querySelectorAll(
-                '.setup-pars-val'
-            )
-        ).map(i => i.value),
-
-        si: Array.from(
-            document.querySelectorAll(
-                '.setup-si-val'
-            )
-        ).map(i => i.value),
-
-        yards:
-            window.tempYards || []
+        name: cNameInput.value,
+        pars: Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value),
+        si: Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value),
+        yards: window.tempYards || []
     };
 
+    // 2. Save it to the list
     if (id) {
-
-        courses =
-            courses.map(x =>
-                String(x.id) ===
-                String(id)
-                    ? c
-                    : x
-            );
-
+        courses = courses.map(x => String(x.id) === String(id) ? c : x);
     } else {
-
         courses.push(c);
     }
 
-    document.getElementById(
-        'editCourseId'
-    ).value = '';
+    // 3. THE FIX: Empty the boxes so they are blank for next time
+    document.getElementById('editCourseId').value = ''; // Clears the hidden ID
+    cNameInput.value = ''; // Clears the Course Name box
+    
+    // Clear all the Par and SI boxes
+    document.querySelectorAll('.setup-pars-val').forEach(i => i.value = '');
+    document.querySelectorAll('.setup-si-val').forEach(i => i.value = '');
 
-    document.getElementById(
-        'cName'
-    ).value = '';
-
+    // 4. Update the memory and the screen
     saveData();
     renderAdmin();
 
-    alert('Course saved!');
+    alert('Course saved and form cleared!');
 }
 
     function renderAdmin() {
