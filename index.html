@@ -682,9 +682,7 @@ function loadSelectedTee() {
 // SAVE YARDAGES
 window.tempYards =
     selectedTee.holes?.map(
-        h => h.yards ||
-             h.yardage ||
-             0
+        h => h.yardage || 0
     ) || [];
 
     console.log(selectedTee);
