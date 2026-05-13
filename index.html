@@ -296,6 +296,18 @@
             <div id="admin-players"></div>
         </div>
         <div class="card">
+<div class="card">
+    <h3>Golf Course API</h3>
+
+    <input type="password"
+           id="golfApiKey"
+           placeholder="Enter API Key">
+
+    <button class="btn"
+            onclick="saveGolfApiKey()">
+        Save API Key
+    </button>
+</div>
             <h3>Course Registry</h3>
             <input type="hidden" id="editCourseId">
             <input type="text" id="cName" placeholder="Course Name">
@@ -358,7 +370,20 @@ function getTieBreaker(pointsArray) {
         pastComps = JSON.parse(localStorage.getItem('g_pastComps')) || [];
         club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     }
+function saveGolfApiKey() {
 
+    const key =
+        document.getElementById(
+            'golfApiKey'
+        ).value;
+
+    localStorage.setItem(
+        'golf_api_key',
+        key
+    );
+
+    alert('API Key Saved!');
+}
     function saveData() {
         localStorage.setItem('g_players', JSON.stringify(players));
         localStorage.setItem('g_courses', JSON.stringify(courses));
