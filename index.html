@@ -133,51 +133,9 @@
             <input type="hidden" id="editRoundId">
             <label style="font-size:12px;">Date (dd/mm/yyyy):</label>
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
-            <select id="rCourse"
-        onchange="updateScorecardInfo()"><option value="">Select Course</option></select>
+            <select id="rCourse"><option value="">Select Course</option></select>
             <select id="rPlayer"><option value="">Select Player</option></select>
-            <div id="scorecard-info"
-     style="overflow-x:auto;
-            margin-bottom:12px;
-            background:#fff;
-            border-radius:10px;
-            padding:10px;
-            border:1px solid #ddd;">
-
-    <table style="width:100%;
-                  min-width:800px;
-                  border-collapse:collapse;
-                  text-align:center;
-                  font-size:12px;">
-
-        <tr>
-            <th>Hole</th>
-            <th>1</th><th>2</th><th>3</th><th>4</th>
-            <th>5</th><th>6</th><th>7</th><th>8</th>
-            <th>9</th><th>10</th><th>11</th><th>12</th>
-            <th>13</th><th>14</th><th>15</th><th>16</th>
-            <th>17</th><th>18</th>
-        </tr>
-
-        <tr id="par-row">
-            <td><b>Par</b></td>
-            <td colspan="18">Select course</td>
-        </tr>
-
-        <tr id="yards-row">
-            <td><b>Yds</b></td>
-            <td colspan="18">-</td>
-        </tr>
-
-        <tr id="si-row">
-            <td><b>SI</b></td>
-            <td colspan="18">-</td>
-        </tr>
-
-    </table>
-</div>
-
-<div class="score-grid" id="round-scores"></div>
+            <div class="score-grid" id="round-scores"></div>
 <div style="margin: 10px 0; display: flex; gap: 10px;">
     <div style="flex: 1;">
         <label style="font-size: 11px; display: block;">Longest Drive</label>
@@ -679,14 +637,9 @@ function loadSelectedTee() {
             selectedTee.holes?.[i]?.hcp || '';
     });
 
-// SAVE YARDAGES
-window.tempYards =
-    selectedTee.holes?.map(
-        h => h.yardage || 0
-    ) || [];
-
-    console.log(selectedTee);
-alert(JSON.stringify(selectedTee.holes[0]));
+    alert(
+        'Course loaded successfully!'
+    );
 }
 function loadCourse(course) {
 console.log(course);
@@ -711,59 +664,18 @@ alert(JSON.stringify(course));
     h.si ||
     ''
 );
-function loadCourse(course) {
 
-    console.log(course);
-    alert(JSON.stringify(course));
+    document.querySelectorAll('.setup-pars-val')
+        .forEach((input, i) => {
+            input.value = pars[i] || '';
+        });
 
-    document.getElementById('cName').value =
-        course.course_name ||
-        course.club_name ||
-        course.name ||
-        '';
+    document.querySelectorAll('.setup-si-val')
+        .forEach((input, i) => {
+            input.value = si[i] || '';
+        });
 
-    const tee =
-        course.tees?.male?.[0] ||
-        course.tees?.female?.[0];
-
-    if (!tee || !tee.holes) {
-        alert("No hole data found.");
-        return;
-    }
-
-    const pars =
-        tee.holes.map(h => h.par);
-
-    const si =
-        tee.holes.map(h =>
-            h.stroke_index ||
-            h.handicap ||
-            h.si ||
-            ''
-        );
-
-    const yards =
-        tee.holes.map(h =>
-            h.yardage || ''
-        );
-
-    document.querySelectorAll(
-        '.setup-pars-val'
-    ).forEach((input, i) => {
-        input.value = pars[i] || '';
-    });
-
-    document.querySelectorAll(
-        '.setup-si-val'
-    ).forEach((input, i) => {
-        input.value = si[i] || '';
-    });
-
-    window.tempYards = yards;
-
-    alert(
-        "Course loaded! Click Save Course."
-    );
+    alert("Course loaded! Click Save Course.");
 }
     function saveData() {
         localStorage.setItem('g_players', JSON.stringify(players));
@@ -947,56 +859,6 @@ function populateRoundSelectors() {
             input.value = '';
             input.style.color = '#333';
         });
-}
-
-function updateScorecardInfo() {
-
-    const courseId =
-        document.getElementById('rCourse').value;
-
-    const course =
-        courses.find(
-            c => c.id == courseId
-        );
-
-    if (!course) return;
-
-console.log(course);
-
-    const pars =
-        course.pars || [];
-
-    const si =
-        course.si || [];
-
-const yards =
-    course.holes?.map(
-        h => h.yardage || h.yards
-    ) || [];
-
-    document.getElementById(
-        'par-row'
-    ).innerHTML =
-        '<td><b>Par</b></td>' +
-        pars.map(p =>
-            `<td>${p || '-'}</td>`
-        ).join('');
-
-    document.getElementById(
-        'yards-row'
-    ).innerHTML =
-        '<td><b>Yds</b></td>' +
-        yards.map(y =>
-            `<td>${y || '-'}</td>`
-        ).join('');
-
-    document.getElementById(
-        'si-row'
-    ).innerHTML =
-        '<td><b>SI</b></td>' +
-        si.map(s =>
-            `<td>${s || '-'}</td>`
-        ).join('');
 }
 
     function saveClubProfile() {
@@ -1357,65 +1219,12 @@ document.querySelectorAll('.round-scores-val')[0]?.focus();
         saveData(); renderAdmin();
     }
 
-function saveCourse() {
-
-    const id =
-        document.getElementById(
-            'editCourseId'
-        ).value;
-
-    const c = {
-        id: id || 'c' + Date.now(),
-
-        name:
-            document.getElementById(
-                'cName'
-            ).value,
-
-        pars: Array.from(
-            document.querySelectorAll(
-                '.setup-pars-val'
-            )
-        ).map(i => i.value),
-
-        si: Array.from(
-            document.querySelectorAll(
-                '.setup-si-val'
-            )
-        ).map(i => i.value),
-
-        yards:
-            window.tempYards || []
-    };
-
-    if (id) {
-
-        courses =
-            courses.map(x =>
-                String(x.id) ===
-                String(id)
-                    ? c
-                    : x
-            );
-
-    } else {
-
-        courses.push(c);
+    function saveCourse() {
+        const id = document.getElementById('editCourseId').value, c = { id: id || 'c' + Date.now(), name: document.getElementById('cName').value, pars: Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value), si: Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value) };
+        if(id) courses = courses.map(x => String(x.id) === String(id) ? c : x); else courses.push(c);
+        document.getElementById('editCourseId').value = ''; document.getElementById('cName').value = '';
+        saveData(); renderAdmin();
     }
-
-    document.getElementById(
-        'editCourseId'
-    ).value = '';
-
-    document.getElementById(
-        'cName'
-    ).value = '';
-
-    saveData();
-    renderAdmin();
-
-    alert('Course saved!');
-}
 
     function renderAdmin() {
         document.getElementById('admin-players').innerHTML = players.map(p => `<div class="item-row"><span>${p.name} (HC: ${p.handicap})</span><div style="display:flex; gap:5px;"><button class="btn-outline" onclick="editPlayer('${p.id}')">Edit</button><button class="btn-del" onclick="deletePlayer('${p.id}')">Delete</button></div></div>`).join('');
