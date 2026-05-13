@@ -318,6 +318,7 @@
             onclick="searchCourse()">
         Search Course
     </button>
+<div id="courseResults"></div>
 
     <div id="courseResults"></div>
 </div>
@@ -435,26 +436,21 @@ alert(JSON.stringify(data));
 
 let html = '';
 
-const courses =
-    data.courses ||
-    data.results ||
-    [];
+if (data.courses.length === 0) {
 
-if (courses.length === 0) {
-
-    html =
-        'No courses found';
+    html = 'No courses found';
 
 } else {
 
-    courses.forEach(course => {
+    data.courses.forEach(course => {
 
         html += `
             <button class="btn-outline"
             style="width:100%; margin:5px 0;"
-            onclick="console.log(${JSON.stringify(course).replace(/"/g, '&quot;')})">
+            onclick="selectCourse(${course.id})">
 
-                ${course.club_name || course.name || 'Golf Course'}
+                ${course.club_name}
+                (${course.location.country})
 
             </button>
         `;
