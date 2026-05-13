@@ -679,6 +679,14 @@ function loadSelectedTee() {
             selectedTee.holes?.[i]?.hcp || '';
     });
 
+// SAVE YARDAGES
+window.tempYards =
+    selectedTee.holes?.map(
+        h => h.yards ||
+             h.yardage ||
+             0
+    ) || [];
+
     alert(
         'Course loaded successfully!'
     );
@@ -1311,12 +1319,65 @@ document.querySelectorAll('.round-scores-val')[0]?.focus();
         saveData(); renderAdmin();
     }
 
-    function saveCourse() {
-        const id = document.getElementById('editCourseId').value, c = { id: id || 'c' + Date.now(), name: document.getElementById('cName').value, pars: Array.from(document.querySelectorAll('.setup-pars-val')).map(i => i.value), si: Array.from(document.querySelectorAll('.setup-si-val')).map(i => i.value) };
-        if(id) courses = courses.map(x => String(x.id) === String(id) ? c : x); else courses.push(c);
-        document.getElementById('editCourseId').value = ''; document.getElementById('cName').value = '';
-        saveData(); renderAdmin();
+function saveCourse() {
+
+    const id =
+        document.getElementById(
+            'editCourseId'
+        ).value;
+
+    const c = {
+        id: id || 'c' + Date.now(),
+
+        name:
+            document.getElementById(
+                'cName'
+            ).value,
+
+        pars: Array.from(
+            document.querySelectorAll(
+                '.setup-pars-val'
+            )
+        ).map(i => i.value),
+
+        si: Array.from(
+            document.querySelectorAll(
+                '.setup-si-val'
+            )
+        ).map(i => i.value),
+
+        yards:
+            window.tempYards || []
+    };
+
+    if (id) {
+
+        courses =
+            courses.map(x =>
+                String(x.id) ===
+                String(id)
+                    ? c
+                    : x
+            );
+
+    } else {
+
+        courses.push(c);
     }
+
+    document.getElementById(
+        'editCourseId'
+    ).value = '';
+
+    document.getElementById(
+        'cName'
+    ).value = '';
+
+    saveData();
+    renderAdmin();
+
+    alert('Course saved!');
+}
 
     function renderAdmin() {
         document.getElementById('admin-players').innerHTML = players.map(p => `<div class="item-row"><span>${p.name} (HC: ${p.handicap})</span><div style="display:flex; gap:5px;"><button class="btn-outline" onclick="editPlayer('${p.id}')">Edit</button><button class="btn-del" onclick="deletePlayer('${p.id}')">Delete</button></div></div>`).join('');
