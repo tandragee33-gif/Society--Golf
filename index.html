@@ -320,7 +320,6 @@
     </button>
 <div id="courseResults"></div>
 
-    <div id="courseResults"></div>
 </div>
             <h3>Course Registry</h3>
             <input type="hidden" id="editCourseId">
@@ -444,16 +443,16 @@ if (data.courses.length === 0) {
 
     data.courses.forEach(course => {
 
-        html += `
-            <button class="btn-outline"
-            style="width:100%; margin:5px 0;"
-            onclick="selectCourse(${course.id})">
+html += `
+    <button class="btn-outline"
+    style="width:100%; margin:5px 0;"
+    onclick='loadCourse(${JSON.stringify(course)})'>
 
-                ${course.club_name}
-                (${course.location.country})
+        ${course.club_name}
+        (${course.location.country})
 
-            </button>
-        `;
+    </button>
+`;
     });
 }
 
@@ -469,6 +468,35 @@ document.getElementById(
             'Search failed'
         );
     }
+}
+function loadCourse(course) {
+
+    document.getElementById('cName').value =
+        course.course_name || course.club_name || '';
+
+    const tee =
+        course.tees?.male?.[0] ||
+        course.tees?.female?.[0];
+
+    if (!tee || !tee.holes) {
+        alert("No hole data found.");
+        return;
+    }
+
+    const pars = tee.holes.map(h => h.par);
+    const si = tee.holes.map(h => h.handicap);
+
+    document.querySelectorAll('.setup-pars-val')
+        .forEach((input, i) => {
+            input.value = pars[i] || '';
+        });
+
+    document.querySelectorAll('.setup-si-val')
+        .forEach((input, i) => {
+            input.value = si[i] || '';
+        });
+
+    alert("Course loaded! Click Save Course.");
 }
     function saveData() {
         localStorage.setItem('g_players', JSON.stringify(players));
