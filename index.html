@@ -576,6 +576,71 @@ async function selectCourse(courseId) {
         );
     }
 }
+function loadSelectedTee() {
+
+    const teeIndex =
+        document.getElementById(
+            'teeSelector'
+        ).value;
+
+    if (teeIndex === '') {
+        alert('Please select a tee box');
+        return;
+    }
+
+    let tees = [];
+
+    if (
+        selectedCourseData.tees &&
+        selectedCourseData.tees.male
+    ) {
+        tees = tees.concat(
+            selectedCourseData.tees.male
+        );
+    }
+
+    if (
+        selectedCourseData.tees &&
+        selectedCourseData.tees.female
+    ) {
+        tees = tees.concat(
+            selectedCourseData.tees.female
+        );
+    }
+
+    const selectedTee =
+        tees[teeIndex];
+
+    // COURSE NAME
+    document.getElementById(
+        'cName'
+    ).value =
+        selectedCourseData.club_name +
+        ' - ' +
+        selectedTee.tee_name;
+
+    // LOAD PARS
+    document.querySelectorAll(
+        '.setup-pars-val'
+    ).forEach((input, i) => {
+
+        input.value =
+            selectedTee.holes?.[i]?.par || '';
+    });
+
+    // LOAD STROKE INDEX
+    document.querySelectorAll(
+        '.setup-si-val'
+    ).forEach((input, i) => {
+
+        input.value =
+            selectedTee.holes?.[i]?.hcp || '';
+    });
+
+    alert(
+        'Course loaded successfully!'
+    );
+}
 function loadCourse(course) {
 console.log(course);
 alert(JSON.stringify(course));
