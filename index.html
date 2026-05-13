@@ -470,6 +470,8 @@ document.getElementById(
     }
 }
 function loadCourse(course) {
+console.log(course);
+alert(JSON.stringify(course));
 
     document.getElementById('cName').value =
         course.course_name || course.club_name || '';
