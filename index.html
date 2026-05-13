@@ -1222,14 +1222,22 @@ if (allScores.length >= 3) { // Only adjust if at least 3 players played
         return { ...p, handicap: newHC.toFixed(1) };
     });
 }
+    // 1. Save the data to the memory
     saveData();
+
+    // 2. Refresh all the screens so they show the new data
+    renderStats();     
+    renderDashboard(); 
+
+    // 3. The "Eraser": Wipe the form clean for next time
     resetRoundForm();
-    renderStats();    // Refresh the stats list
-    renderDashboard(); // Refresh history counts
-    showTab('tab-stats'); 
+
+    // 4. Reset the box colors back to neutral
+    document.querySelectorAll('.round-scores-val').forEach(input => colorLive(input));
+
+    // 5. Tell the user it's done, then move to the Stats page
     alert("Round Saved!");
-resetRoundForm();
-document.querySelectorAll('.round-scores-val').forEach(input => colorLive(input));
+    showTab('tab-stats');
 }
 
     function renderStats() {
