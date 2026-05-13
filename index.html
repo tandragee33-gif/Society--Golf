@@ -894,9 +894,7 @@ console.log(course);
         course.si || [];
 
 const yards =
-    course.holes?.map(
-        h => h.yardage || h.yards
-    ) || [];
+    course.yards || [];
 
     document.getElementById(
         'par-row'
