@@ -484,7 +484,12 @@ function loadCourse(course) {
     }
 
     const pars = tee.holes.map(h => h.par);
-    const si = tee.holes.map(h => h.handicap);
+    const si = tee.holes.map(h =>
+    h.stroke_index ||
+    h.handicap ||
+    h.si ||
+    ''
+);
 
     document.querySelectorAll('.setup-pars-val')
         .forEach((input, i) => {
