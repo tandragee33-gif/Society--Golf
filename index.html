@@ -549,10 +549,10 @@ async function selectCourse(courseId) {
 
             option.value = index;
 
-            option.textContent =
-                `${tee.tee_name}
-                - ${tee.yardage || 0} yds
-                (Slope ${tee.slope_rating || 'N/A'})`;
+option.textContent =
+    `${tee.tee_name}
+    - ${tee.total_yards || 0} yds
+    (Slope ${tee.slope_rating || 'N/A'})`;
 
             teeSelector.appendChild(
                 option
