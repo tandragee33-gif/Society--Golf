@@ -937,11 +937,17 @@ document.querySelectorAll('.round-scores-val').forEach(input => colorLive(input)
 
     function resetRoundForm() {
         document.getElementById('editRoundId').value = '';
-        document.querySelectorAll('.round-scores-val').forEach(i => i.value = ''); document.getElementById('rLongDrive').value = 'No';
+        document.querySelectorAll('.round-scores-val').forEach(i => i.value = '');
+document.querySelectorAll('.round-scores-val')
+    .forEach(i => {
+        i.style.color = '#333';
+    });
+ document.getElementById('rLongDrive').value = 'No';
 document.getElementById('rNearPin').value = 'No';
         const now = new Date();
         document.getElementById('rDate').value = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
         populateRoundSelectors();
+document.querySelectorAll('.round-scores-val')[0]?.focus();
     }
 
     function savePlayer() {
