@@ -712,11 +712,15 @@ alert(JSON.stringify(course));
     ''
 );
 function loadCourse(course) {
-console.log(course);
-alert(JSON.stringify(course));
+
+    console.log(course);
+    alert(JSON.stringify(course));
 
     document.getElementById('cName').value =
-        course.course_name || course.club_name || '';
+        course.course_name ||
+        course.club_name ||
+        course.name ||
+        '';
 
     const tee =
         course.tees?.male?.[0] ||
@@ -727,27 +731,39 @@ alert(JSON.stringify(course));
         return;
     }
 
-    const pars = tee.holes.map(h => h.par);
-    const si = tee.holes.map(h =>
-    h.stroke_index ||
-    h.handicap ||
-    h.si ||
-    ''
-);
+    const pars =
+        tee.holes.map(h => h.par);
 
-    document.querySelectorAll('.setup-pars-val')
-        .forEach((input, i) => {
-            input.value = pars[i] || '';
-        });
+    const si =
+        tee.holes.map(h =>
+            h.stroke_index ||
+            h.handicap ||
+            h.si ||
+            ''
+        );
 
-    document.querySelectorAll('.setup-si-val')
-        .forEach((input, i) => {
-            input.value = si[i] || '';
-        });
+    const yards =
+        tee.holes.map(h =>
+            h.yardage || ''
+        );
 
-window.tempYards = yards;
+    document.querySelectorAll(
+        '.setup-pars-val'
+    ).forEach((input, i) => {
+        input.value = pars[i] || '';
+    });
 
-    alert("Course loaded! Click Save Course.");
+    document.querySelectorAll(
+        '.setup-si-val'
+    ).forEach((input, i) => {
+        input.value = si[i] || '';
+    });
+
+    window.tempYards = yards;
+
+    alert(
+        "Course loaded! Click Save Course."
+    );
 }
     function saveData() {
         localStorage.setItem('g_players', JSON.stringify(players));
