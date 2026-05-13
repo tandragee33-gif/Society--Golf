@@ -441,6 +441,7 @@ function getTieBreaker(pointsArray) {
         pastComps = JSON.parse(localStorage.getItem('g_pastComps')) || [];
         club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
 competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
+renderActiveTeams(); 
     }
 function saveGolfApiKey() {
 
@@ -1369,6 +1370,7 @@ function addTeam() {
     selected.forEach(ck => ck.checked = false); 
     renderActiveTeams();
 saveData(); // <--- This saves them so they don't disappear! 
+alert("Team added!"); 
 }
 
 function renderActiveTeams() {
