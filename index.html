@@ -133,7 +133,8 @@
             <input type="hidden" id="editRoundId">
             <label style="font-size:12px;">Date (dd/mm/yyyy):</label>
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
-            <select id="rCourse"><option value="">Select Course</option></select>
+            <select id="rCourse"
+        onchange="updateScorecardInfo()"><option value="">Select Course</option></select>
             <select id="rPlayer"><option value="">Select Player</option></select>
             <div id="scorecard-info"
      style="overflow-x:auto;
@@ -900,6 +901,52 @@ function populateRoundSelectors() {
             input.value = '';
             input.style.color = '#333';
         });
+}
+
+function updateScorecardInfo() {
+
+    const courseId =
+        document.getElementById('rCourse').value;
+
+    const course =
+        courses.find(
+            c => c.id == courseId
+        );
+
+    if (!course) return;
+
+    const pars =
+        course.pars || [];
+
+    const si =
+        course.si || [];
+
+    const yards =
+        course.yards || [];
+
+    document.getElementById(
+        'par-row'
+    ).innerHTML =
+        '<td><b>Par</b></td>' +
+        pars.map(p =>
+            `<td>${p || '-'}</td>`
+        ).join('');
+
+    document.getElementById(
+        'yards-row'
+    ).innerHTML =
+        '<td><b>Yds</b></td>' +
+        yards.map(y =>
+            `<td>${y || '-'}</td>`
+        ).join('');
+
+    document.getElementById(
+        'si-row'
+    ).innerHTML =
+        '<td><b>SI</b></td>' +
+        si.map(s =>
+            `<td>${s || '-'}</td>`
+        ).join('');
 }
 
     function saveClubProfile() {
