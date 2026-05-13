@@ -430,12 +430,39 @@ async function searchCourse() {
         const data =
             await response.json();
 
-        console.log(data);
+console.log(data);
 
-        document.getElementById(
-            'courseResults'
-        ).innerHTML =
-            'Search complete - open console (F12)';
+let html = '';
+
+const courses =
+    data.courses ||
+    data.results ||
+    [];
+
+if (courses.length === 0) {
+
+    html =
+        'No courses found';
+
+} else {
+
+    courses.forEach(course => {
+
+        html += `
+            <button class="btn-outline"
+            style="width:100%; margin:5px 0;"
+            onclick="console.log(${JSON.stringify(course).replace(/"/g, '&quot;')})">
+
+                ${course.club_name || course.name || 'Golf Course'}
+
+            </button>
+        `;
+    });
+}
+
+document.getElementById(
+    'courseResults'
+).innerHTML = html;
 
     } catch (err) {
 
