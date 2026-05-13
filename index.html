@@ -135,7 +135,7 @@
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
             <select id="rCourse"><option value="">Select Course</option></select>
             <select id="rPlayer"><option value="">Select Player</option></select>
-            <div id="realScorecard"></div>
+            <div class="score-grid" id="round-scores"></div>
 <div style="margin: 10px 0; display: flex; gap: 10px;">
     <div style="flex: 1;">
         <label style="font-size: 11px; display: block;">Longest Drive</label>
@@ -853,8 +853,6 @@ function populateRoundSelectors() {
             `<option value="${p.id}">${p.name}</option>`
         ).join('');
 
-document.getElementById('rCourse').onchange = renderRealScorecard;
-
     // CLEAR SCORECARD FOR NEW ROUND
     document.querySelectorAll('.round-scores-val')
         .forEach(input => {
@@ -862,97 +860,7 @@ document.getElementById('rCourse').onchange = renderRealScorecard;
             input.style.color = '#333';
         });
 }
-function renderRealScorecard() {
 
-    const courseId =
-        document.getElementById('rCourse').value;
-
-    const card =
-        document.getElementById('realScorecard');
-
-    if (!courseId) {
-        card.innerHTML = '';
-        return;
-    }
-
-    const course =
-        courses.find(c =>
-            String(c.id) === String(courseId)
-        );
-
-    if (!course) return;
-
-    let html = `
-    <div style="
-        overflow-x:auto;
-        margin-top:15px;
-    ">
-    <table style="
-        width:100%;
-        border-collapse:collapse;
-        text-align:center;
-        font-size:12px;
-        background:white;
-        border:1px solid #ddd;
-    ">
-
-    <tr style="
-        background:#1b5e20;
-        color:white;
-    ">
-        <th>Hole</th>
-        ${Array.from({length:18},
-            (_,i)=>`<th>${i+1}</th>`
-        ).join('')}
-    </tr>
-
-    <tr>
-        <td><b>Par</b></td>
-        ${course.pars.map(p =>
-            `<td>${p}</td>`
-        ).join('')}
-    </tr>
-
-    <tr>
-        <td><b>Yds</b></td>
-        ${(course.yards || [])
-            .map(y => `<td>${y}</td>`)
-            .join('')}
-    </tr>
-
-    <tr>
-        <td><b>SI</b></td>
-        ${course.si.map(s =>
-            `<td>${s}</td>`
-        ).join('')}
-    </tr>
-
-    <tr>
-        <td><b>Score</b></td>
-        ${Array.from({length:18},
-            (_,i)=>`
-            <td>
-                <input
-                    type="number"
-                    class="round-scores-val"
-                    inputmode="numeric"
-                    style="
-                        width:45px;
-                        text-align:center;
-                        font-size:18px;
-                    "
-                    oninput="colorLive(this)"
-                >
-            </td>
-        `).join('')}
-    </tr>
-
-    </table>
-    </div>
-    `;
-
-    card.innerHTML = html;
-}
     function saveClubProfile() {
         club.name = document.getElementById('setupClubName').value;
         saveData();
