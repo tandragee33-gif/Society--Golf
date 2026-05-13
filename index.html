@@ -310,15 +310,30 @@
 
     <hr>
 
-    <input type="text"
-           id="courseSearch"
-           placeholder="Search Course Name">
+<input type="text"
+       id="courseSearch"
+       placeholder="Search Course Name">
 
-    <button class="btn"
-            onclick="searchCourse()">
-        Search Course
-    </button>
+<button class="btn"
+        onclick="searchCourse()">
+    Search Course
+</button>
+
 <div id="courseResults"></div>
+
+<select id="teeSelector"
+        style="display:none; margin-top:10px;">
+    <option value="">
+        Select Tee Box
+    </option>
+</select>
+
+<button class="btn"
+        id="loadTeeBtn"
+        style="display:none;"
+        onclick="loadSelectedTee()">
+    Load Selected Tee
+</button>
 
 </div>
             <h3>Course Registry</h3>
@@ -348,6 +363,7 @@ function colorLive(input) {
 }
     let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, pastComps = [], club = { name: "Golf Pro Manager", logo: "" };
     let tempTeams = [];
+let selectedCourseData = null;
 
     function formatDateDisplay(dateStr) {
         if(!dateStr || !dateStr.includes('-')) return dateStr;
@@ -446,7 +462,7 @@ if (data.courses.length === 0) {
 html += `
     <button class="btn-outline"
     style="width:100%; margin:5px 0;"
-    onclick='loadCourse(${JSON.stringify(course)})'>
+    onclick="selectCourse(${course.id})">
 
         ${course.club_name}
         (${course.location.country})
@@ -466,6 +482,97 @@ document.getElementById(
 
         alert(
             'Search failed'
+        );
+    }
+}
+async function selectCourse(courseId) {
+
+    const apiKey =
+        localStorage.getItem(
+            'golf_api_key'
+        );
+
+    try {
+
+        const response =
+            await fetch(
+                `https://api.golfcourseapi.com/v1/courses/${courseId}`,
+                {
+                    headers: {
+                        "Authorization":
+                            `Key ${apiKey}`
+                    }
+                }
+            );
+
+        const data =
+            await response.json();
+
+        selectedCourseData = data.course;
+
+        const teeSelector =
+            document.getElementById(
+                'teeSelector'
+            );
+
+        teeSelector.innerHTML =
+            '<option value="">Select Tee Box</option>';
+
+        let tees = [];
+
+        if (
+            data.course.tees &&
+            data.course.tees.male
+        ) {
+            tees =
+                tees.concat(
+                    data.course.tees.male
+                );
+        }
+
+        if (
+            data.course.tees &&
+            data.course.tees.female
+        ) {
+            tees =
+                tees.concat(
+                    data.course.tees.female
+                );
+        }
+
+        tees.forEach((tee, index) => {
+
+            const option =
+                document.createElement(
+                    'option'
+                );
+
+            option.value = index;
+
+            option.textContent =
+                `${tee.tee_name}
+                - ${tee.yardage || 0} yds
+                (Slope ${tee.slope_rating || 'N/A'})`;
+
+            teeSelector.appendChild(
+                option
+            );
+        });
+
+        teeSelector.style.display =
+            'block';
+
+        document.getElementById(
+            'loadTeeBtn'
+        ).style.display =
+            'block';
+
+    } catch (err) {
+
+        console.error(err);
+
+        alert(
+            'Failed to load tee boxes'
         );
     }
 }
