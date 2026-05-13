@@ -687,9 +687,8 @@ window.tempYards =
              0
     ) || [];
 
-    alert(
-        'Course loaded successfully!'
-    );
+    console.log(selectedTee);
+alert(JSON.stringify(selectedTee.holes[0]));
 }
 function loadCourse(course) {
 console.log(course);
