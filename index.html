@@ -135,7 +135,48 @@
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
             <select id="rCourse"><option value="">Select Course</option></select>
             <select id="rPlayer"><option value="">Select Player</option></select>
-            <div class="score-grid" id="round-scores"></div>
+            <div id="scorecard-info"
+     style="overflow-x:auto;
+            margin-bottom:12px;
+            background:#fff;
+            border-radius:10px;
+            padding:10px;
+            border:1px solid #ddd;">
+
+    <table style="width:100%;
+                  min-width:800px;
+                  border-collapse:collapse;
+                  text-align:center;
+                  font-size:12px;">
+
+        <tr>
+            <th>Hole</th>
+            <th>1</th><th>2</th><th>3</th><th>4</th>
+            <th>5</th><th>6</th><th>7</th><th>8</th>
+            <th>9</th><th>10</th><th>11</th><th>12</th>
+            <th>13</th><th>14</th><th>15</th><th>16</th>
+            <th>17</th><th>18</th>
+        </tr>
+
+        <tr id="par-row">
+            <td><b>Par</b></td>
+            <td colspan="18">Select course</td>
+        </tr>
+
+        <tr id="yards-row">
+            <td><b>Yds</b></td>
+            <td colspan="18">-</td>
+        </tr>
+
+        <tr id="si-row">
+            <td><b>SI</b></td>
+            <td colspan="18">-</td>
+        </tr>
+
+    </table>
+</div>
+
+<div class="score-grid" id="round-scores"></div>
 <div style="margin: 10px 0; display: flex; gap: 10px;">
     <div style="flex: 1;">
         <label style="font-size: 11px; display: block;">Longest Drive</label>
