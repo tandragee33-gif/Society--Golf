@@ -440,6 +440,7 @@ function getTieBreaker(pointsArray) {
         singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
         pastComps = JSON.parse(localStorage.getItem('g_pastComps')) || [];
         club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
+competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
     }
 function saveGolfApiKey() {
 
@@ -697,6 +698,7 @@ alert(JSON.stringify(selectedTee.holes[0]));
         localStorage.setItem('g_singlesT', JSON.stringify(singlesT));
         localStorage.setItem('g_pastComps', JSON.stringify(pastComps));
         localStorage.setItem('g_club', JSON.stringify(club));
+localStorage.setItem('g_compTeams', JSON.stringify(competitionTeams));
     }
 
     // BACKUP FUNCTION
@@ -1366,6 +1368,7 @@ function addTeam() {
     competitionTeams.push({ id: competitionTeams.length + 1, members: teamPlayers });
     selected.forEach(ck => ck.checked = false); 
     renderActiveTeams();
+saveData(); // <--- This saves them so they don't disappear! 
 }
 
 function renderActiveTeams() {
