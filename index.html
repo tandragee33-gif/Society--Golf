@@ -567,15 +567,83 @@ alert(JSON.stringify(course));
         showTab('tab-dash');
     }
 
-    function setupInputGrids() {
-        ['round-scores', 'setup-pars', 'setup-si'].forEach(g => {
-            const el = document.getElementById(g);
-            el.innerHTML = '';
-            for(let i=1; i<=18; i++) {
-el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number" class="${g}-val" oninput="colorLive(this)"></div>`;
-            }
-        });
+function setupInputGrids() {
+
+    // ROUND SCORECARD
+    const roundEl =
+        document.getElementById('round-scores');
+
+    roundEl.innerHTML = '';
+
+    for (let i = 1; i <= 18; i++) {
+
+        roundEl.innerHTML += `
+        <div class="hole-input"
+             style="border:1px solid #ddd;
+                    border-radius:10px;
+                    padding:8px;
+                    background:#fafafa;
+                    text-align:center;">
+
+            <div style="font-size:11px;
+                        color:#666;">
+                Hole
+            </div>
+
+            <div style="font-weight:bold;
+                        font-size:16px;">
+                ${i}
+            </div>
+
+            <input type="number"
+                   inputmode="numeric"
+                   class="round-scores-val"
+                   style="font-size:20px;
+                          font-weight:bold;
+                          text-align:center;
+                          margin-top:8px;"
+                   oninput="moveToNext(this); colorLive(this)">
+        </div>`;
     }
+
+    // COURSE SETUP GRIDS
+    ['setup-pars', 'setup-si'].forEach(g => {
+
+        const el =
+            document.getElementById(g);
+
+        el.innerHTML = '';
+
+        for (let i = 1; i <= 18; i++) {
+
+            el.innerHTML += `
+            <div class="hole-input">
+                <label>${i}</label>
+                <input type="number"
+                       class="${g}-val">
+            </div>`;
+        }
+    });
+}
+function moveToNext(input) {
+
+    const inputs =
+        Array.from(
+            document.querySelectorAll(
+                '.round-scores-val'
+            )
+        );
+
+    const index =
+        inputs.indexOf(input);
+
+    if (
+        input.value &&
+        index < inputs.length - 1
+    ) {
+        inputs[index + 1].focus();
+    }
+}
 
     function showTab(id) {
         document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
@@ -597,12 +665,29 @@ el.innerHTML += `<div class="hole-input"><label>${i}</label><input type="number"
         if(id === 'tab-pairs' || id === 'tab-singles') renderMatchplay(id.split('-')[1]);
     }
 
-    function populateRoundSelectors() {
-        const cSel = document.getElementById('rCourse');
-        const pSel = document.getElementById('rPlayer');
-        cSel.innerHTML = '<option value="">Select Course</option>' + courses.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        pSel.innerHTML = '<option value="">Select Player</option>' + players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    }
+function populateRoundSelectors() {
+    const cSel = document.getElementById('rCourse');
+    const pSel = document.getElementById('rPlayer');
+
+    cSel.innerHTML =
+        '<option value="">Select Course</option>' +
+        courses.map(c =>
+            `<option value="${c.id}">${c.name}</option>`
+        ).join('');
+
+    pSel.innerHTML =
+        '<option value="">Select Player</option>' +
+        players.map(p =>
+            `<option value="${p.id}">${p.name}</option>`
+        ).join('');
+
+    // CLEAR SCORECARD FOR NEW ROUND
+    document.querySelectorAll('.round-scores-val')
+        .forEach(input => {
+            input.value = '';
+            input.style.color = '#333';
+        });
+}
 
     function saveClubProfile() {
         club.name = document.getElementById('setupClubName').value;
@@ -911,6 +996,7 @@ if (allScores.length >= 3) { // Only adjust if at least 3 players played
     renderDashboard(); // Refresh history counts
     showTab('tab-stats'); 
     alert("Round Saved!");
+resetRoundForm();
 document.querySelectorAll('.round-scores-val').forEach(input => colorLive(input));
 }
 
@@ -937,7 +1023,11 @@ document.querySelectorAll('.round-scores-val').forEach(input => colorLive(input)
 
     function resetRoundForm() {
         document.getElementById('editRoundId').value = '';
-        document.querySelectorAll('.round-scores-val').forEach(i => i.value = '');
+        document.querySelectorAll('.round-scores-val')
+.forEach(i => {
+    i.value = '';
+    i.style.color = '#333';
+});
 document.querySelectorAll('.round-scores-val')
     .forEach(i => {
         i.style.color = '#333';
