@@ -760,46 +760,24 @@ function setupInputGrids() {
     }
 });
 
-const scoreEl =
+// ROUND SCORECARD
+const roundEl =
     document.getElementById('round-scores');
 
-scoreEl.innerHTML = `
-<table>
-<tr>
-    <th>Hole</th>
-    ${Array.from({length:18},
-        (_,i)=>`<th>${i+1}</th>`
-    ).join('')}
-</tr>
+roundEl.innerHTML = '';
 
-<tr id="par-row">
-    <td><b>Par</b></td>
-    ${Array(18).fill('<td>-</td>').join('')}
-</tr>
+for (let i = 1; i <= 18; i++) {
 
-<tr id="yards-row">
-    <td><b>Yds</b></td>
-    ${Array(18).fill('<td>-</td>').join('')}
-</tr>
+    roundEl.innerHTML += `
+    <div class="hole-input">
+        <label>${i}</label>
 
-<tr id="si-row">
-    <td><b>SI</b></td>
-    ${Array(18).fill('<td>-</td>').join('')}
-</tr>
-
-<tr>
-    <td><b>Score</b></td>
-    ${Array.from({length:18},
-        ()=>`
-        <td>
-            <input type="number"
-                   class="round-scores-val hole-score"
-                   inputmode="numeric"
-                   oninput="colorLive(this)">
-        </td>`
-    ).join('')}
-</tr>
-</table>`;
+        <input type="number"
+               inputmode="numeric"
+               class="round-scores-val"
+               oninput="moveToNext(this); colorLive(this)">
+    </div>`;
+}
 
     // COURSE SETUP GRIDS
     ['setup-pars', 'setup-si'].forEach(g => {
