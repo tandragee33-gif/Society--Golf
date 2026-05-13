@@ -921,8 +921,10 @@ function updateScorecardInfo() {
     const si =
         course.si || [];
 
-    const yards =
-        course.yards || [];
+   const yards =
+    course.holes?.map(
+        h => h.yardage
+    ) || course.yards || [];
 
     document.getElementById(
         'par-row'
