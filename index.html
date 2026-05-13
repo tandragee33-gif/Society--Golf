@@ -29,7 +29,6 @@
         
         .item-row { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: white; }
         .score-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin: 10px 0; }
-grid-template-columns: repeat(6, 1fr); 
         .hole-input { text-align: center; font-size: 10px; }
         .hole-input input { padding: 4px 0; text-align: center; width: 100% !important; }
 
@@ -136,7 +135,7 @@ grid-template-columns: repeat(6, 1fr);
             <input type="text" id="rDate" placeholder="dd/mm/yyyy">
             <select id="rCourse"><option value="">Select Course</option></select>
             <select id="rPlayer"><option value="">Select Player</option></select>
-            <div id="round-scores" class="real-scorecard"></div>
+            <div class="score-grid" id="round-scores"></div>
 <div style="margin: 10px 0; display: flex; gap: 10px;">
     <div style="flex: 1;">
         <label style="font-size: 11px; display: block;">Longest Drive</label>
@@ -742,42 +741,42 @@ alert(JSON.stringify(course));
 
 function setupInputGrids() {
 
-    ['setup-pars', 'setup-si'].forEach(g => {
+    // ROUND SCORECARD
+    const roundEl =
+        document.getElementById('round-scores');
 
-    const el =
-        document.getElementById(g);
+    roundEl.innerHTML = '';
 
-    el.innerHTML = '';
+    for (let i = 1; i <= 18; i++) {
 
-    for(let i = 1; i <= 18; i++) {
+        roundEl.innerHTML += `
+        <div class="hole-input"
+             style="border:1px solid #ddd;
+                    border-radius:10px;
+                    padding:8px;
+                    background:#fafafa;
+                    text-align:center;">
 
-        el.innerHTML += `
-        <div class="hole-input">
-            <label>${i}</label>
+            <div style="font-size:11px;
+                        color:#666;">
+                Hole
+            </div>
+
+            <div style="font-weight:bold;
+                        font-size:16px;">
+                ${i}
+            </div>
+
             <input type="number"
-                   class="${g}-val">
+                   inputmode="numeric"
+                   class="round-scores-val"
+                   style="font-size:20px;
+                          font-weight:bold;
+                          text-align:center;
+                          margin-top:8px;"
+                   oninput="moveToNext(this); colorLive(this)">
         </div>`;
     }
-});
-
-// ROUND SCORECARD
-const roundEl =
-    document.getElementById('round-scores');
-
-roundEl.innerHTML = '';
-
-for (let i = 1; i <= 18; i++) {
-
-    roundEl.innerHTML += `
-    <div class="hole-input">
-        <label>${i}</label>
-
-        <input type="number"
-               inputmode="numeric"
-               class="round-scores-val"
-               oninput="moveToNext(this); colorLive(this)">
-    </div>`;
-}
 
     // COURSE SETUP GRIDS
     ['setup-pars', 'setup-si'].forEach(g => {
