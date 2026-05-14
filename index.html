@@ -433,27 +433,31 @@ function getTieBreaker(pointsArray) {
     }
 
 function loadData() {
-    // 1. Load your standard data
+    // 1. Core Data
     players = JSON.parse(localStorage.getItem('g_players')) || [];
     courses = JSON.parse(localStorage.getItem('g_courses')) || [];
     rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
-    pairsT = JSON.parse(localStorage.getItem('g_pairsT')) || [];
-    singlesT = JSON.parse(localStorage.getItem('g_singlesT')) || [];
     pastComps = JSON.parse(localStorage.getItem('g_pastComps')) || [];
     club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
 
-    // 2. Draw the Teams (if they exist)
-    renderActiveTeams();
+    // 2. Load KO Data - (Do NOT use || [] here, let it be null if empty)
+    pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
+    singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
 
-    // 3. NEW: Load and Draw the Doubles specifically
+    // 3. Draw the KO Brackets
+    // This tells the app: "Check memory for Pairs and Singles and draw whatever you find"
+    renderMatchplay('pairs');
+    renderMatchplay('singles');
+
+    // 4. Draw the Teams tab
+    renderActiveTeams(); 
+
+    // 5. Load the regular "Doubles Combined" (tempTeams)
     const saved = localStorage.getItem('g_tempTeams');
     if (saved) {
-        // Put the data into tempTeams (the name used in your setup function)
         tempTeams = JSON.parse(saved);
-        
-        // Draw the cards back on the screen using the new function
-        renderSavedDoubles(); 
+        if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
     }
 }
 function saveGolfApiKey() {
