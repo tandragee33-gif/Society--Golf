@@ -442,6 +442,12 @@ function getTieBreaker(pointsArray) {
         club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
 competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
 renderActiveTeams(); 
+// Load doubles specifically
+    const savedDoubles = localStorage.getItem('g_pairsT');
+    if (savedDoubles) {
+        pairsT = JSON.parse(savedDoubles);
+        if (typeof renderDoubles === "function") renderDoubles();
+    }
     }
 function saveGolfApiKey() {
 
