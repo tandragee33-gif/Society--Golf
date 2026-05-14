@@ -433,7 +433,7 @@ function getTieBreaker(pointsArray) {
     }
 
 function loadData() {
-    // 1. Restore Core Data (Players, Courses, etc.)
+    // Core Data
     players = JSON.parse(localStorage.getItem('g_players')) || [];
     courses = JSON.parse(localStorage.getItem('g_courses')) || [];
     rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
@@ -441,25 +441,20 @@ function loadData() {
     club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
 
-    // 2. Restore KO Data 
-    pairsT = JSON.parse(localStorage.getItem('g_pairsT')) || null;
-    singlesT = JSON.parse(localStorage.getItem('g_singlesT')) || null;
+    // KO Data
+    pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
+    singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
 
-    // 3. Trigger the Displays
-    // This brings back the Team tab
-    if (typeof renderActiveTeams === "function") renderActiveTeams(); 
+    // Draw everything
+    renderActiveTeams(); 
+    renderMatchplay('pairs');
+    renderMatchplay('singles');
 
-    // This brings back the KO tabs (Pairs and Singles)
-    if (typeof renderMatchplay === "function") {
-        renderMatchplay('pairs');
-        renderMatchplay('singles');
-    }
-
-    // 4. Restore the new "Doubles Combined" cards
-    const savedDoubles = localStorage.getItem('g_tempTeams');
-    if (savedDoubles) {
-        tempTeams = JSON.parse(savedDoubles);
-        if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
+    // Load Doubles Combined
+    const savedTemp = localStorage.getItem('g_tempTeams');
+    if (savedTemp) {
+        tempTeams = JSON.parse(savedTemp);
+        if (window.renderSavedDoubles) renderSavedDoubles();
     }
 }
 function saveGolfApiKey() {
