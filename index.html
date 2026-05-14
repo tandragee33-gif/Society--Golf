@@ -433,7 +433,7 @@ function getTieBreaker(pointsArray) {
     }
 
 function loadData() {
-    // Core Data
+    // 1. Core Data (The essentials)
     players = JSON.parse(localStorage.getItem('g_players')) || [];
     courses = JSON.parse(localStorage.getItem('g_courses')) || [];
     rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
@@ -441,21 +441,29 @@ function loadData() {
     club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
 
-    // KO Data
+    // 2. Load the KO Memory
     pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
     singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
 
-    // Draw everything
-    renderActiveTeams(); 
-    renderMatchplay('pairs');
-    renderMatchplay('singles');
+    // 3. Draw the Screens (Inside safety bubbles)
+    try { renderActiveTeams(); } catch(e) { console.log("Team draw failed"); }
+    
+    // Drawing the Matchplay tabs
+    try { 
+        if (typeof renderMatchplay === "function") {
+            renderMatchplay('pairs');
+            renderMatchplay('singles');
+        }
+    } catch(e) { console.log("Matchplay draw failed"); }
 
-    // Load Doubles Combined
-    const savedTemp = localStorage.getItem('g_tempTeams');
-    if (savedTemp) {
-        tempTeams = JSON.parse(savedTemp);
-        if (window.renderSavedDoubles) renderSavedDoubles();
-    }
+    // 4. Load the Doubles Combined (The new part)
+    try {
+        const saved = localStorage.getItem('g_tempTeams');
+        if (saved) {
+            tempTeams = JSON.parse(saved);
+            if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
+        }
+    } catch(e) { console.log("Doubles draw failed"); }
 }
 function saveGolfApiKey() {
 
