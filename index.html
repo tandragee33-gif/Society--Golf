@@ -433,29 +433,36 @@ function getTieBreaker(pointsArray) {
     }
 
 function loadData() {
-    // 1. Load your standard data
+    // 1. Restore Core Data (Players, Courses, etc.)
     players = JSON.parse(localStorage.getItem('g_players')) || [];
     courses = JSON.parse(localStorage.getItem('g_courses')) || [];
     rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
-    pairsT = JSON.parse(localStorage.getItem('g_pairsT')) || [];
-    singlesT = JSON.parse(localStorage.getItem('g_singlesT')) || [];
     pastComps = JSON.parse(localStorage.getItem('g_pastComps')) || [];
     club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
 
-    // 2. Draw the Teams (if they exist)
-    renderActiveTeams();
+    // 2. Restore KO Data 
+    pairsT = JSON.parse(localStorage.getItem('g_pairsT')) || null;
+    singlesT = JSON.parse(localStorage.getItem('g_singlesT')) || null;
 
-    // 3. NEW: Load and Draw the Doubles specifically
-    const saved = localStorage.getItem('g_tempTeams');
-    if (saved) {
-        // Put the data into tempTeams (the name used in your setup function)
-        tempTeams = JSON.parse(saved);
-        
-        // Draw the cards back on the screen using the new function
-        renderSavedDoubles(); 
+    // 3. Trigger the Displays
+    // This brings back the Team tab
+    if (typeof renderActiveTeams === "function") renderActiveTeams(); 
+
+    // This brings back the KO tabs (Pairs and Singles)
+    if (typeof renderMatchplay === "function") {
+        renderMatchplay('pairs');
+        renderMatchplay('singles');
+    }
+
+    // 4. Restore the new "Doubles Combined" cards
+    const savedDoubles = localStorage.getItem('g_tempTeams');
+    if (savedDoubles) {
+        tempTeams = JSON.parse(savedDoubles);
+        if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
     }
 }
+
 function saveGolfApiKey() {
 
     const key =
@@ -1683,16 +1690,16 @@ function hideGuide() {
 <div id="guideBox" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:25px; border-radius:15px; z-index:9999; width:90%; max-height:85vh; overflow-y:auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-family: sans-serif; border: 1px solid #ccc; color: #333;">
     <button onclick="hideGuide()" style="float:right; background:#e74c3c; color:white; border:none; border-radius:20px; width:30px; height:30px; cursor:pointer; font-weight:bold;">X</button>
     
-    <h2 style="color:#2c3e50; margin-top:0;">⛳ Society Manager: Full Guide</h2>
+    <h2 style="color:#2c3e50; margin-top:0;">⛳ User Guide</h2>
     <hr style="border: 0; height: 1px; background: #eee; margin-bottom: 20px;">
 
     <h3 style="color:#2980b9;">1. Setup & Players</h3>
-    <p>• Add Course Name, Par, and Stroke Index (SI). Points calculate automatically based on these.</p>
+    <p>• Search or Add Course Name, Par, and Stroke Index (SI). Points are calculated automatically based on these.</p>
     <p>• Add players and handicaps. Edit them anytime in the 'Setup' tab.</p>
 
     <h3 style="color:#2980b9;">2. Scoring a Round</h3>
-    <p>• Enter <b>Gross Strokes</b> for each hole in the 'Round' tab.</p>
-    <p>• <b>Awards:</b> Toggle 'Longest Drive' or 'Nearest Pin' to track trophies.</p>
+    <p>• Enter <b>Gross Strokes</b> for each hole in the 'Enter Scores' tab.</p>
+    <p>• <b>Awards:</b> When entering a score, select Yes or No to award trophies for 'Longest Drive' or 'Nearest Pin'.</p>
 
     <h3 style="color:#2980b9;">3. Tie-Breakers (Countback)</h3>
     <p>Ties are settled by: <b>Back 9 > Last 6 > Last 3 > 18th Hole.</b></p>
