@@ -433,41 +433,30 @@ function getTieBreaker(pointsArray) {
     }
 
 function loadData() {
-    // 1. Core Data (The essentials)
     players = JSON.parse(localStorage.getItem('g_players')) || [];
     courses = JSON.parse(localStorage.getItem('g_courses')) || [];
     rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
     pastComps = JSON.parse(localStorage.getItem('g_pastComps')) || [];
     club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
-
-    // 2. Load the KO Memory
+    
+    // Minimal Matchplay
     pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
     singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
 
-    // 3. Draw the Screens (Inside safety bubbles)
-    try { renderActiveTeams(); } catch(e) { console.log("Team draw failed"); }
-    
-    // Drawing the Matchplay tabs
-    try { 
-        if (typeof renderMatchplay === "function") {
-            renderMatchplay('pairs');
-            renderMatchplay('singles');
-        }
-    } catch(e) { console.log("Matchplay draw failed"); }
+    // Minimal Doubles
+    const saved = localStorage.getItem('g_tempTeams');
+    tempTeams = saved ? JSON.parse(saved) : [];
 
-    // 4. Load the Doubles Combined (The new part)
-    try {
-        const saved = localStorage.getItem('g_tempTeams');
-        if (saved) {
-            tempTeams = JSON.parse(saved);
-            if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
-// Force a fresh draw of the selection lists if no active KO is found
-    if (!pairsT) renderMatchplay('pairs');
-    if (!singlesT) renderMatchplay('singles');
-        }
-    } catch(e) { console.log("Doubles draw failed"); }
-}
+    // Basic Draws
+    if (typeof renderActiveTeams === "function") renderActiveTeams();
+    if (typeof renderMatchplay === "function") {
+        renderMatchplay('pairs');
+        renderMatchplay('singles');
+    }
+    if (tempTeams.length > 0 && typeof renderSavedDoubles === "function") {
+        renderSavedDoubles();
+    }
 function saveGolfApiKey() {
 
     const key =
