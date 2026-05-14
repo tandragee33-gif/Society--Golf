@@ -211,7 +211,7 @@
                 <div id="doubles-selector" class="selector-list"></div>
                 <div style="display: flex; gap: 10px;">
                     <button class="btn" onclick="setupDoublesTeams()">Create Scorecards</button>
-                    <button class="btn-del" onclick="clearPairs()">Clear All</button>
+                    <button class="btn-del" onclick="resetDoublesSelection()">Clear All</button>
                 </div>
             </div>
 
@@ -442,22 +442,6 @@ function getTieBreaker(pointsArray) {
         club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
 competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
 renderActiveTeams(); 
-// 1. Read the 'notebook' from the browser memory
-pairsT = JSON.parse(localStorage.getItem('g_pairsT')) || [];
-
-// 2. Draw the pairs on the screen
-renderPairs();
-function loadData() {
-    // ... (your other code for players and teams) ...
-
-    // ADD THIS:
-    const savedDoubles = localStorage.getItem('g_pairsT');
-    if (savedDoubles) {
-        pairsT = JSON.parse(savedDoubles);
-        // After loading, we tell the app to show them
-        renderDoubles(); 
-    }
-}
     }
 function saveGolfApiKey() {
 
@@ -1139,7 +1123,6 @@ function saveTournamentRecord(type, winner) {
             <div class="item-row"><span>${t.p2.name}</span> <input type="number" class="pts-input db-p2" data-id="${t.p2.id}" data-idx="${idx}" placeholder="Pts"></div></div>`).join('');
         document.getElementById('db-step1').classList.add('hidden'); document.getElementById('db-step2').classList.remove('hidden');
         updateScorecardFromHistory();
-setupDoublesTeams 
     }
 
     function calculateDoublesResults() {
@@ -1155,8 +1138,6 @@ setupDoublesTeams
     function saveDoublesRecord(names, pts) {
         pastComps.push({ id: Date.now(), type: 'Doubles Combined', winner: names, date: document.getElementById('dbDate').value, detail: pts + ' pts' });
         saveData(); alert("Doubles Winner Saved!"); resetDoublesSelection(); showTab('tab-dash');
-// This tells the browser: "Take the 'pairsT' list and write it in the notebook"
-localStorage.setItem('g_pairsT', JSON.stringify(pairsT));
     }
 
     function resetDoublesSelection() { document.getElementById('db-winner-area').innerHTML = ''; document.getElementById('doubles-output').innerHTML = ''; showDbStep1(); }
