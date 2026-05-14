@@ -1123,6 +1123,7 @@ function saveTournamentRecord(type, winner) {
             <div class="item-row"><span>${t.p2.name}</span> <input type="number" class="pts-input db-p2" data-id="${t.p2.id}" data-idx="${idx}" placeholder="Pts"></div></div>`).join('');
         document.getElementById('db-step1').classList.add('hidden'); document.getElementById('db-step2').classList.remove('hidden');
         updateScorecardFromHistory();
+localStorage.setItem('g_pairsT', JSON.stringify(pairsT));
     }
 
     function calculateDoublesResults() {
