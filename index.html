@@ -462,6 +462,9 @@ function loadData() {
         if (saved) {
             tempTeams = JSON.parse(saved);
             if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
+// Force a fresh draw of the selection lists if no active KO is found
+    if (!pairsT) renderMatchplay('pairs');
+    if (!singlesT) renderMatchplay('singles');
         }
     } catch(e) { console.log("Doubles draw failed"); }
 }
