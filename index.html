@@ -1167,15 +1167,19 @@ localStorage.setItem('g_tempTeams', JSON.stringify(tempTeams));
     }
 
 function resetDoublesSelection() {
-    // 1. Clear the screen
+    // 1. Clear the screen areas
     document.getElementById('db-winner-area').innerHTML = '';
     document.getElementById('doubles-output').innerHTML = '';
     
-    // 2. Clear the variable and the "Ghost" memory
+    // 2. Clear the specific area where the cards are drawn
+    const scorecardArea = document.getElementById('doubles-scorecards');
+    if (scorecardArea) scorecardArea.innerHTML = '';
+
+    // 3. Wipe the memory (The Ghost-Busters)
     tempTeams = []; 
     localStorage.removeItem('g_tempTeams'); 
 
-    // 3. Go back to the first screen
+    // 4. Go back to the selection screen
     showDbStep1(); 
 }
 
