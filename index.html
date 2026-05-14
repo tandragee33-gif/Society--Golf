@@ -433,7 +433,7 @@ function getTieBreaker(pointsArray) {
     }
 
 function loadData() {
-    // 1. Core Data
+    // 1. Core Data (The essentials)
     players = JSON.parse(localStorage.getItem('g_players')) || [];
     courses = JSON.parse(localStorage.getItem('g_courses')) || [];
     rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
@@ -445,34 +445,27 @@ function loadData() {
     pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
     singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
 
-    // 3. Draw Teams
-    try { 
-        if (typeof renderActiveTeams === "function") renderActiveTeams(); 
-    } catch(e) { console.log("Team draw error"); }
+    // 3. Draw the Screens (Inside safety bubbles)
+    try { renderActiveTeams(); } catch(e) { console.log("Team draw failed"); }
     
-    // 4. Draw Matchplay
+    // Drawing the Matchplay tabs
     try { 
         if (typeof renderMatchplay === "function") {
             renderMatchplay('pairs');
             renderMatchplay('singles');
         }
-    } catch(e) { console.log("Matchplay draw error"); }
+    } catch(e) { console.log("Matchplay draw failed"); }
 
-    // 5. Load Doubles
+    // 4. Load the Doubles Combined (The new part)
     try {
         const saved = localStorage.getItem('g_tempTeams');
         if (saved) {
             tempTeams = JSON.parse(saved);
             if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
-        } else {
-            tempTeams = [];
+// Force a fresh draw of the selection lists if no active KO is found
+    if (!pairsT) renderMatchplay('pairs');
+    if (!singlesT) renderMatchplay('singles');
         }
-    } catch(e) { console.log("Doubles draw error"); }
-
-    // 6. Force Draw for empty KOs
-    if (!pairsT && typeof renderMatchplay === "function") renderMatchplay('pairs');
-    if (!singlesT && typeof renderMatchplay === "function") renderMatchplay('singles');
-}
     } catch(e) { console.log("Doubles draw failed"); }
 }
 function saveGolfApiKey() {
