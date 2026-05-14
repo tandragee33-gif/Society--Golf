@@ -1166,7 +1166,18 @@ localStorage.setItem('g_tempTeams', JSON.stringify(tempTeams));
         saveData(); alert("Doubles Winner Saved!"); resetDoublesSelection(); showTab('tab-dash');
     }
 
-    function resetDoublesSelection() { document.getElementById('db-winner-area').innerHTML = ''; document.getElementById('doubles-output').innerHTML = ''; showDbStep1(); }
+function resetDoublesSelection() {
+    // 1. Clear the screen
+    document.getElementById('db-winner-area').innerHTML = '';
+    document.getElementById('doubles-output').innerHTML = '';
+    
+    // 2. Clear the variable and the "Ghost" memory
+    tempTeams = []; 
+    localStorage.removeItem('g_tempTeams'); 
+
+    // 3. Go back to the first screen
+    showDbStep1(); 
+}
 
     function renderPastComps() {
         const list = document.getElementById('past-tourney-list');
