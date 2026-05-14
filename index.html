@@ -1178,13 +1178,22 @@ function saveRound() {
     const scs = Array.from(document.querySelectorAll('.round-scores-val')).map(i => parseInt(i.value) || 0);
 
     // Calculate the points array
-    const ptsArray = scs.map((s, i) => {
+const ptsArray = scs.map((s, i) => {
         if(s <= 0) return 0;
-        const par = parseInt(crs.pars[i]);
-        const si = parseInt(crs.si[i]);
-        const hc = parseInt(plr.handicap) || 0;
-        const allow = Math.floor(hc/18) + (hc%18 >= si ? 1 : 0);
-        return Math.max(0, par - (s - allow) + 2);
+        
+        const par = parseInt(crs.pars[i]) || 0;
+        const si = parseInt(crs.si[i]) || 0; // Force to Number
+        const hc = parseInt(plr.handicap) || 0; // Force to Number
+        
+        // 1. Calculate strokes for this hole
+        // If handicap is 1, and si is 1: (0) + (1 >= 1 ? 1 : 0) = 1 stroke.
+        const allow = Math.floor(hc / 18) + (hc % 18 >= si ? 1 : 0);
+        
+        // 2. Calculate Net Score
+        const netScore = s - allow;
+        
+        // 3. Stableford formula: Par - Net + 2 (cannot be less than 0)
+        return Math.max(0, par - netScore + 2);
     });
 
     const totalPts = ptsArray.reduce((a, b) => a + b, 0);
