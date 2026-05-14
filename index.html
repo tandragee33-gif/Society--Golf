@@ -1184,6 +1184,7 @@ const ptsArray = scs.map((s, i) => {
         const par = parseInt(crs.pars[i]) || 0;
         const si = parseInt(crs.si[i]) || 0; // Force to Number
        const hc = Math.round(parseFloat(plr.handicap)) || 0; // Round the decimal
+console.log("Player:", plr.name, "Raw HC:", plr.handicap, "Rounded HC:", hc); 
         
         // 1. Calculate strokes for this hole
         // If handicap is 1, and si is 1: (0) + (1 >= 1 ? 1 : 0) = 1 stroke.
