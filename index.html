@@ -445,26 +445,31 @@ function loadData() {
     pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
     singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
 
-    // 3. Draw the Screens
-    try { renderActiveTeams(); } catch(e) { console.log("Team draw failed"); }
+    // 3. Draw Teams
+    try { 
+        if (typeof renderActiveTeams === "function") renderActiveTeams(); 
+    } catch(e) { console.log("Team draw error"); }
     
+    // 4. Draw Matchplay
     try { 
         if (typeof renderMatchplay === "function") {
             renderMatchplay('pairs');
             renderMatchplay('singles');
         }
-    } catch(e) { console.log("Matchplay draw failed"); }
+    } catch(e) { console.log("Matchplay draw error"); }
 
-    // 4. Load the Doubles Combined
-    const saved = localStorage.getItem('g_tempTeams');
-    if (saved) {
-        tempTeams = JSON.parse(saved);
-        if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
-    } else {
-        tempTeams = []; // Ensure it's empty if nothing is saved
-    }
+    // 5. Load Doubles
+    try {
+        const saved = localStorage.getItem('g_tempTeams');
+        if (saved) {
+            tempTeams = JSON.parse(saved);
+            if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
+        } else {
+            tempTeams = [];
+        }
+    } catch(e) { console.log("Doubles draw error"); }
 
-    // 5. Force fresh draw for KO if empty
+    // 6. Force Draw for empty KOs
     if (!pairsT && typeof renderMatchplay === "function") renderMatchplay('pairs');
     if (!singlesT && typeof renderMatchplay === "function") renderMatchplay('singles');
 }
