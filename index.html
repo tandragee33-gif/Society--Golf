@@ -468,12 +468,11 @@ function loadData() {
         }
     } catch(e) { console.log("Doubles draw failed"); }
 
-    // 5. Force Draw for empty KOs
-    if (!pairsT && typeof renderMatchplay === "function") renderMatchplay('pairs');
+if (!pairsT && typeof renderMatchplay === "function") renderMatchplay('pairs');
     if (!singlesT && typeof renderMatchplay === "function") renderMatchplay('singles');
 }
-    } catch(e) { console.log("Doubles draw failed"); }
-}
+
+function saveGolfApiKey() {
 function saveGolfApiKey() {
 
     const key =
