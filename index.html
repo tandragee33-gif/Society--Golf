@@ -1274,22 +1274,22 @@ nearPin: document.getElementById('rNearPin').value === "Yes"
     } else {
         rounds.push(r);
     }
-// --- Society Handicap Adjustment ---
-// Winner gets cut (-2), Last place gets a buffer (+1)
-const allScores = rounds.filter(r => r.date === isoDate).sort((a,b) => b.points - a.points);
-
-if (allScores.length >= 3) { // Only adjust if at least 3 players played
-    const winnerId = allScores[0].playerId;
-    const lastId = allScores[allScores.length - 1].playerId;
-
-    players = players.map(p => {
-        let newHC = parseFloat(p.handicap) || 0;
-        if (p.id === winnerId) newHC -= 2.0; // Cut the winner
-        if (p.id === lastId) newHC += 1.0;   // Help the last player
-        
-        return { ...p, handicap: newHC.toFixed(1) };
-    });
-}
+// // --- Society Handicap Adjustment ---
+// // Winner gets cut (-2), Last place gets a buffer (+1)
+// const allScores = rounds.filter(r => r.date === isoDate).sort((a,b) => b.points - a.points);
+// 
+// if (allScores.length >= 3) { // Only adjust if at least 3 players played
+//     const winnerId = allScores[0].playerId;
+//     const lastId = allScores[allScores.length - 1].playerId;
+// 
+//     players = players.map(p => {
+//         let newHC = parseFloat(p.handicap) || 0;
+//         if (p.id === winnerId) newHC -= 2.0; // Cut the winner
+//         if (p.id === lastId) newHC += 1.0;   // Help the last player
+//         
+//         return { ...p, handicap: newHC.toFixed(1) };
+//     });
+// }
     // 1. Save the data to the memory
     saveData();
 
