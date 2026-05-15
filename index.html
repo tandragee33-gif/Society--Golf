@@ -433,7 +433,7 @@ function getTieBreaker(pointsArray) {
     }
 
 function loadData() {
-    // 1. Core Data (The essentials)
+    // 1. Core Data
     players = JSON.parse(localStorage.getItem('g_players')) || [];
     courses = JSON.parse(localStorage.getItem('g_courses')) || [];
     rounds = JSON.parse(localStorage.getItem('g_rounds')) || [];
@@ -445,10 +445,11 @@ function loadData() {
     pairsT = JSON.parse(localStorage.getItem('g_pairsT'));
     singlesT = JSON.parse(localStorage.getItem('g_singlesT'));
 
-    // 3. Draw the Screens (Inside safety bubbles)
-    try { renderActiveTeams(); } catch(e) { console.log("Team draw failed"); }
+    // 3. Draw Screens
+    try { 
+        if (typeof renderActiveTeams === "function") renderActiveTeams(); 
+    } catch(e) { console.log("Team draw failed"); }
     
-    // Drawing the Matchplay tabs
     try { 
         if (typeof renderMatchplay === "function") {
             renderMatchplay('pairs');
@@ -456,16 +457,21 @@ function loadData() {
         }
     } catch(e) { console.log("Matchplay draw failed"); }
 
-    // 4. Load the Doubles Combined (The new part)
+    // 4. Load the Doubles Combined
     try {
         const saved = localStorage.getItem('g_tempTeams');
         if (saved) {
             tempTeams = JSON.parse(saved);
             if (typeof renderSavedDoubles === "function") renderSavedDoubles(); 
-// Force a fresh draw of the selection lists if no active KO is found
-    if (!pairsT) renderMatchplay('pairs');
-    if (!singlesT) renderMatchplay('singles');
+        } else {
+            tempTeams = [];
         }
+    } catch(e) { console.log("Doubles draw failed"); }
+
+    // 5. Force Draw for empty KOs
+    if (!pairsT && typeof renderMatchplay === "function") renderMatchplay('pairs');
+    if (!singlesT && typeof renderMatchplay === "function") renderMatchplay('singles');
+}
     } catch(e) { console.log("Doubles draw failed"); }
 }
 function saveGolfApiKey() {
@@ -1170,16 +1176,14 @@ function resetDoublesSelection() {
     // 1. Clear the screen areas
     document.getElementById('db-winner-area').innerHTML = '';
     document.getElementById('doubles-output').innerHTML = '';
-    
-    // 2. Clear the specific area where the cards are drawn
     const scorecardArea = document.getElementById('doubles-scorecards');
     if (scorecardArea) scorecardArea.innerHTML = '';
 
-    // 3. Wipe the memory (The Ghost-Busters)
+    // 2. Wipe the memory
     tempTeams = []; 
     localStorage.removeItem('g_tempTeams'); 
 
-    // 4. Go back to the selection screen
+    // 3. Reset UI
     showDbStep1(); 
 }
 
