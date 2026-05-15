@@ -285,7 +285,7 @@
         <input type="text" id="tmDate" placeholder="dd/mm/yyyy">
         
         <div id="tm-setup">
-            <p style="font-size:12px;"><b>1. Select 2 players for a Team:</b></p>
+            <p style="font-size:12px;"><b>1. Select 2, 3 or 4 players for a Team :</b></p>
             <div id="team-selector" class="selector-list"></div>
             <button class="btn" onclick="addTeam()">Add Team to List</button>
         </div>
@@ -1427,11 +1427,17 @@ function renderTeamSelector() {
 function addTeam() {
     const selected = document.querySelectorAll('.tm-ck:checked');
     
-    // FIXED: Use < 2 so any number 2 or higher is allowed!
+    // 1. Check the Minimum (less than 2)
     if (selected.length < 2) {
         return alert("You must select at least 2 players!");
     }
+
+    // 2. NEW: Check the Maximum (greater than 4)
+    if (selected.length > 4) {
+        return alert("A team can have a maximum of 4 players!");
+    }
     
+    // ... the rest of your code stays exactly the same ...
     const teamPlayers = Array.from(selected).map(ck => players.find(p => p.id == ck.value));
    
     competitionTeams.push({ 
@@ -1439,7 +1445,6 @@ function addTeam() {
         members: teamPlayers 
     });
    
-    // Clear checkboxes for the next team
     selected.forEach(ck => ck.checked = false); 
    
     renderActiveTeams();
