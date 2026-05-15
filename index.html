@@ -285,7 +285,7 @@
         <input type="text" id="tmDate" placeholder="dd/mm/yyyy">
         
         <div id="tm-setup">
-            <p style="font-size:12px;"><b>1. Select 4 players for a Team:</b></p>
+            <p style="font-size:12px;"><b>1. Select 2 players for a Team:</b></p>
             <div id="team-selector" class="selector-list"></div>
             <button class="btn" onclick="addTeam()">Add Team to List</button>
         </div>
@@ -1426,13 +1426,25 @@ function renderTeamSelector() {
 
 function addTeam() {
     const selected = document.querySelectorAll('.tm-ck:checked');
-    if (selected.length !== 4) return alert("Please select exactly 4 players.");
+    
+    // FIXED: Use < 2 so any number 2 or higher is allowed!
+    if (selected.length < 2) {
+        return alert("You must select at least 2 players!");
+    }
+    
     const teamPlayers = Array.from(selected).map(ck => players.find(p => p.id == ck.value));
-    competitionTeams.push({ id: competitionTeams.length + 1, members: teamPlayers });
+   
+    competitionTeams.push({ 
+        id: competitionTeams.length + 1, 
+        members: teamPlayers 
+    });
+   
+    // Clear checkboxes for the next team
     selected.forEach(ck => ck.checked = false); 
+   
     renderActiveTeams();
-saveData(); // <--- This saves them so they don't disappear! 
-alert("Team added!"); 
+    saveData(); 
+    alert("Team added!"); 
 }
 
 function renderActiveTeams() {
