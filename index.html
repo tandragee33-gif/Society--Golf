@@ -1804,29 +1804,38 @@ function renderSavedDoubles() {
 }
 </script>
 <!-- ======================================================= -->
-<!-- HANDS-OFF HANDICAP EXTENSION CODE                      -->
+<!-- HANDS-OFF HANDICAP EXTENSION CODE (WITH ONE-TIME LOCK)  -->
 <!-- ======================================================= -->
 <script>
 (function() {
-    // 1. Intercept your original viewDetail function automatically
     const originalViewDetail = window.viewDetail;
     
     window.viewDetail = function(date, courseId) {
-        // Run your original view detail code first so the popup opens normally
         if (typeof originalViewDetail === "function") {
             originalViewDetail(date, courseId);
         }
         
-        // Immediately attach our event handler to the button
         const lockButton = document.getElementById('btn-lock-round');
         if (lockButton) {
-            lockButton.onclick = function() {
-                calculateAndAdjustHandicaps(date, courseId);
-            };
+            // Find if this event has already been locked previously
+            const sampleRound = rounds.find(r => r.date === date && String(r.courseId) === String(courseId));
+            
+            if (sampleRound && sampleRound.isLocked) {
+                lockButton.innerHTML = "🔒 Round Locked & Finalized";
+                lockButton.style.backgroundColor = "#7f8c8d"; // Gray out the button
+                lockButton.disabled = true;
+            } else {
+                lockButton.innerHTML = "🔒 Lock Round & Adjust Handicaps";
+                lockButton.style.backgroundColor = "#e67e22"; // Orange active button
+                lockButton.disabled = false;
+                
+                lockButton.onclick = function() {
+                    calculateAndAdjustHandicaps(date, courseId);
+                };
+            }
         }
     };
 
-    // 2. The isolated math and logic function
     function calculateAndAdjustHandicaps(date, courseId) {
         const eventRounds = rounds.filter(r => r.date === date && String(r.courseId) === String(courseId));
 
@@ -1834,7 +1843,11 @@ function renderSavedDoubles() {
             return alert("You need at least 2 players in this event to determine a winner and last place!");
         }
 
-        // Sort by points, using your existing tiebreaker logic
+        // Double check to make absolutely sure it hasn't been locked while open
+        if (eventRounds[0].isLocked) {
+            return alert("This event's handicaps have already been adjusted and locked!");
+        }
+
         eventRounds.sort((a, b) => {
             if (b.points !== a.points) return b.points - a.points;
             return getTieBreaker(b.pointsArray) - getTieBreaker(a.pointsArray);
@@ -1860,12 +1873,19 @@ function renderSavedDoubles() {
             message += `🐢 Last Place: ${lastPlayer.name}\n   Old HC: ${oldHc} ➔ New HC: ${lastPlayer.handicap}\n`;
         }
 
-        // Save data and update views safely
+        // SAFETY: Mark ALL rounds in this specific event as locked so it never runs again
+        eventRounds.forEach(r => {
+            r.isLocked = true;
+        });
+
         saveData();
         if (typeof renderPlayers === "function") renderPlayers(); 
         if (typeof renderDashboard === "function") renderDashboard();
         
-        alert(message + "\nHandicaps updated successfully!");
+        alert(message + "\nHandicaps updated and event locked successfully!");
+        
+        // Refresh detail view layout to visually gray out the button immediately
+        window.viewDetail(date, courseId);
     }
 })();
 </script>
