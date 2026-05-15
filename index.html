@@ -104,6 +104,9 @@
             <div class="no-print">
                 <button class="btn-outline" onclick="closeDetail()">← Back to History</button>
                 <button class="btn-share" onclick="window.print()">Print / Share as PDF</button>
+<button class="btn" style="background-color: #e67e22; margin-left: 10px;" id="btn-lock-round">
+    🔒 Lock Round & Adjust Handicaps
+</button>
                 <hr>
             </div>
             
@@ -1800,6 +1803,71 @@ function renderSavedDoubles() {
     document.getElementById('db-step2').classList.remove('hidden');
 }
 </script>
+<!-- ======================================================= -->
+<!-- HANDS-OFF HANDICAP EXTENSION CODE                      -->
+<!-- ======================================================= -->
+<script>
+(function() {
+    // 1. Intercept your original viewDetail function automatically
+    const originalViewDetail = window.viewDetail;
+    
+    window.viewDetail = function(date, courseId) {
+        // Run your original view detail code first so the popup opens normally
+        if (typeof originalViewDetail === "function") {
+            originalViewDetail(date, courseId);
+        }
+        
+        // Immediately attach our event handler to the button
+        const lockButton = document.getElementById('btn-lock-round');
+        if (lockButton) {
+            lockButton.onclick = function() {
+                calculateAndAdjustHandicaps(date, courseId);
+            };
+        }
+    };
 
+    // 2. The isolated math and logic function
+    function calculateAndAdjustHandicaps(date, courseId) {
+        const eventRounds = rounds.filter(r => r.date === date && String(r.courseId) === String(courseId));
+
+        if (eventRounds.length < 2) {
+            return alert("You need at least 2 players in this event to determine a winner and last place!");
+        }
+
+        // Sort by points, using your existing tiebreaker logic
+        eventRounds.sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            return getTieBreaker(b.pointsArray) - getTieBreaker(a.pointsArray);
+        });
+
+        const winnerRound = eventRounds[0];
+        const lastPlaceRound = eventRounds[eventRounds.length - 1];
+
+        const winnerPlayer = players.find(p => p.id === winnerRound.playerId);
+        const lastPlayer = players.find(p => p.id === lastPlaceRound.playerId);
+
+        let message = `⛳ Event Results (${date}):\n\n`;
+
+        if (winnerPlayer) {
+            let oldHc = parseFloat(winnerPlayer.handicap) || 0;
+            winnerPlayer.handicap = Math.max(0, oldHc - 2); 
+            message += `🏆 Winner: ${winnerPlayer.name}\n   Old HC: ${oldHc} ➔ New HC: ${winnerPlayer.handicap}\n\n`;
+        }
+
+        if (lastPlayer && lastPlayer.id !== winnerPlayer.id) {
+            let oldHc = parseFloat(lastPlayer.handicap) || 0;
+            lastPlayer.handicap = oldHc + 1;
+            message += `🐢 Last Place: ${lastPlayer.name}\n   Old HC: ${oldHc} ➔ New HC: ${lastPlayer.handicap}\n`;
+        }
+
+        // Save data and update views safely
+        saveData();
+        if (typeof renderPlayers === "function") renderPlayers(); 
+        if (typeof renderDashboard === "function") renderDashboard();
+        
+        alert(message + "\nHandicaps updated successfully!");
+    }
+})();
+</script>
 </body>
 </html>
