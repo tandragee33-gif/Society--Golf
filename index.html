@@ -441,21 +441,25 @@ function loadData() {
     club = JSON.parse(localStorage.getItem('g_club')) || { name: "Golf Pro Manager", logo: "" };
     competitionTeams = JSON.parse(localStorage.getItem('g_compTeams')) || [];
 
-// 2. Load the KO Memory (FIXED with || [])
-pairsT = JSON.parse(localStorage.getItem('g_pairsT')) || [];
-singlesT = JSON.parse(localStorage.getItem('g_singlesT')) || [];
+    // 2. Load the KO Memory (FIXED with || [])
+    pairsT = JSON.parse(localStorage.getItem('g_pairsT')) || [];
+    singlesT = JSON.parse(localStorage.getItem('g_singlesT')) || [];
 
     // 3. Draw Screens
     try { 
         if (typeof renderActiveTeams === "function") renderActiveTeams(); 
-    } catch(e) { console.log("Team draw failed"); }
+    } catch(e) {
+        console.log("Team draw failed"); 
+    }
     
     try { 
         if (typeof renderMatchplay === "function") {
             renderMatchplay('pairs');
             renderMatchplay('singles');
         }
-    } catch(e) { console.log("Matchplay draw failed"); }
+    } catch(e) {
+        console.log("Matchplay draw failed"); 
+    }
 
     // 4. Load the Doubles Combined
     try {
@@ -466,12 +470,18 @@ singlesT = JSON.parse(localStorage.getItem('g_singlesT')) || [];
         } else {
             tempTeams = [];
         }
-    } catch(e) { console.log("Doubles draw failed"); }
+    } catch(e) {
+        console.log("Doubles draw failed"); 
+    }
 
- // 5. Force Draw for empty KOs (UPDATED)
-if (pairsT.length === 0 && typeof renderMatchplay === "function") {
-    renderMatchplay('pairs');
-}
+    // 5. Force Draw for empty KOs (UPDATED)
+    if (pairsT.length === 0 && typeof renderMatchplay === "function") {
+        renderMatchplay('pairs');
+    }
+    if (singlesT.length === 0 && typeof renderMatchplay === "function") {
+        renderMatchplay('singles');
+    }
+} // <--- Properly closes the entire loadData function
 if (singlesT.length === 0 && typeof renderMatchplay === "function") {
     renderMatchplay('singles');
 }
