@@ -91,9 +91,26 @@
                 <div id="past-tourney-list"></div>
             </div>
             <div class="card" id="recent-rounds-card">
-                <h3>Recent Rounds</h3>
-                <select id="dashSeason" onchange="renderDashboard()"></select>
-                <div id="dash-list"></div>
+<h3>Recent Rounds</h3>
+
+<!-- Existing Season Dropdown -->
+<label style="font-size: 11px;">Season:</label>
+<select id="dashSeason" onchange="renderDashboard()"></select>
+
+<!-- NEW: Course Filter Dropdown -->
+<label style="font-size: 11px; margin-left: 10px;">Course:</label>
+<select id="dashCourseFilter" onchange="renderDashboard()">
+    <option value="all">⛳ All Courses</option>
+</select>
+
+<!-- NEW: Date Filter Dropdown -->
+<label style="font-size: 11px; margin-left: 10px;">Date:</label>
+<select id="dashDateFilter" onchange="renderDashboard()">
+    <option value="all">📅 All Dates</option>
+</select>
+
+<!-- This is where your history results will display -->
+<div id="dash-list" style="margin-top: 15px;"></div>
 <button class="btn-share" onclick="exportMasterReport()" style="margin-top:10px; background: #000;">
     Print Master Report (All Events)
 </button>
@@ -990,20 +1007,67 @@ const yards =
         sel.innerHTML = seasons.map(s => `<option value="${s}">${s} Season</option>`).join('');
     }
 
-    function renderDashboard() {
-        const s = document.getElementById('dashSeason').value;
-        const comps = rounds.filter(r => r.season === s).reduce((acc, r) => { 
-            const k = `${r.date}|${r.courseId}`; 
-            if (!acc[k]) acc[k] = { date: r.date, course: r.courseName, id: r.courseId, count: 0 }; 
-            acc[k].count++; 
-            return acc; 
-        }, {});
-        document.getElementById('dash-list').innerHTML = Object.values(comps).map(c => `
-            <div class="item-row" onclick="viewDetail('${c.date}','${c.id}')">
-                <span><b>${c.course}</b><br><small>${formatDateDisplay(c.date)}</small></span>
-                <span>${c.count} Players ></span>
-            </div>`).join('');
+function renderDashboard() {
+    // 1. Get the filter values from the HTML selectors
+    const selectedSeason = document.getElementById('dashSeason').value;
+    const selectedCourse = document.getElementById('dashCourseFilter').value;
+    const selectedDate = document.getElementById('dashDateFilter').value;
+    const dashListDiv = document.getElementById('dash-list');
+
+    // 2. Automatically fill your dropdown options based on your saved data
+    populateDashboardFilters();
+
+    // 3. Filter your 'rounds' array using the inputs
+    const filteredRounds = rounds.filter(round => {
+        // Match season (assuming your rounds have a .season property, e.g., "2026")
+        const matchesSeason = (selectedSeason === 'all' || round.season === selectedSeason);
+        // Match course
+        const matchesCourse = (selectedCourse === 'all' || round.courseName === selectedCourse);
+        // Match date
+        const matchesDate = (selectedDate === 'all' || round.date === selectedDate);
+
+        // Keep the round only if it passes all 3 tests!
+        return matchesSeason && matchesCourse && matchesDate;
+    });
+
+    // 4. Draw the scorecards
+    if (filteredRounds.length === 0) {
+        dashListDiv.innerHTML = "<p style='color:#999; font-size:12px;'>No rounds match these filters.</p>";
+        return;
     }
+
+    // Your existing code below this line that maps 'filteredRounds' to the screen...
+    dashListDiv.innerHTML = filteredRounds.map(round => `
+        <div class="match-card" onclick="viewRoundDetail(${round.id})">
+            <h4>${round.courseName}</h4>
+            <small>📅 ${round.date} | 👤 ${round.playerName}</small>
+            <p>Score: ${round.totalScore}</p>
+        </div>
+    `).join('');
+}
+
+function populateDashboardFilters() {
+    const courseSelect = document.getElementById('dashCourseFilter');
+    const dateSelect = document.getElementById('dashDateFilter');
+
+    if (!courseSelect || !dateSelect) return;
+
+    const savedCourse = courseSelect.value;
+    const savedDate = dateSelect.value;
+
+    // Pull unique courses and dates out of your local data box
+    const uniqueCourses = [...new Set(rounds.map(r => r.courseName).filter(Boolean))];
+    const uniqueDates = [...new Set(rounds.map(r => r.date).filter(Boolean))];
+
+    courseSelect.innerHTML = `<option value="all">⛳ All Courses</option>` + 
+        uniqueCourses.map(c => `<option value="${c}">${c}</option>`).join('');
+
+    dateSelect.innerHTML = `<option value="all">📅 All Dates</option>` + 
+        uniqueDates.map(d => `<option value="${d}">${d}</option>`).join('');
+
+    courseSelect.value = savedCourse;
+    dateSelect.value = savedDate;
+}
 
 function viewDetail(date, courseId) {
     const filtered = rounds.filter(r => r.date === date && String(r.courseId) === String(courseId)).sort((a,b) => {
