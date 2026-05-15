@@ -1041,7 +1041,7 @@ function renderDashboard() {
         <div class="match-card" onclick="viewRoundDetail(${round.id})">
             <h4>${round.courseName}</h4>
             <small>📅 ${round.date} | 👤 ${round.playerName}</small>
-            <p>Score: ${round.totalScore}</p>
+            <p>Points: ${round.points} pts</p> 
         </div>
     `).join('');
 }
