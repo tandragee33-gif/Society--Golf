@@ -481,24 +481,13 @@ function loadData() {
     if (singlesT.length === 0 && typeof renderMatchplay === "function") {
         renderMatchplay('singles');
     }
-} // <--- Properly closes the entire loadData function
-if (singlesT.length === 0 && typeof renderMatchplay === "function") {
-    renderMatchplay('singles');
-}
-    } catch(e) { console.log("Doubles draw failed"); }
-}
+} // <--- loadData closes perfectly here.
+
+// All the stray duplicate text that was here has been DELETED.
+
 function saveGolfApiKey() {
-
-    const key =
-        document.getElementById(
-            'golfApiKey'
-        ).value;
-
-    localStorage.setItem(
-        'golf_api_key',
-        key
-    );
-
+    const key = document.getElementById('golfApiKey').value;
+    localStorage.setItem('golf_api_key', key);
     alert('API Key Saved!');
 }
 async function searchCourse() {
