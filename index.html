@@ -1044,40 +1044,45 @@ function viewDetail(date, courseId) {
     }
 
     function renderMatchplay(type) {
-        const t = (type === 'pairs') ? pairsT : singlesT;
-        const setupDiv = document.getElementById(type === 'pairs' ? 'p-setup' : 's-setup');
-        const bracketDiv = document.getElementById(type === 'pairs' ? 'p-bracket' : 's-bracket');
-        const selector = document.getElementById(type === 'pairs' ? 'p-selector' : 's-selector');
-        const winArea = document.getElementById(type === 'pairs' ? 'p-winner-area' : 's-winner-area');
-        winArea.innerHTML = "";
-        if(!t) {
-            setupDiv.classList.remove('hidden'); bracketDiv.classList.add('hidden');
-            selector.innerHTML = players.map(p => `<div class="selector-item"><label for="${type}-${p.id}">${p.name}</label><input type="checkbox" class="${type}-ck" id="${type}-${p.id}" value="${p.id}"></div>`).join('');
-        } else {
-            setupDiv.classList.add('hidden'); bracketDiv.classList.remove('hidden');
-            bracketDiv.innerHTML = `<button class="btn-del" style="margin-bottom:15px;" onclick="resetT('${type}')">Reset Bracket</button>` +
-                t.rounds.map((rd, i) => `<h4>Round ${i+1}</h4>` + rd.map(m => `
-                <div class="match-card">
-                    <div class="${m.win==='A'?'winner-row':''}">${m.uA.name}</div>
-                    <div style="text-align:center; color:#999; font-size:10px;">VS</div>
-                    <div class="${m.win==='B'?'winner-row':''}">${m.uB ? m.uB.name : 'BYE'}</div>
-                    <div style="display:flex; gap:5px; margin-top:10px;">
-                        <button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','A')">Win A</button>
-                        <button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','B')">Win B</button>
-                    </div>
-                </div>`).join('')).join('');
-            const lastRound = t.rounds[t.rounds.length - 1];
-            if(lastRound.length === 1 && lastRound[0].win) {
-                const champ = lastRound[0].win === 'A' ? lastRound[0].uA.name : lastRound[0].uB.name;
-winArea.innerHTML = '<div class="champion-box">' +
-    '<h2>🏆 Champion: ' + champ + '</h2>' +
-    '<p>Result: <input type="text" id="match-score-input" placeholder="4&3" style="width:60px"></p>' +
-    '<button class="btn-save-comp" onclick="saveTournamentRecord(\'' + type + '\', \'' + champ + '\')">Save to History</button>' +
-    '</div>';
-            }
+    const t = (type === 'pairs') ? pairsT : singlesT;
+    const setupDiv = document.getElementById(type === 'pairs' ? 'p-setup' : 's-setup');
+    const bracketDiv = document.getElementById(type === 'pairs' ? 'p-bracket' : 's-bracket');
+    const selector = document.getElementById(type === 'pairs' ? 'p-selector' : 's-selector');
+    const winArea = document.getElementById(type === 'pairs' ? 'p-winner-area' : 's-winner-area');
+    winArea.innerHTML = "";
+
+    // FIXED: Check if 't' is empty or doesn't have rounds yet
+    if (!t || !t.rounds || t.length === 0) {
+        setupDiv.classList.remove('hidden'); 
+        bracketDiv.classList.add('hidden');
+        selector.innerHTML = players.map(p => `<div class="selector-item"><label for="${type}-${p.id}">${p.name}</label><input type="checkbox" class="${type}-ck" id="${type}-${p.id}" value="${p.id}"></div>`).join('');
+    } else {
+        setupDiv.classList.add('hidden'); 
+        bracketDiv.classList.remove('hidden');
+        
+        bracketDiv.innerHTML = `<button class="btn-del" style="margin-bottom:15px;" onclick="resetT('${type}')">Reset Bracket</button>` +
+            t.rounds.map((rd, i) => `<h4>Round ${i+1}</h4>` + rd.map(m => `
+            <div class="match-card">
+                <div class="${m.win==='A'?'winner-row':''}">${m.uA.name}</div>
+                <div style="text-align:center; color:#999; font-size:10px;">VS</div>
+                <div class="${m.win==='B'?'winner-row':''}">${m.uB ? m.uB.name : 'BYE'}</div>
+                <div style="text-flex; gap:5px; margin-top:10px;">
+                    <button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','A')">Win A</button>
+                    <button class="btn-outline" onclick="setWin('${type}',${i},'${m.id}','B')">Win B</button>
+                </div>
+            </div>`).join('')).join('');
+
+        const lastRound = t.rounds[t.rounds.length - 1];
+        if (lastRound && lastRound.length === 1 && lastRound[0].win) {
+            const champ = lastRound[0].win === 'A' ? lastRound[0].uA.name : lastRound[0].uB.name;
+            winArea.innerHTML = '<div class="champion-box">' +
+                '<h2>🏆 Champion: ' + champ + '</h2>' +
+                '<p>Result: <input type="text" id="match-score-input" placeholder="4&3" style="width:60px"></p>' +
+                '<button class="btn-save-comp" onclick="saveTournamentRecord(\'' + type + '\', \'' + champ + '\')">Save to History</button>' +
+                '</div>';
         }
     }
-
+}
     function initTourney(type) {
         const ids = Array.from(document.querySelectorAll(`.${type}-ck:checked`)).map(i => i.value);
         if(ids.length < 2) return alert("Select players.");
