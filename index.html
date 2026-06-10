@@ -1164,13 +1164,15 @@ function populateRoundSelectors() {
 function updateScorecardInfo() { 
     const courseId = document.getElementById('rCourse').value; 
     const playerId = document.getElementById('rPlayer').value;
-    const course = courses.find(c => c.id == courseId);  
-    const player = players.find(p => p.id == playerId);
+    const course = courses.find(c => c.id == String(courseId));  
+    const player = players.find(p => p.id == String(playerId));
     const container = document.getElementById('round-scores');
     const totalsBanner = document.getElementById('round-totals-banner');
 
     if (!course || !player) { 
-        container.innerHTML = '<p style="text-align:center;color:#777;padding:15px;">Select both course and player to display scorecard matrix.</p>'; 
+        if (container) {
+            container.innerHTML = '<p style="text-align:center;color:#777;padding:15px;">Select both course and player to display scorecard matrix.</p>'; 
+        }
         if (totalsBanner) totalsBanner.style.display = 'none';
         return;
     }  
@@ -1181,7 +1183,6 @@ function updateScorecardInfo() {
     const si = course.si || []; 
     const yards = course.yards || [];
 
-    // Fills back-row metadata tables if present
     if (document.getElementById('par-row')) { 
         document.getElementById('par-row').innerHTML = '<td><b>Par</b></td>' + pars.map(p => `<td>${p || '-'}</td>`).join('');
     } 
@@ -1192,7 +1193,6 @@ function updateScorecardInfo() {
         document.getElementById('si-row').innerHTML = '<td><b>SI</b></td>' + si.map(s => `<td>${s || '-'}</td>`).join('');
     }
 
-    // Generate horizontal layout rows with points displayed below each input
     let html = "";
     for (let i = 1; i <= 18; i++) {
         const hPar = parseInt(pars[i-1]) || 4;
@@ -1206,36 +1206,38 @@ function updateScorecardInfo() {
                 <span class="sc-par-val">Par ${hPar}</span>
                 <span class="sc-si-val">SI ${hSi}</span>
                 <input type="number" id="hole-score-${i}" class="round-scores-val" placeholder="Score" min="1" 
-                    oninput="colorLive(this); calculateLiveRoundPoints(${i}, ${hPar}, ${hSi}, ${hHc})">
+                    oninput="if(typeof colorLive === 'function'){colorLive(this);} calculateLiveRoundPoints(${i}, ${hPar}, ${hSi}, ${hHc})">
             </div>
             <div style="text-align: right; font-size: 12px; color: #2e7d32; font-weight: bold; padding-right: 10px;">
                 Points: <span id="hole-pts-${i}">-</span>
             </div>
         </div>`;
     }
-    container.innerHTML = html;
+    if (container) {
+        container.innerHTML = html;
+    }
     refreshRoundTotals();
 }
 
-// Live calculation engine for individual hole points
 function calculateLiveRoundPoints(holeNum, par, si, hc) {
     const inputField = document.getElementById(`hole-score-${holeNum}`);
+    if (!inputField) return;
     const val = parseInt(inputField.value) || 0;
     const ptsDisplay = document.getElementById(`hole-pts-${holeNum}`);
 
-    if (val <= 0) { 
-        ptsDisplay.innerText = "-";
-    } else { 
-        // Determine handicap stroke allocation for this hole
-        const allowance = Math.floor(hc / 18) + (hc % 18 >= si ? 1 : 0);
-        const netScore = val - allowance; 
-        const points = Math.max(0, par - netScore + 2); 
-        ptsDisplay.innerText = points;
-    }  
+    if (ptsDisplay) {
+        if (val <= 0) { 
+            ptsDisplay.innerText = "-";
+        } else { 
+            const allowance = Math.floor(hc / 18) + (hc % 18 >= si ? 1 : 0);
+            const netScore = val - allowance; 
+            const points = Math.max(0, par - netScore + 2); 
+            ptsDisplay.innerText = points;
+        }  
+    }
 
     refreshRoundTotals();
 
-    // Auto-hop to next hole input field
     if (inputField.value.length >= 1) { 
         const nextInput = document.getElementById(`hole-score-${holeNum + 1}`); 
         if (nextInput) { 
@@ -1245,14 +1247,16 @@ function calculateLiveRoundPoints(holeNum, par, si, hc) {
     } 
 }
 
-// Recalculates and prints gross and stableford totals
 function refreshRoundTotals() {
     let totalGross = 0;
     let totalPoints = 0;
 
     for (let i = 1; i <= 18; i++) {
-        const scoreVal = parseInt(document.getElementById(`hole-score-${i}`).value) || 0;
-        const ptsVal = parseInt(document.getElementById(`hole-pts-${i}`).innerText) || 0;
+        const inputField = document.getElementById(`hole-score-${i}`);
+        const ptsField = document.getElementById(`hole-pts-${i}`);
+        
+        const scoreVal = inputField ? (parseInt(inputField.value) || 0) : 0;
+        const ptsVal = ptsField ? (parseInt(ptsField.innerText) || 0) : 0;
 
         totalGross += scoreVal;
         totalPoints += ptsVal;
