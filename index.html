@@ -2180,6 +2180,65 @@ function showTab(tabId) {
 window.addEventListener('DOMContentLoaded', () => {
     showTab('tab-dash');
 });
+// 1. Core Startup Initialization Loader
+function init() {
+    loadData();
+    updateCourseDropdowns();
+    updatePlayerDropdowns();
+    renderSetupLists();
+    
+    // Automatically open the main History tab on load up
+    showTab('tab-dash');
+}
+
+// 2. Dropdown Update Handlers
+function updateCourseDropdowns() {
+    const rCourse = document.getElementById('rCourse');
+    if (!rCourse) return;
+    rCourse.innerHTML = '<option value="">Select Course</option>';
+    courses.forEach(c => {
+        rCourse.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+    });
+}
+
+function updatePlayerDropdowns() {
+    const rPlayer = document.getElementById('rPlayer');
+    if (!rPlayer) return;
+    rPlayer.innerHTML = '<option value="">Select Player</option>';
+    players.forEach(p => {
+        rPlayer.innerHTML += `<option value="${p.id}">${p.name} (Hcp: ${p.handicap})</option>`;
+    });
+}
+
+// 3. Master Tab Navigation Controller
+function showTab(tabId) {
+    // Hide all view screens
+    const tabs = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.add('hidden');
+    }
+    
+    // Show the clicked view screen
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+        targetTab.classList.remove('hidden');
+    }
+
+    // Reset button navigation highlight indicators
+    const buttons = document.querySelectorAll('.nav button');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    // Highlight active clicked menu button
+    const activeBtnId = tabId.replace('tab-', 'btn-');
+    const activeBtn = document.getElementById(activeBtnId);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // Context-based screen renders
+    if (tabId === 'tab-dash' && typeof renderDashboard === 'function') renderDashboard();
+    if (tabId === 'tab-stats' && typeof renderStats === 'function') renderStats();
+}
 </script>
 </body>
 </html>
