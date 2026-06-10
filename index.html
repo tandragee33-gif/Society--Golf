@@ -790,7 +790,40 @@ function calculateLiveHolePoints(input, holeNum) {
 let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, pastComps = [], club = { name: "Golf Pro Manager", logo: "" };
 let tempTeams = [];
 let selectedCourseData = null;
+// Master Tab Navigation Controller
+function showTab(tabId) {
+    // 1. Hide all tab view areas completely
+    const tabs = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.add('hidden');
+    }
+    
+    // 2. Unhide the specific tab container requested
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+        targetTab.classList.remove('hidden');
+    }
 
+    // 3. Remove the highlight styling from all menu buttons
+    const buttons = document.querySelectorAll('.nav button');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    // 4. Highlight the active clicked menu button
+    // Matches buttons like id="btn-dash", id="btn-comp", etc.
+    const activeBtnId = tabId.replace('tab-', 'btn-');
+    const activeBtn = document.getElementById(activeBtnId);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // 5. Context-based auto renders
+    if (tabId === 'tab-dash' && typeof renderDashboard === 'function') {
+        renderDashboard();
+    }
+    if (tabId === 'tab-stats' && typeof renderStats === 'function') {
+        renderStats();
+    }
+}
     function formatDateDisplay(dateStr) {
         if(!dateStr || !dateStr.includes('-')) return dateStr;
         const [y, m, d] = dateStr.split('-');
