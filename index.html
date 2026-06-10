@@ -698,7 +698,7 @@ function generateMasterReport() {
         </table>
     `;
 }
-// Function to dynamically build the 18 layout rows inside the scoreboard container
+// Function to dynamically build the 18 layout rows connected to the live engine
 function generateLiveScoreboard() {
     const scoreContainer = document.getElementById('round-scores');
     if (!scoreContainer) return;
@@ -714,7 +714,7 @@ function generateLiveScoreboard() {
                        id="score-hole-${hole}" 
                        min="1" 
                        placeholder="Score" 
-                       oninput="colorLive(this)">
+                       oninput="calculateLiveHolePoints(this, ${hole})">
                 <span class="sc-pts-val" id="row-pts-${hole}">0 Pts</span>
             </div>
         `;
@@ -722,21 +722,57 @@ function generateLiveScoreboard() {
     }
 }
 
-// Function to automatically highlight bad, good, or excellent live entries
-function colorLive(input) {
+// Function to instantly calculate Stableford points and adjust color on input
+function calculateLiveHolePoints(input, holeNum) {
+    // 1. Color formatting logic
     const val = parseInt(input.value);
     if (!val || val <= 0) {
         input.style.color = '#333';
+        document.getElementById(`row-pts-${holeNum}`).textContent = '0 Pts';
         return;
     }
-    
     if (val >= 7) {
-        input.style.color = '#e74c3c'; // Red alerts for high scores
+        input.style.color = '#e74c3c'; // Red (High score)
     } else if (val <= 3) {
-        input.style.color = '#27ae60'; // Green highlights for low scores
+        input.style.color = '#27ae60'; // Green (Low score)
     } else {
-        input.style.color = '#333'; // Standard text fallback
+        input.style.color = '#333';
     }
+
+    // 2. Stableford Point Engine calculation
+    const playerSelect = document.getElementById('rPlayer');
+    const courseSelect = document.getElementById('rCourse');
+    
+    if (!playerSelect.value || !courseSelect.value) {
+        return; // Needs both a selected player and course to calculate points
+    }
+
+    // Find the player's handicap from the registry
+    const playerObj = players.find(p => String(p.id) === String(playerSelect.value));
+    const handicap = playerObj ? (parseFloat(playerObj.handicap) || 0) : 0;
+
+    // Find the course details
+    const courseObj = courses.find(c => String(c.id) === String(courseSelect.value));
+    if (!courseObj || !courseObj.pars || !courseObj.si) return;
+
+    const par = parseInt(courseObj.pars[holeNum - 1]) || 4;
+    const si = parseInt(courseObj.si[holeNum - 1]) || 10;
+
+    // Determine how many handicap strokes are allocated to this hole
+    let strokesReceived = Math.floor(handicap / 18);
+    if (handicap % 18 >= si) {
+        strokesReceived += 1;
+    }
+
+    // Net score = Gross score - handicap strokes received
+    const netScore = val - strokesReceived;
+
+    // Calculate Stableford points (2 points for a Net Par)
+    let points = (par + 2) - netScore;
+    if (points < 0) points = 0;
+
+    // Dynamically update the points text lane visually
+    document.getElementById(`row-pts-${holeNum}`).textContent = `${points} Pts`;
 }
     let players = [], courses = [], rounds = [], pairsT = null, singlesT = null, pastComps = [], club = { name: "Golf Pro Manager", logo: "" };
     let tempTeams = [];
