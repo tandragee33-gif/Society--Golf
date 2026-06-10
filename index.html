@@ -2106,6 +2106,44 @@ function renderSavedDoubles() {
         window.viewDetail(date, courseId);
     }
 })();
+// Master Tab Navigation Controller (Forces the frozen buttons to work)
+function showTab(tabId) {
+    // 1. Hide all tab view areas completely
+    const tabs = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.add('hidden');
+    }
+    
+    // 2. Unhide the specific tab container requested
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) {
+        targetTab.classList.remove('hidden');
+    }
+
+    // 3. Remove highlight styling from all menu buttons
+    const buttons = document.querySelectorAll('.nav button');
+    buttons.forEach(btn => btn.classList.remove('active'));
+
+    // 4. Highlight the active clicked menu button
+    const activeBtnId = tabId.replace('tab-', 'btn-');
+    const activeBtn = document.getElementById(activeBtnId);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // 5. Context-based auto renders
+    if (tabId === 'tab-dash' && typeof renderDashboard === 'function') {
+        renderDashboard();
+    }
+    if (tabId === 'tab-stats' && typeof renderStats === 'function') {
+        renderStats();
+    }
+}
+
+// Automatically reset to the Dashboard tab view when you first open the web page
+window.addEventListener('DOMContentLoaded', () => {
+    showTab('tab-dash');
+});
 </script>
 </body>
 </html>
